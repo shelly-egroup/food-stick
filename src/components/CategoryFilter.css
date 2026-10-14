@@ -1,0 +1,44 @@
+/* 類型：手機四欄兩列，電腦一排 */
+.catgrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+/* 手機上一格不到 90px：字距、留白收緊，「早午餐」才放得下 */
+.catgrid__chip {
+  gap: 4px;
+  min-width: 0;
+  padding: 0 0.3em;
+  letter-spacing: 0.02em;
+}
+.catgrid__chip span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.catgrid__chip svg {
+  color: var(--accent);
+  transition:
+    color 0.15s,
+    transform 0.3s var(--ease-spring);
+}
+.catgrid__chip:is([aria-pressed='true'], [aria-checked='true']) svg {
+  color: var(--paper-hi);
+  transform: rotate(-8deg) scale(1.12);
+}
+/* 很窄的手機（小於 360px）：小圖收起來，只留字 */
+@media (max-width: 359px) {
+  .catgrid__chip svg {
+    display: none;
+  }
+}
+@media (min-width: 760px) {
+  .catgrid {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  .catgrid__chip {
+    gap: 6px;
+    padding: 0 0.85em;
+    letter-spacing: 0.08em;
+  }
+}

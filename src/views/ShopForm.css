@@ -1,0 +1,41 @@
+.form {
+  display: grid;
+  gap: 22px;
+}
+.form fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.form legend {
+  padding: 0;
+  margin-bottom: 0.45rem;
+}
+.form__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.form__toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 0;
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+}
+.form__toggle > span {
+  display: grid;
+}
+.form__toggle b {
+  font-family: var(--f-display);
+  font-weight: 900;
+  letter-spacing: 0.16em;
+}
+.form__toggle i {
+  font-style: normal;
+  font-size: var(--t-sm);
+  color: var(--ink-3);
+}

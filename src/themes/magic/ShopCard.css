@@ -1,0 +1,529 @@
+/* 魔法的店家卡片：封面朝外、立在書架上的魔法書 */
+.book {
+  container-type: inline-size;
+  position: relative;
+  display: grid;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--paper-hi);
+  font: inherit;
+  transform-origin: 50% 100%;
+  transition: transform 0.28s var(--ease-spring);
+}
+button.book {
+  cursor: pointer;
+}
+/* 書架：每本書底下一段木板，左右伸進書和書之間的空隙，一整排就連成一條 */
+.book::after {
+  content: '';
+  position: absolute;
+  left: -14px;
+  right: -14px;
+  bottom: -13px;
+  height: 13px;
+  background: #8b5b36;
+  border-block: 1.5px solid var(--ink);
+  /* 用不透明的顏色：相鄰木板重疊的地方才不會多出一塊深色 */
+  box-shadow:
+    inset 0 2px 0 #b07a4c,
+    0 6px 0 var(--paper-shade);
+}
+
+/* 封面：左邊一條書背的陰影與壓線，右邊露出書頁 */
+.book__cover {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  justify-items: center;
+  align-items: center;
+  gap: 6px;
+  aspect-ratio: 3 / 4;
+  padding: 15% 11% 11% 17%;
+  background:
+    linear-gradient(90deg, rgba(0, 0, 0, 0.3) 0 9%, rgba(255, 255, 255, 0.16) 9% 10.5%, transparent 10.5%),
+    radial-gradient(ellipse 80% 60% at 72% 18%, rgba(255, 255, 255, 0.13), transparent 70%), var(--cover);
+  border: 1.5px solid var(--ink);
+  border-radius: 3px 8px 8px 3px;
+  box-shadow:
+    5px 0 0 -1px var(--paper-hi),
+    5px 0 0 0.5px var(--ink),
+    6px 5px 0 rgba(38, 33, 29, 0.16);
+}
+/* 燙金框 */
+.book__cover::before {
+  content: '';
+  position: absolute;
+  inset: 7% 7% 7% 15%;
+  border: 1.5px solid var(--marigold);
+  outline: 1px solid rgba(242, 185, 64, 0.5);
+  outline-offset: 3px;
+  border-radius: 2px;
+  pointer-events: none;
+}
+/* 右上、右下的金屬護角 */
+.book__cover::after {
+  content: '';
+  position: absolute;
+  inset: -1.5px;
+  border-radius: inherit;
+  background:
+    linear-gradient(225deg, var(--marigold) 0 11px, transparent 11px) top right / 20px 20px no-repeat,
+    linear-gradient(315deg, var(--marigold) 0 11px, transparent 11px) bottom right / 20px 20px no-repeat,
+    linear-gradient(225deg, var(--ink) 0 13px, transparent 13px) top right / 22px 22px no-repeat,
+    linear-gradient(315deg, var(--ink) 0 13px, transparent 13px) bottom right / 22px 22px no-repeat;
+  pointer-events: none;
+}
+.book__emblem {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--marigold);
+  border: 1.5px solid var(--ink);
+  box-shadow: 0 0 0 3px rgba(242, 185, 64, 0.25);
+  color: var(--ink);
+  font-family: var(--f-display);
+  font-weight: 900;
+  font-size: 0.8rem;
+  line-height: 1;
+}
+.book__title {
+  max-width: 100%;
+  font-family: var(--f-display);
+  font-weight: 900;
+  /* 封面扣掉左右留白大約是書寬的 64%，平均分給最長那一行的字數 */
+  font-size: clamp(13px, calc(64cqw / (var(--per) * 1.12)), 25px);
+  line-height: 1.24;
+  letter-spacing: 0.04em;
+  text-align: center;
+  text-wrap: balance;
+  color: #fff;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+/* 分好的每一行各自一行 */
+.book__title > span {
+  display: block;
+}
+.book__meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--f-body);
+  font-weight: 500;
+  font-size: 0.76rem;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.92);
+}
+.book__likes {
+  position: absolute;
+  top: -10px;
+  right: -4px;
+  padding: 2px 8px;
+  background: var(--paper-hi);
+  border: 1.5px solid var(--ink);
+  border-radius: 99px;
+  font-family: var(--f-body);
+  font-weight: 700;
+  font-size: 0.78rem;
+  line-height: 1.25;
+  color: var(--accent);
+}
+.book__love {
+  position: absolute;
+  left: -10px;
+  bottom: 4px;
+  line-height: 0;
+}
+/* 被貶為麻瓜：魔力褪去、書皮變灰，上方用兩條緞帶封印；書名照樣看得清楚 */
+.book.is-blocked .book__cover {
+  filter: grayscale(0.92) brightness(1.2);
+}
+.book.is-blocked .book__likes {
+  top: auto;
+  bottom: 22%;
+}
+.book__ban {
+  position: absolute;
+  left: -10px;
+  right: -10px;
+  top: 1%;
+  height: 28%;
+  pointer-events: none;
+}
+.book__ban .ban__strip {
+  height: 22px;
+  margin-top: -11px;
+  background: linear-gradient(180deg, #6b52a8, #4f3a86);
+  border: 1.5px solid var(--ink);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.22),
+    0 2px 0 rgba(38, 33, 29, 0.18);
+  font-size: 0.84rem;
+  letter-spacing: 0.8em;
+  text-indent: 0.8em;
+  color: var(--marigold);
+}
+.book__ban .ban__strip--a {
+  rotate: -12deg;
+}
+.book__ban .ban__strip--b {
+  rotate: 12deg;
+  color: #f1e9ff;
+}
+/* 火漆：歪的是蠟（::before），字不轉 */
+.book__ban .ban__stamp {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 34px;
+  height: 34px;
+  margin: -17px 0 0 -17px;
+  display: grid;
+  place-items: center;
+  isolation: isolate;
+  font-family: var(--f-display);
+  font-weight: 900;
+  font-size: 0.98rem;
+  line-height: 1;
+  color: var(--paper-hi);
+}
+.book__ban .ban__stamp::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: 46% 54% 50% 50% / 52% 48% 54% 46%;
+  background: var(--vermilion);
+  border: 1.5px solid var(--ink);
+  box-shadow:
+    inset 0 0 0 3px var(--vermilion),
+    inset 0 0 0 4.5px #f08a72;
+  rotate: -10deg;
+}
+.book--big .book__ban .ban__strip {
+  height: 26px;
+  margin-top: -13px;
+  font-size: 0.95rem;
+}
+.book--big .book__ban .ban__stamp {
+  width: 40px;
+  height: 40px;
+  margin: -20px 0 0 -20px;
+  font-size: 1.12rem;
+}
+
+/* 碰到就把書抽出來一點；按下去再放回 */
+@media (hover: hover) {
+  button.book:hover {
+    transform: translateY(-8px);
+  }
+  button.book:hover .book__cover {
+    box-shadow:
+      5px 0 0 -1px var(--paper-hi),
+      5px 0 0 0.5px var(--ink),
+      8px 12px 0 rgba(38, 33, 29, 0.14);
+  }
+}
+button.book:active {
+  transform: translateY(-2px);
+}
+
+/* 新書從上面掉到書架上，彈兩下 */
+.book.is-new {
+  animation: book-drop 1s var(--ease-out) both;
+}
+@keyframes book-drop {
+  0% {
+    opacity: 0;
+    transform: translateY(-90px) rotate(8deg);
+  }
+  45% {
+    opacity: 1;
+    transform: translateY(4px) rotate(0);
+  }
+  70% {
+    transform: translateY(-6px) rotate(-2deg);
+  }
+  100% {
+    transform: none;
+  }
+}
+/* ---------- 收起來：書發出紫光浮起來 → 腳下轉出一圈法陣 → 從下往上化成星塵（一道光掃過去）→ 一團紫煙散掉 ----------
+   店家詳情裡演完整段（removing，約 1.6 秒）；回到書架上演快轉版（gone）。書架木板留著 */
+.book {
+  --k: 1;
+}
+.book.is-gone {
+  --k: 0.45;
+}
+.book:is(.is-removing, .is-gone) {
+  transform: none;
+  pointer-events: none;
+  perspective: 600px;
+}
+.book:is(.is-removing, .is-gone) .book__cover {
+  -webkit-mask-image: linear-gradient(to top, transparent 40%, #000 60%);
+  mask-image: linear-gradient(to top, transparent 40%, #000 60%);
+  -webkit-mask-size: 100% 300%;
+  mask-size: 100% 300%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: 0 0;
+  mask-position: 0 0;
+  animation:
+    book-lift calc(0.38s * var(--k)) var(--ease-out) both,
+    book-erase calc(1s * var(--k)) linear calc(0.4s * var(--k)) both;
+}
+@keyframes book-lift {
+  30% {
+    translate: 1.5px -6px;
+  }
+  55% {
+    translate: -1.5px -9px;
+  }
+  to {
+    translate: 0 -12px;
+    filter: brightness(1.2) drop-shadow(0 0 14px rgba(155, 123, 255, 0.95));
+  }
+}
+@keyframes book-erase {
+  to {
+    -webkit-mask-position: 0 100%;
+    mask-position: 0 100%;
+  }
+}
+.book:is(.is-removing, .is-gone) :is(.book__love, .book__likes, .book__ban, .book__ribbon) {
+  animation: book-shed calc(0.35s * var(--k)) ease-in both;
+}
+@keyframes book-shed {
+  to {
+    opacity: 0;
+    translate: 0 -16px;
+  }
+}
+.book__fx {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  translate: 0 -12px;
+  transform-style: preserve-3d;
+}
+/* 法陣：一個圓躺平在書架上、圍著書腳慢慢轉 */
+.book__ring {
+  position: absolute;
+  left: 50%;
+  bottom: calc(-4px - 50cqw);
+  width: 100%;
+  aspect-ratio: 1;
+  margin-left: -50%;
+  border-radius: 50%;
+  border: 2px dashed var(--marigold);
+  outline: 1.5px solid rgba(155, 123, 255, 0.8);
+  outline-offset: -9px;
+  box-shadow:
+    0 0 10px rgba(155, 123, 255, 0.7),
+    inset 0 0 12px rgba(155, 123, 255, 0.5);
+  opacity: 0;
+  transform: rotateX(76deg) rotateZ(0deg) scale(0.2);
+  animation: book-ring calc(1.5s * var(--k)) linear calc(0.1s * var(--k)) both;
+}
+@keyframes book-ring {
+  0% {
+    opacity: 0;
+    transform: rotateX(76deg) rotateZ(0deg) scale(0.2);
+  }
+  18% {
+    opacity: 1;
+    transform: rotateX(76deg) rotateZ(50deg) scale(1);
+  }
+  82% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: rotateX(76deg) rotateZ(240deg) scale(1.1);
+  }
+}
+/* 消失的那條線：一道亮光從書底掃到書頂 */
+.book__edge {
+  position: absolute;
+  left: 2%;
+  right: 0;
+  top: 100%;
+  height: 3px;
+  margin-top: -1.5px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, transparent, #fff3d0 18%, #efe6ff 50%, #fff3d0 82%, transparent);
+  box-shadow: 0 0 10px 3px rgba(155, 123, 255, 0.85);
+  opacity: 0;
+  animation: book-edge calc(0.5s * var(--k)) linear calc(0.65s * var(--k)) both;
+}
+@keyframes book-edge {
+  from {
+    top: 100%;
+    opacity: 1;
+  }
+  88% {
+    opacity: 1;
+  }
+  to {
+    top: 0%;
+    opacity: 0;
+  }
+}
+/* 星屑：在那條光經過的地方飄起來 */
+.book__fx i {
+  position: absolute;
+  left: var(--x);
+  top: calc((1 - var(--d)) * 100%);
+  width: 9px;
+  height: 9px;
+  margin: -4.5px;
+  background: var(--marigold);
+  clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
+  opacity: 0;
+  animation: book-mote calc(0.75s * var(--k)) ease-out calc((0.65s + var(--d) * 0.5s) * var(--k)) both;
+}
+.book__fx i:nth-of-type(2n) {
+  width: 6px;
+  height: 6px;
+  margin: -3px;
+  background: #e2d7ff;
+}
+@keyframes book-mote {
+  from {
+    opacity: 1;
+    scale: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    translate: calc((var(--d) - 0.5) * 34px) -52px;
+    scale: 1.1;
+    rotate: 120deg;
+  }
+}
+/* 最後一團紫煙 */
+.book__puff {
+  position: absolute;
+  left: -20%;
+  right: -20%;
+  top: 10%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(201, 184, 255, 0.75), rgba(155, 123, 255, 0.28) 55%, transparent);
+  opacity: 0;
+  animation: book-puff calc(0.6s * var(--k)) ease-out calc(1.05s * var(--k)) both;
+}
+@keyframes book-puff {
+  from {
+    opacity: 0;
+    scale: 0.3;
+  }
+  35% {
+    opacity: 0.9;
+  }
+  to {
+    opacity: 0;
+    scale: 1.2;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .book:is(.is-removing, .is-gone) .book__cover {
+    -webkit-mask-image: none;
+    mask-image: none;
+    animation: book-shed 0.3s both;
+  }
+  .book__fx {
+    display: none;
+  }
+}
+
+/* 自己放的魔法書：書頁間夾著一條紫色緞帶，從書頂垂下來，尾端吊一顆會發光的金星 */
+.book__ribbon {
+  position: absolute;
+  left: 21%;
+  top: -7px;
+  z-index: 2;
+  width: 10px;
+  height: 34px;
+  transform-origin: 50% 0;
+  animation: book-ribbon 3.2s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+.book__ribbon::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 6px;
+  background: linear-gradient(90deg, #3e2c86, #8f74e6 48%, #3e2c86);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 78%, 0 100%);
+  filter: drop-shadow(1px 0 0 var(--ink)) drop-shadow(-1px 0 0 var(--ink));
+}
+.book__ribbon::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -5px;
+  width: 13px;
+  height: 13px;
+  margin-left: -6.5px;
+  background: var(--marigold);
+  clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
+  filter: drop-shadow(0 0 4px rgba(242, 185, 64, 0.9));
+  animation: book-ribbon-star 2.4s ease-in-out infinite;
+}
+.book--big .book__ribbon {
+  width: 12px;
+  height: 42px;
+}
+@keyframes book-ribbon {
+  from {
+    rotate: -4deg;
+  }
+  to {
+    rotate: 5deg;
+  }
+}
+@keyframes book-ribbon-star {
+  50% {
+    scale: 0.75;
+    opacity: 0.8;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .book__ribbon,
+  .book__ribbon::after {
+    animation: none;
+  }
+}
+
+/* 大本（店家詳情裡） */
+.book--big {
+  width: 150px;
+}
+.book--big .book__likes {
+  top: -10px;
+  right: -6px;
+}
+
+/* 魔法版的書架：書比較寬，欄位跟著放寬 */
+[data-theme='magic'] .wall {
+  grid-template-columns: repeat(auto-fill, minmax(102px, 1fr));
+  gap: 36px 16px;
+}
+@media (min-width: 760px) {
+  [data-theme='magic'] .wall {
+    grid-template-columns: repeat(auto-fill, minmax(136px, 1fr));
+    gap: 44px 26px;
+  }
+}

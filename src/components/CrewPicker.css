@@ -1,0 +1,625 @@
+/* 揪團名單：一張小卡，上面是存好的進香團（冒險小隊），下面是同事的頭像格子（會換行，不用往旁邊滑） */
+.crew {
+  display: grid;
+  gap: 12px;
+  padding: 14px 14px 12px;
+  border: 1.5px solid var(--ink);
+  background: var(--paper-hi);
+  box-shadow: 4px 4px 0 var(--accent-tint);
+  animation: rise-in 0.35s var(--ease-out) both;
+}
+.crew__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.crew__title {
+  font-family: var(--f-serif);
+  font-weight: 700;
+  font-size: 0.98rem;
+  letter-spacing: 0.12em;
+}
+
+/* ---------- 存好的團：一面面小團旗（徽章），最後一面是虛線的「組成進香團」 ---------- */
+.crew__presets {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px 18px;
+}
+.crew__preset,
+.crew__new {
+  position: relative;
+  display: inline-flex;
+  align-items: flex-start;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  transition: transform 0.2s var(--ease-spring);
+}
+.crew__preset:active,
+.crew__new:active {
+  transform: scale(0.95);
+}
+.crew__flag b,
+.crew__new-flag b {
+  display: block;
+  font-family: var(--f-serif);
+  font-weight: 700;
+  font-size: 0.9rem;
+  line-height: 1.2;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+}
+.crew__faces {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-end;
+}
+.crew__faces .avatar {
+  box-shadow: 0 0 0 1.5px var(--paper-hi);
+}
+.crew__faces .avatar + .avatar {
+  margin-left: -6px;
+}
+.crew__more {
+  margin-left: 4px;
+  font-size: var(--t-xs);
+  font-weight: 700;
+  color: var(--ink-2);
+}
+.crew__new-flag {
+  position: relative;
+  display: block;
+}
+.crew__new-flag svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.crew__new-flag path {
+  vector-effect: non-scaling-stroke;
+  transition:
+    fill 0.2s,
+    stroke-dasharray 0.2s;
+}
+.crew__new-flag b {
+  position: relative;
+}
+
+/* ---------- 同事格子 ---------- */
+.crew__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(62px, 1fr));
+  gap: 14px 6px;
+}
+.crew__pick {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 4px 0 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: var(--ink-2);
+}
+.crew__face {
+  position: relative;
+  display: grid;
+  border-radius: 50%;
+  transition:
+    transform 0.28s var(--ease-spring),
+    box-shadow 0.2s;
+}
+.crew__face .avatar {
+  transition:
+    filter 0.2s,
+    opacity 0.2s;
+}
+.crew__pick:not(.is-on) .crew__face .avatar {
+  filter: grayscale(1);
+  opacity: 0.55;
+}
+.crew__pick.is-on .crew__face {
+  transform: translateY(-2px);
+  box-shadow:
+    0 0 0 2px var(--paper-hi),
+    0 0 0 4px var(--accent);
+}
+.crew__pick:active .crew__face {
+  transform: scale(0.92);
+}
+.crew__name {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--t-xs);
+  font-weight: 500;
+}
+.crew__pick.is-on .crew__name {
+  color: var(--ink);
+  font-weight: 700;
+}
+/* 被揪到的記號：廟宇是一顆「揪」字小章，魔法是一顆亮起來的星 */
+.crew__mark {
+  position: absolute;
+  right: -7px;
+  bottom: -5px;
+  width: 22px;
+  height: 22px;
+  animation: crew-mark 0.32s var(--ease-spring) both;
+}
+@keyframes crew-mark {
+  from {
+    opacity: 0;
+    transform: scale(2.2) rotate(-25deg);
+  }
+}
+
+/* ---------- 廟宇：團旗掛在小旗桿左邊，團員站在桿子右邊；這次揪的那團旗子升到頂、換上朱紅 ---------- */
+[data-theme='temple'] .crew__preset,
+[data-theme='temple'] .crew__new {
+  min-height: 52px;
+  padding-top: 10px;
+}
+[data-theme='temple'] .crew__flag {
+  margin-right: -1px;
+  translate: 0 7px;
+  filter: drop-shadow(1.5px 0 0 var(--ink)) drop-shadow(-1.5px 0 0 var(--ink)) drop-shadow(0 1.5px 0 var(--ink))
+    drop-shadow(0 -1.5px 0 var(--ink));
+  transition: translate 0.4s var(--ease-spring);
+  animation: crew-flag-up 0.55s var(--ease-spring) calc(var(--i) * 70ms) both;
+}
+@keyframes crew-flag-up {
+  from {
+    opacity: 0;
+    translate: 0 26px;
+  }
+}
+[data-theme='temple'] .crew__flag b {
+  padding: 8px 10px 8px 21px;
+  color: var(--vermilion-lo);
+  background:
+    conic-gradient(from -45deg at 50% 100%, rgba(242, 185, 64, 0.85) 90deg, transparent 0) 0 0 / 8px 5px repeat-x,
+    conic-gradient(from 135deg at 50% 0, rgba(242, 185, 64, 0.85) 90deg, transparent 0) 0 100% / 8px 5px repeat-x,
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.16) 0 10px, rgba(38, 33, 29, 0.05) 10px 20px) 0 0 / 20px 100%,
+    var(--vermilion-tint);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 11px 50%);
+}
+[data-theme='temple'] .crew__preset.is-on .crew__flag {
+  translate: 0 0;
+}
+[data-theme='temple'] .crew__preset.is-on .crew__flag b {
+  color: var(--paper-hi);
+  text-shadow: 0 1px 0 var(--vermilion-lo);
+  background:
+    conic-gradient(from -45deg at 50% 100%, var(--marigold) 90deg, transparent 0) 0 0 / 8px 5px repeat-x,
+    conic-gradient(from 135deg at 50% 0, var(--marigold) 90deg, transparent 0) 0 100% / 8px 5px repeat-x,
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.1) 0 10px, rgba(38, 33, 29, 0.08) 10px 20px) 0 0 / 20px 100%,
+    var(--vermilion);
+}
+/* 滑過去：旗面飄起來（只動布紋，字不動） */
+@media (hover: hover) {
+  [data-theme='temple'] .crew__preset:hover .crew__flag b {
+    animation: crew-ripple 1.4s linear infinite;
+  }
+  [data-theme='temple'] .crew__new:hover .crew__new-flag path {
+    fill: var(--vermilion-tint);
+    stroke-dasharray: none;
+  }
+}
+@keyframes crew-ripple {
+  to {
+    background-position:
+      0 0,
+      0 100%,
+      -20px 0,
+      0 0;
+  }
+}
+/* 小旗桿：木桿、金寶珠 */
+[data-theme='temple'] .crew__pole {
+  position: relative;
+  flex: none;
+  align-self: stretch;
+  width: 5px;
+  margin-top: -3px;
+  margin-right: 5px;
+  border: 1.5px solid var(--ink);
+  border-radius: 2px 2px 1px 1px;
+  background: var(--wood);
+}
+[data-theme='temple'] .crew__pole::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: -10px;
+  width: 11px;
+  height: 11px;
+  margin-left: -5.5px;
+  border: 1.5px solid var(--ink);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff3c4, var(--marigold) 60%, #c08a20);
+}
+/* 組成進香團：一面還沒繡字的虛線空旗、一支空桿子 */
+[data-theme='temple'] .crew__new-flag {
+  padding: 8px 10px 8px 21px;
+  color: var(--vermilion);
+}
+[data-theme='temple'] .crew__new-flag path {
+  fill: rgba(255, 253, 248, 0.85);
+  stroke: var(--vermilion);
+  stroke-width: 1.5;
+  stroke-dasharray: 5 3.5;
+}
+[data-theme='temple'] .crew__new .crew__pole {
+  margin-right: 0;
+  background: var(--paper-shade);
+}
+[data-theme='temple'] .crew__new .crew__pole::before {
+  background: var(--paper-hi);
+}
+[data-theme='temple'] .crew__mark {
+  display: grid;
+  place-items: center;
+  background: var(--vermilion);
+  border: 1.5px solid var(--ink);
+  border-radius: 3px;
+  rotate: -8deg;
+}
+[data-theme='temple'] .crew__mark::before {
+  content: '揪';
+  font-family: var(--f-display);
+  font-weight: 900;
+  font-size: 0.78rem;
+  line-height: 1;
+  color: var(--paper-hi);
+  rotate: 8deg;
+}
+
+/* ---------- 魔法：冒險小隊是一張小隊卡，左邊一枚盾形徽章；這次帶的那隊換成夜空色、發光 ---------- */
+[data-theme='magic'] .crew {
+  border-radius: 14px;
+  background: linear-gradient(160deg, #f3efff, var(--paper-hi) 55%);
+  box-shadow:
+    4px 4px 0 var(--accent-tint),
+    0 0 0 4px rgba(155, 123, 255, 0.08);
+}
+[data-theme='magic'] .crew__pole {
+  display: none;
+}
+[data-theme='magic'] .crew__preset,
+[data-theme='magic'] .crew__new {
+  align-items: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 5px 10px 5px 7px;
+  border-radius: 14px;
+}
+[data-theme='magic'] .crew__preset {
+  border: 1.5px solid var(--ink);
+  background: linear-gradient(135deg, #efe9ff, #fffdf8 70%);
+  box-shadow: 3px 3px 0 var(--accent-tint);
+  animation: crew-badge-in 0.45s var(--ease-spring) calc(var(--i) * 70ms) both;
+}
+@keyframes crew-badge-in {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+}
+[data-theme='magic'] .crew__preset::before,
+[data-theme='magic'] .crew__new::before {
+  content: '';
+  flex: none;
+  width: 24px;
+  height: 28px;
+  background: center / contain no-repeat;
+}
+[data-theme='magic'] .crew__preset::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 28'%3E%3Cpath d='M12 1.5 22 5v8.5c0 6.5-5 11-10 13-5-2-10-6.5-10-13V5z' fill='%233a4fa0' stroke='%2326211d' stroke-width='1.5' stroke-linejoin='round'/%3E%3Cpath d='M12 1.5 22 5v8.5c0 6.5-5 11-10 13z' fill='%234a3d9e'/%3E%3Cpath d='M12 1.5 22 5v8.5c0 6.5-5 11-10 13-5-2-10-6.5-10-13V5z' fill='none' stroke='%2326211d' stroke-width='1.5' stroke-linejoin='round'/%3E%3Cpath d='M12 7.6l1.5 3.9 4.1.2-3.2 2.6 1.1 4-3.5-2.3-3.5 2.3 1.1-4-3.2-2.6 4.1-.2z' fill='%23f2b940'/%3E%3C/svg%3E");
+}
+[data-theme='magic'] .crew__flag b {
+  color: var(--accent-lo);
+}
+[data-theme='magic'] .crew__faces {
+  align-self: center;
+}
+[data-theme='magic'] .crew__preset.is-on {
+  background:
+    radial-gradient(circle at 78% 22%, rgba(255, 255, 255, 0.9) 0 1px, transparent 1.6px),
+    radial-gradient(circle at 92% 70%, rgba(242, 185, 64, 0.9) 0 1.2px, transparent 1.8px),
+    linear-gradient(135deg, #2c3e7a, #4a3d9e);
+  box-shadow:
+    3px 3px 0 var(--accent-tint),
+    0 0 16px rgba(155, 123, 255, 0.55);
+}
+[data-theme='magic'] .crew__preset.is-on::before {
+  filter: drop-shadow(0 0 4px rgba(242, 185, 64, 0.9));
+}
+[data-theme='magic'] .crew__preset.is-on .crew__flag b,
+[data-theme='magic'] .crew__preset.is-on .crew__more {
+  color: #fff3d0;
+}
+@media (hover: hover) {
+  [data-theme='magic'] .crew__preset:hover {
+    box-shadow:
+      3px 3px 0 var(--accent-tint),
+      0 0 14px rgba(155, 123, 255, 0.45);
+  }
+  [data-theme='magic'] .crew__new:hover {
+    border-style: solid;
+    background: #f3efff;
+  }
+}
+/* 組成冒險小隊：虛線框、一枚還沒成形的虛線徽章，角落一顆星在閃 */
+[data-theme='magic'] .crew__new {
+  padding-right: 14px;
+  border: 1.5px dashed var(--accent);
+  background: rgba(255, 253, 248, 0.75);
+  color: var(--accent-lo);
+}
+[data-theme='magic'] .crew__new::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 28'%3E%3Cpath d='M12 1.5 22 5v8.5c0 6.5-5 11-10 13-5-2-10-6.5-10-13V5z' fill='%23efe9ff' stroke='%233a68ad' stroke-width='1.4' stroke-dasharray='3 2.2' stroke-linejoin='round'/%3E%3Cpath d='M12 9.5v8M8 13.5h8' stroke='%233a68ad' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+[data-theme='magic'] .crew__new::after {
+  content: '';
+  position: absolute;
+  right: -6px;
+  top: -7px;
+  width: 13px;
+  height: 13px;
+  background: var(--marigold);
+  clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
+  filter: drop-shadow(0 0 3px rgba(155, 123, 255, 0.9));
+  animation: crew-twinkle 2.4s ease-in-out infinite;
+}
+@keyframes crew-twinkle {
+  0%,
+  100% {
+    opacity: 0.35;
+    scale: 0.6;
+  }
+  50% {
+    opacity: 1;
+    scale: 1;
+  }
+}
+[data-theme='magic'] .crew__new-flag svg {
+  display: none;
+}
+[data-theme='magic'] .crew__pick.is-on .crew__face {
+  box-shadow:
+    0 0 0 2px var(--paper-hi),
+    0 0 0 4px var(--marigold),
+    0 0 14px rgba(155, 123, 255, 0.6);
+}
+[data-theme='magic'] .crew__mark {
+  background: var(--marigold);
+  clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
+  filter: drop-shadow(0 0 3px rgba(155, 123, 255, 0.9));
+}
+
+/* ---------- 發組隊邀請：左邊「抽到之後要大家回覆」的小開關，右邊發紅帖（放出貓頭鷹） ---------- */
+.crew__send {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 12px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--rule-2);
+}
+.crew__confirm {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 0 0 46px;
+  border: 0;
+  background: none;
+  font-family: var(--f-serif);
+  font-weight: 700;
+  font-size: var(--t-sm);
+  letter-spacing: 0.04em;
+  color: var(--ink-2);
+  text-align: left;
+}
+.crew__confirm::before,
+.crew__confirm::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+}
+.crew__confirm::before {
+  left: 0;
+  width: 38px;
+  height: 22px;
+  margin-top: -11px;
+  border: 1.5px solid var(--ink);
+  border-radius: 2px;
+  background: var(--paper-lo);
+  transition: background 0.2s;
+}
+.crew__confirm::after {
+  left: 4px;
+  width: 14px;
+  height: 14px;
+  margin-top: -7px;
+  border: 1.5px solid var(--ink);
+  background: var(--paper-hi);
+  transition: transform 0.3s var(--ease-spring);
+}
+.crew__confirm[aria-checked='true'] {
+  color: var(--ink);
+}
+.crew__confirm[aria-checked='true']::before {
+  background: var(--jade);
+}
+.crew__confirm[aria-checked='true']::after {
+  transform: translateX(16px);
+}
+[data-theme='magic'] .crew__confirm::before,
+[data-theme='magic'] .crew__confirm::after {
+  border-radius: 999px;
+}
+.crew__send-btn {
+  gap: 8px;
+  min-height: 46px;
+  padding: 0 1.1em 0 0.8em;
+  font-size: 1rem;
+  letter-spacing: 0.14em;
+}
+.crew__send-btn .glyph {
+  flex: none;
+  transition: rotate 0.3s var(--ease-spring);
+}
+@media (hover: hover) {
+  .crew__send-btn:hover .glyph {
+    rotate: -12deg;
+  }
+}
+.crew__send-hint {
+  margin-top: -4px;
+  font-size: var(--t-xs);
+  line-height: 1.6;
+  color: var(--ink-3);
+}
+/* 飛出去的紅帖（信）：掛在最上層，飛到每個人頭上就消失 */
+.crew-flyer {
+  position: fixed;
+  z-index: 90;
+  display: grid;
+  width: 30px;
+  height: 30px;
+  pointer-events: none;
+  filter: drop-shadow(2px 3px 0 rgba(38, 33, 29, 0.2));
+}
+
+/* ---------- 已經發出邀請：大家的回覆即時更新 ---------- */
+.crew--gather {
+  gap: 14px;
+}
+.crew__gather-head b {
+  word-break: keep-all;
+}
+.crew__gather-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+}
+.crew__gather-glyph {
+  flex: none;
+  display: grid;
+  animation: mate-bob 2.2s ease-in-out infinite;
+}
+.crew__gather-head p {
+  flex: 1 1 9em;
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+.crew__gather-head b {
+  font-family: var(--f-display);
+  font-weight: 900;
+  font-size: 1rem;
+  line-height: 1.35;
+  letter-spacing: 0.08em;
+  text-wrap: balance;
+}
+.crew__gather-head span {
+  font-size: var(--t-xs);
+  font-weight: 500;
+  color: var(--ink-2);
+}
+.crew__recall {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-left: auto;
+  min-height: 38px;
+  padding: 0 12px 0 8px;
+  border: 1.5px dashed var(--rule-strong);
+  background: var(--paper-hi);
+  font-family: var(--f-serif);
+  font-weight: 700;
+  font-size: var(--t-xs);
+  letter-spacing: 0.12em;
+  color: var(--ink-2);
+}
+[data-theme='temple'] .crew--gather {
+  background:
+    linear-gradient(var(--vermilion), var(--vermilion)) top / 100% 4px no-repeat,
+    linear-gradient(180deg, #fff6ec, var(--paper-hi) 40%);
+}
+[data-theme='magic'] .crew--gather {
+  background:
+    radial-gradient(circle at 92% 14%, rgba(242, 185, 64, 0.9) 0 1.2px, transparent 1.8px),
+    radial-gradient(circle at 70% 8%, rgba(155, 123, 255, 0.9) 0 1px, transparent 1.6px),
+    linear-gradient(160deg, #ece5ff, var(--paper-hi) 55%);
+}
+[data-theme='magic'] .crew__recall {
+  border-radius: 999px;
+}
+
+/* ---------- 只有自己的時候 ---------- */
+.crew--empty {
+  justify-items: center;
+  padding-bottom: 16px;
+}
+.crew__invite {
+  min-height: 42px;
+  font-size: 0.92rem;
+  letter-spacing: 0.12em;
+}
+/* 寬螢幕：插畫在左、字和邀請按鈕在右，省下一半高度 */
+@media (min-width: 960px) {
+  .crew--empty {
+    grid-template-columns: 150px minmax(0, 1fr);
+    grid-template-areas:
+      'art text'
+      'art cta';
+    align-items: center;
+    justify-items: start;
+    column-gap: 18px;
+    row-gap: 10px;
+    padding: 14px 18px;
+  }
+  .crew--empty .vignette {
+    display: contents;
+  }
+  .crew--empty .vignette svg {
+    grid-area: art;
+    width: 150px;
+  }
+  .crew--empty .vignette figcaption {
+    grid-area: text;
+    justify-items: start;
+    text-align: left;
+    align-self: end;
+  }
+  .crew--empty .crew__invite {
+    grid-area: cta;
+    align-self: start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .crew__mark,
+  .crew__flag,
+  .crew__flag b,
+  .crew__preset,
+  .crew__new::after {
+    animation: none !important;
+  }
+}

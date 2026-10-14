@@ -1,0 +1,97 @@
+/* 魔法門面：拱門、緞帶、兩疊書與蠟燭、占卜桌上的大水晶球 */
+.gate__body.gate__body--magic {
+  grid-template-columns: clamp(52px, 9vw, 110px) minmax(0, 1fr) clamp(52px, 9vw, 110px);
+}
+.magic-stack {
+  display: grid;
+  align-items: end;
+  min-height: 0;
+}
+.magic-stack svg {
+  width: 100%;
+  height: auto;
+  max-height: 100%;
+  overflow: visible;
+}
+/* 水晶球與占卜桌填滿中間這一格，空間變小時整組等比例縮小（不會撐破格子、跑到面板底下） */
+.gate__orb {
+  position: relative;
+  min-height: 0;
+}
+.gate__orb svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+/* 手機：面板放在最底下，占卜桌、書堆與蠟燭整組縮到面板上方，桌巾垂到桌面上，不會被面板蓋住 */
+@media (max-width: 700px) and (min-height: 540px) {
+  .gate--magic .gate__facade {
+    padding-bottom: calc(var(--panel-h, 0px) + max(14px, var(--safe-b)) + 14px);
+  }
+  .gate--magic.gate--signin .gate__facade,
+  .gate--magic.gate--reject .gate__facade {
+    transition: padding-bottom 0.55s var(--ease-out);
+  }
+  .gate--magic .gate__panel {
+    bottom: max(14px, var(--safe-b));
+  }
+}
+.gate__step.gate__step--desk {
+  background: var(--wood);
+  box-shadow: inset 0 -6px 0 var(--wood-lo);
+}
+.gate__ribbon {
+  overflow: visible;
+}
+
+/* 帳號不對：水晶球起霧 */
+.gate--reject .crystal__core {
+  filter: grayscale(1) brightness(1.15);
+  transition: filter 0.6s;
+}
+.gate--reject .crystal__heart,
+.gate--reject .crystal__stars {
+  opacity: 0;
+  transition: opacity 0.6s;
+}
+
+/* 走進去：一片白光 */
+.gate__flash {
+  position: fixed;
+  inset: 0;
+  z-index: 8;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(
+    circle at 50% 50%,
+    #ffffff 0%,
+    #fff3cf 30%,
+    rgba(155, 123, 255, 0.6) 60%,
+    rgba(58, 104, 173, 0) 80%
+  );
+}
+
+/* 開門動畫進行時讓 GSAP 接手，避免和 CSS 動畫互搶 */
+.gate--enter .crystal__runes,
+.gate--enter .crystal__aura,
+.gate--enter .crystal__rays,
+.gate--enter .crystal__heart,
+.gate--enter .crystal__glass {
+  animation: none;
+}
+
+.moon {
+  animation: moon-float 6s ease-in-out infinite;
+}
+@keyframes moon-float {
+  50% {
+    transform: translateY(-6px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .moon {
+    animation: none;
+  }
+}

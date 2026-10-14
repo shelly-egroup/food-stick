@@ -1,0 +1,205 @@
+.sheet {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  max-width: none;
+  max-height: none;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  display: grid;
+  align-items: end;
+  justify-items: center;
+  overflow: hidden;
+}
+.sheet:not([open]) {
+  display: none;
+}
+.sheet::backdrop {
+  background: rgba(38, 33, 29, 0.42);
+  animation: fade-in 0.25s ease both;
+}
+
+.sheet__paper {
+  position: relative;
+  width: 100%;
+  max-height: calc(100dvh - 48px - var(--safe-t));
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  background: var(--paper-hi);
+  border-top: 1.5px solid var(--ink);
+  box-shadow: 0 -6px 0 var(--accent);
+  animation: sheet-up 0.42s var(--ease-out) both;
+  overflow: hidden;
+}
+.sheet__paper::before {
+  content: '';
+  justify-self: center;
+  width: 40px;
+  height: 4px;
+  margin-top: 8px;
+  background: var(--rule-2);
+  grid-row: 1;
+  grid-column: 1;
+}
+
+.sheet__head {
+  grid-row: 1;
+  grid-column: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 22px var(--gutter) 10px;
+  /* 手機可以抓著頂端往下拖來關掉 */
+  touch-action: none;
+}
+.sheet__close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 6px 12px;
+  border: 1.5px solid var(--ink);
+  background: var(--paper-hi);
+  font-size: var(--t-sm);
+  letter-spacing: 0.12em;
+  opacity: 0;
+  pointer-events: none;
+}
+.sheet__close:focus-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+.sheet__titles {
+  flex: 1;
+  min-width: 0;
+}
+/* 標題左邊的小圖：打開時晃一下落定 */
+.sheet__icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  margin-top: 2px;
+  color: var(--accent);
+  animation: sheet-icon-in 0.6s 0.08s var(--ease-spring) both;
+}
+.sheet__icon svg {
+  max-width: 100%;
+  max-height: 100%;
+}
+@keyframes sheet-icon-in {
+  from {
+    opacity: 0;
+    transform: scale(0.5) rotate(-16deg);
+  }
+}
+.sheet__aside {
+  flex: none;
+  align-self: center;
+  margin-top: 10px;
+}
+.sheet__eyebrow {
+  font-family: var(--f-latin);
+  font-weight: 600;
+  font-size: 0.78rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 2px;
+}
+.sheet__title {
+  font-size: var(--t-xl);
+  overflow-wrap: anywhere;
+}
+.sheet__title:focus {
+  outline: none;
+}
+.sheet__body {
+  /* 裡面有東西掉出去（例如拆下來的菜牌）時，不要出現左右捲軸 */
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: 6px var(--gutter) 24px;
+}
+.sheet__foot {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  padding: 14px var(--gutter) calc(16px + var(--safe-b));
+  border-top: 1.5px solid var(--ink);
+  background: var(--paper);
+}
+.sheet__body:last-child {
+  padding-bottom: calc(24px + var(--safe-b));
+}
+
+.sheet--closing .sheet__paper {
+  animation: sheet-down 0.24s var(--ease-out) both;
+}
+.sheet--closing::backdrop {
+  animation: fade-out 0.24s ease both;
+}
+
+@media (min-width: 760px) {
+  .sheet {
+    align-items: center;
+  }
+  .sheet__paper {
+    width: min(560px, calc(100vw - 48px));
+    max-height: min(820px, calc(100dvh - 64px));
+    border: 1.5px solid var(--ink);
+    box-shadow: 10px 10px 0 var(--accent);
+    animation: sheet-pop 0.36s var(--ease-out) both;
+  }
+  .sheet__paper::before {
+    display: none;
+  }
+  .sheet--wide .sheet__paper {
+    width: min(720px, calc(100vw - 48px));
+  }
+  .sheet--closing .sheet__paper {
+    animation: sheet-unpop 0.22s var(--ease-out) both;
+  }
+  .sheet__body:last-child {
+    padding-bottom: 28px;
+  }
+}
+
+@keyframes sheet-up {
+  from {
+    transform: translateY(100%);
+  }
+}
+@keyframes sheet-down {
+  to {
+    transform: translateY(100%);
+  }
+}
+@keyframes sheet-pop {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+    clip-path: inset(0 0 70% 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    clip-path: inset(0 0 -20px 0);
+  }
+}
+@keyframes sheet-unpop {
+  to {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+@keyframes fade-out {
+  to {
+    opacity: 0;
+  }
+}

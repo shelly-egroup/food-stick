@@ -1,0 +1,384 @@
+.home {
+  --dock-h: 252px;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-height: calc(100dvh - var(--bar-h) - var(--tab-h) - var(--safe-b) - var(--safe-t));
+}
+
+/* ---------- 舞台：場景插畫 ---------- */
+.stage {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  container-type: size;
+  /* 矮的手機也盡量不用捲：舞台可以縮到 240px，下方的操作區一次看得到 */
+  height: clamp(
+    240px,
+    calc(100dvh - var(--bar-h) - var(--tab-h) - var(--safe-b) - var(--safe-t) - var(--dock-h)),
+    560px
+  );
+  background: var(--paper);
+  border-bottom: 1.5px solid var(--ink);
+}
+.stage__top {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 390 / 214;
+  z-index: 2;
+  pointer-events: none;
+  overflow: visible;
+}
+.stage__floor {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: min(100cqw, 100cqh * 390 / 430);
+  translate: -50% 0;
+  z-index: 1;
+}
+.stage__art {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 390 / 330;
+  overflow: visible;
+}
+/* 供桌兩側延伸到畫面邊緣 */
+.stage::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(min(100cqw, 100cqh * 390 / 430) * 96 / 390);
+  height: calc(min(100cqw, 100cqh * 390 / 430) * 16 / 390);
+  background: var(--ink);
+  z-index: 0;
+}
+
+.stage__taunt {
+  position: absolute;
+  left: 50%;
+  top: 34%;
+  translate: -50% 0;
+  z-index: 5;
+  padding: 10px 18px;
+  background: var(--paper-hi);
+  border: 1.5px solid var(--ink);
+  box-shadow: 4px 4px 0 var(--accent);
+  font-family: var(--f-kai);
+  font-size: var(--t-lg);
+  white-space: nowrap;
+  animation: taunt-pop 0.4s var(--ease-spring) both;
+}
+@keyframes taunt-pop {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.85);
+  }
+}
+
+/* ---------- 下方操作區 ---------- */
+.dock {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  padding: 16px var(--gutter) 14px;
+  background: var(--paper);
+}
+.dock__intro {
+  display: none;
+}
+.dock__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 12px;
+}
+/* 兩組切換並排：收窄一點，手機上也能放在同一行 */
+.dock__row .seg button {
+  padding: 0 0.6em;
+  letter-spacing: 0.04em;
+}
+.dock__cta {
+  margin-top: 2px;
+}
+/* 搖籤中：按鈕裡換成主題的小儀式（點香、轉動的星芒） */
+.dock__cta.is-busy {
+  opacity: 1;
+  cursor: progress;
+}
+.dock__hint {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 6px 14px;
+  font-size: var(--t-sm);
+  font-weight: 500;
+  color: var(--ink-2);
+  letter-spacing: 0.04em;
+  text-align: center;
+}
+.dock__charges {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--f-serif);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--ink-2);
+}
+/* 搖手機：一顆小籤筒（水晶球）的提示，能搖的時候它會自己晃兩下；還要點一下才能搖時是一顆虛線按鈕 */
+.dock__shake {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 0 12px 0 7px;
+  border: 1.5px dashed var(--accent);
+  border-radius: 2px;
+  background: var(--paper-hi);
+  font-family: var(--f-serif);
+  font-weight: 700;
+  font-size: var(--t-sm);
+  letter-spacing: 0.08em;
+  color: var(--accent-lo);
+}
+button.dock__shake:active {
+  transform: scale(0.96);
+}
+.dock__shake.is-on {
+  padding: 0;
+  border-style: solid;
+  border-color: transparent;
+  background: transparent;
+  color: var(--ink-2);
+}
+.dock__shake .glyph {
+  flex: none;
+  transform-origin: 50% 90%;
+}
+.dock__shake.is-on .glyph {
+  animation: dock-shake 3.2s ease-in-out infinite;
+}
+@keyframes dock-shake {
+  0%,
+  70%,
+  100% {
+    rotate: 0deg;
+  }
+  74% {
+    rotate: -14deg;
+  }
+  78% {
+    rotate: 12deg;
+  }
+  82% {
+    rotate: -9deg;
+  }
+  86% {
+    rotate: 6deg;
+  }
+  90% {
+    rotate: -2deg;
+  }
+}
+[data-theme='magic'] .dock__shake {
+  border-radius: 999px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .dock__shake.is-on .glyph {
+    animation: none;
+  }
+}
+
+/* 篩選：一行摘要，點了拉出一張紙（Sheet）來選，頁面不會被撐長 */
+.filters__toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1.5px solid var(--ink);
+  border-radius: 2px;
+  background: var(--paper-hi);
+  color: var(--ink);
+  text-align: left;
+  transition:
+    box-shadow 0.2s,
+    transform 0.15s var(--ease-spring);
+}
+.filters__toggle:active {
+  transform: scale(0.98);
+}
+/* 有設條件：框線換成主色、摘要變主色 */
+.filters__toggle.is-set {
+  border-color: var(--accent);
+  box-shadow: 3px 3px 0 var(--accent-tint);
+}
+.filters__toggle.is-set .filters__summary {
+  color: var(--accent);
+  font-weight: 700;
+}
+.filters__label {
+  flex: none;
+  font-family: var(--f-serif);
+  font-weight: 700;
+  letter-spacing: 0.16em;
+}
+.filters__summary {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--t-sm);
+  font-weight: 500;
+  color: var(--ink-2);
+}
+.filters__chev {
+  flex: none;
+}
+.filters__panel {
+  display: grid;
+  gap: 12px;
+}
+/* 紙卷最上面：籤筒裡還剩幾支（跟著條件即時變） */
+.filters__count {
+  font-family: var(--f-serif);
+  font-weight: 700;
+  font-size: 1.02rem;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  animation: rise-in 0.25s var(--ease-out) both;
+}
+.pricegrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.pricegrid .chip {
+  gap: 5px;
+  padding: 0 0.4em;
+  letter-spacing: 0.02em;
+}
+
+/* ---------- 電腦：左邊版畫海報、右邊操作 ---------- */
+@media (min-width: 960px) {
+  .home {
+    grid-template-rows: none;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+    gap: clamp(32px, 5vw, 80px);
+    align-items: center;
+    min-height: calc(100dvh - var(--bar-h));
+    padding: 28px var(--gutter) 36px;
+    max-width: 1320px;
+    margin: 0 auto;
+  }
+  .stage {
+    height: min(calc(100dvh - var(--bar-h) - 64px), 780px);
+    min-height: 520px;
+    border: 1.5px solid var(--ink);
+    box-shadow: 10px 10px 0 var(--accent);
+    max-width: 640px;
+    width: 100%;
+    justify-self: end;
+  }
+  .dock {
+    gap: 16px;
+    padding: 0;
+    max-width: 520px;
+    background: none;
+  }
+  .dock__intro {
+    display: grid;
+    gap: 12px;
+    margin-bottom: 6px;
+  }
+  .dock__title {
+    font-size: clamp(2.3rem, 3.5vw, 3.4rem);
+    line-height: 1.15;
+    letter-spacing: 0.02em;
+  }
+  .dock__accent {
+    color: var(--accent);
+  }
+  .dock__lede {
+    font-family: var(--f-serif);
+    font-weight: 500;
+    font-size: 1.04rem;
+    line-height: 1.8;
+    letter-spacing: 0.02em;
+    color: var(--ink-2);
+    max-width: 30em;
+  }
+  /* 電腦也收成一行摘要（點開才展開），右邊一整欄不用捲動就看得完 */
+  .pricegrid {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  .pricegrid .chip {
+    padding: 0 0.85em;
+  }
+  .dock__cta {
+    min-height: 68px;
+    font-size: 1.5rem;
+    margin-top: 8px;
+  }
+  .dock__hint {
+    justify-content: flex-start;
+    text-align: left;
+  }
+}
+
+/* ---------- 進場與施法時的氣氛 ---------- */
+.stage--enter .stage__top {
+  animation: hall-drop 0.9s var(--ease-spring) both;
+}
+.stage--enter .stage__floor {
+  animation: floor-rise 0.8s 0.1s var(--ease-out) both;
+}
+@keyframes hall-drop {
+  from {
+    transform: translateY(-40px);
+    opacity: 0;
+  }
+}
+@keyframes floor-rise {
+  from {
+    transform: translateY(28px);
+    opacity: 0;
+  }
+}
+.stage::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  background: var(--stage-dim);
+  opacity: 0;
+  transition: opacity 0.5s;
+}
+.stage--busy::before {
+  opacity: 1;
+}
+.stage--busy .lantern-sway {
+  animation-name: art-sway-hard;
+  animation-duration: 0.55s;
+}
+.stage--busy .sun__rays {
+  animation-duration: 6s;
+}
+@keyframes art-sway-hard {
+  from {
+    transform: rotate(-9deg);
+  }
+  to {
+    transform: rotate(9deg);
+  }
+}

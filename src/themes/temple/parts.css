@@ -1,0 +1,123 @@
+/* 廟宇零件會動的地方：香煙、燈籠字、閃光、廟貓、香火、大樑寶珠 */
+.smoke path {
+  stroke-dasharray: 26 14;
+  animation: art-smoke 3.2s linear infinite;
+}
+.smoke path:nth-child(2) {
+  animation-duration: 3.8s;
+}
+.smoke path:nth-child(3) {
+  animation-duration: 2.9s;
+}
+@keyframes art-smoke {
+  to {
+    stroke-dashoffset: 80;
+  }
+}
+.lantern__char {
+  font-family: var(--f-display);
+  font-weight: 900;
+  font-size: 24px;
+  fill: var(--paper-hi);
+}
+.sparks path {
+  animation: art-twinkle 2.8s ease-in-out infinite;
+}
+@keyframes art-twinkle {
+  0%,
+  100% {
+    transform: scale(0.2);
+    opacity: 0;
+  }
+  45%,
+  55% {
+    transform: scale(1) rotate(45deg);
+    opacity: 1;
+  }
+}
+.cat {
+  cursor: pointer;
+}
+/* 趴著的時候腳收起來；跑起來才伸出來、前後交替擺動 */
+.cat__legs {
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+.cat-run.is-running .cat__legs {
+  opacity: 1;
+}
+.cat__leg {
+  transform-box: fill-box;
+  transform-origin: 50% 0%;
+}
+.cat-run.is-running .cat__leg--a {
+  animation: cat-leg 0.18s ease-in-out infinite alternate;
+}
+.cat-run.is-running .cat__leg--b {
+  animation: cat-leg 0.18s ease-in-out infinite alternate-reverse;
+}
+@keyframes cat-leg {
+  from {
+    transform: rotate(-38deg);
+  }
+  to {
+    transform: rotate(38deg);
+  }
+}
+.cat-run.is-running .cat__tail {
+  animation-duration: 0.3s;
+}
+.cat__tail {
+  animation: art-tail 1.6s ease-in-out infinite alternate;
+}
+@keyframes art-tail {
+  from {
+    transform: rotate(-14deg);
+  }
+  to {
+    transform: rotate(18deg);
+  }
+}
+.cat__eyes {
+  animation: art-blink 4.6s infinite;
+}
+@keyframes art-blink {
+  0%,
+  92%,
+  100% {
+    transform: scaleY(1);
+  }
+  95% {
+    transform: scaleY(0.1);
+  }
+}
+.embers circle {
+  animation: art-ember 1.1s ease-in-out infinite alternate;
+}
+@keyframes art-ember {
+  to {
+    fill: var(--marigold);
+  }
+}
+.beam__pearl {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: art-pearl 2.4s ease-in-out infinite;
+}
+@keyframes art-pearl {
+  50% {
+    transform: scale(1.25);
+    fill: var(--marigold);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .smoke path,
+  .sparks path,
+  .cat__tail,
+  .cat__eyes,
+  .embers circle,
+  .beam__pearl {
+    animation: none !important;
+  }
+}

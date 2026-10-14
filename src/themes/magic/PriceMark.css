@@ -1,0 +1,53 @@
+/* 魔力球：金色軌跡繞著轉、光暈呼吸、星光一閃一閃 */
+/* 幾顆魔力球的光暈疊在一起，像一小團魔力，也比較省寬度 */
+.price-mark--mana {
+  gap: 0;
+  margin: -0.25em 0;
+}
+.price-mark--mana svg + svg {
+  margin-left: -0.42em;
+}
+.mana__swirl {
+  transform-box: view-box;
+  transform-origin: 10px 10px;
+  animation: mana-swirl 3.2s linear infinite;
+}
+@keyframes mana-swirl {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.mana__aura {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: mana-aura 2.4s ease-in-out infinite;
+}
+@keyframes mana-aura {
+  50% {
+    transform: scale(1.12);
+    opacity: 0.7;
+  }
+}
+.mana__spark {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: mana-spark 1.8s ease-in-out infinite;
+}
+@keyframes mana-spark {
+  0%,
+  100% {
+    transform: scale(0.6);
+    opacity: 0.4;
+  }
+  50% {
+    transform: scale(1.15) rotate(30deg);
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mana__swirl,
+  .mana__aura,
+  .mana__spark {
+    animation: none;
+  }
+}

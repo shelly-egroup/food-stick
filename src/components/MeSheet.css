@@ -1,0 +1,142 @@
+.me {
+  display: grid;
+  gap: 22px;
+}
+.me__card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.me__who {
+  display: grid;
+  gap: 2px;
+}
+.me__who b {
+  font-family: var(--f-display);
+  font-weight: 900;
+  font-size: var(--t-xl);
+  letter-spacing: 0.06em;
+}
+.me__who span {
+  font-family: var(--f-classic);
+  color: var(--ink-2);
+  letter-spacing: 0.06em;
+}
+.me__who em {
+  font-style: normal;
+  font-family: var(--f-display);
+  font-weight: 900;
+  color: var(--accent);
+}
+.me__toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--f-display);
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+.me__toggle > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.me__tip {
+  padding: 12px 14px;
+  border: 1.5px dashed var(--ink);
+  font-size: var(--t-sm);
+  color: var(--ink-2);
+  line-height: 1.7;
+}
+.me__toggle-wrap {
+  display: grid;
+  gap: 4px;
+}
+.me__toggle .glyph {
+  flex: none;
+}
+.me__toggle-hint {
+  font-size: var(--t-sm);
+  color: var(--ink-3);
+  line-height: 1.6;
+}
+/* 登出：一扇半開的廟門（一顆睡著的水晶球），滑過去門再打開一點（月亮旁的 z 飄起來） */
+.me__out {
+  justify-self: start;
+  gap: 10px;
+  padding: 0 1.2em 0 0.8em;
+}
+.me__out .glyph {
+  flex: none;
+}
+.me__out .glyph__leaf {
+  transform-box: fill-box;
+  transform-origin: 0 50%;
+  transition: transform 0.35s var(--ease-spring);
+}
+.me__out .glyph__z {
+  transition:
+    translate 0.4s var(--ease-out),
+    opacity 0.4s;
+}
+@media (hover: hover) {
+  .me__out:hover .glyph__leaf {
+    transform: scaleX(0.45);
+  }
+  .me__out:hover .glyph__z {
+    translate: 1.5px -2px;
+    opacity: 0.6;
+  }
+}
+.me__out:active .glyph__leaf {
+  transform: scaleX(0.3);
+}
+
+/* 名字：改了之後旁邊冒出一顆「蓋章／署名」，按了才生效 */
+.me__name {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+}
+.me__name .input {
+  flex: 1;
+  min-width: 0;
+}
+.me__rename {
+  flex: none;
+  gap: 6px;
+  padding: 0 14px 0 10px;
+  animation: me-rename-in 0.4s var(--ease-spring) both;
+}
+@keyframes me-rename-in {
+  from {
+    opacity: 0;
+    transform: scale(0.6) rotate(-8deg);
+  }
+}
+/* 一直輕輕提醒：印章往下壓、羽毛筆寫一下 */
+.me__rename .glyph__stamp,
+.me__rename .glyph__quill {
+  transform-box: view-box;
+  animation: me-rename-nudge 1.8s ease-in-out 0.4s infinite;
+}
+@keyframes me-rename-nudge {
+  0%,
+  60%,
+  100% {
+    translate: 0 0;
+  }
+  70% {
+    translate: 0 2px;
+  }
+  80% {
+    translate: 0 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .me__rename,
+  .me__rename .glyph__stamp,
+  .me__rename .glyph__quill {
+    animation: none;
+  }
+}

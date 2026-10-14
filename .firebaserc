@@ -1,0 +1,7 @@
+{
+  "projects": {
+    "default": "lunch-stick",
+    "live": "lunch-stick",
+    "demo": "demo-lunchstick"
+  }
+}

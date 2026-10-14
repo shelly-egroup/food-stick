@@ -1,0 +1,131 @@
+/* 魔法的愛心咒法陣（.slot 的外框在 components/LoveButton.css）。按下去的動畫交給 GSAP，這裡只放常駐的動作 */
+.slot__layer {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+.slot__layer > svg,
+svg.slot__layer {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.slot__spin {
+  animation: sigil-spin 26s linear infinite;
+}
+@media (hover: hover) {
+  .love-btn:hover .slot--magic .slot__spin {
+    animation-duration: 7s;
+  }
+}
+@keyframes sigil-spin {
+  to {
+    rotate: 360deg;
+  }
+}
+
+.slot--magic .slot__heart {
+  opacity: 0;
+  visibility: hidden;
+  transform-origin: 50% 54%;
+}
+.slot--magic.is-on .slot__heart {
+  opacity: 1;
+  visibility: visible;
+}
+.slot__beat {
+  transform-origin: 50% 58%;
+}
+.slot--magic.is-on .slot__beat {
+  animation: heart-beat 2.6s ease-in-out infinite;
+}
+@keyframes heart-beat {
+  0%,
+  40%,
+  100% {
+    transform: none;
+  }
+  12% {
+    transform: scale(1.1);
+  }
+  24% {
+    transform: scale(0.98);
+  }
+}
+.slot__heart-line {
+  transition: opacity 0.3s;
+}
+.slot--magic.is-on .slot__heart-line {
+  opacity: 0;
+}
+
+/* 亮起來之後的光暈：用 scale 屬性呼吸，不會跟 GSAP 的 transform 打架 */
+.slot__halo {
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(236, 111, 134, 0.36) 0%,
+    rgba(155, 123, 255, 0.26) 46%,
+    rgba(155, 123, 255, 0) 70%
+  );
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.slot--magic.is-on .slot__halo {
+  opacity: 1;
+  visibility: visible;
+  animation: halo-breathe 2.6s ease-in-out infinite;
+}
+@keyframes halo-breathe {
+  50% {
+    scale: 1.14;
+  }
+}
+.slot__shock {
+  position: absolute;
+  inset: 2px;
+  border-radius: 50%;
+  border: 2px solid #9b7bff;
+  box-shadow: 0 0 12px rgba(155, 123, 255, 0.6);
+  opacity: 0;
+  pointer-events: none;
+}
+/* 星芒：四角星，金、粉、紫輪流 */
+.slot__sparks i {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  margin: -6px 0 0 -6px;
+  background: var(--marigold);
+  clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
+  opacity: 0;
+  pointer-events: none;
+}
+.slot__sparks i:nth-child(3n + 2) {
+  background: #ec6f86;
+}
+.slot__sparks i:nth-child(3n) {
+  background: #9b7bff;
+}
+
+/* 魔法版的愛店按鈕：圓一點，亮起來時帶一點紫光 */
+[data-theme='magic'] .love-btn {
+  border-radius: 10px;
+}
+[data-theme='magic'] .love-btn.is-on {
+  background: linear-gradient(100deg, #f4efff 0%, var(--paper-hi) 62%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .slot__spin,
+  .slot--magic.is-on .slot__beat,
+  .slot--magic.is-on .slot__halo {
+    animation: none;
+  }
+}

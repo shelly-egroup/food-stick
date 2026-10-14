@@ -1,0 +1,49 @@
+/* 對話框：彈出來、停一下、往上淡掉 */
+.say {
+  pointer-events: none;
+}
+.say__pop {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: say-pop 1.7s var(--ease-out) both;
+}
+@keyframes say-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  12% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+  22% {
+    transform: scale(1);
+  }
+  78% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+.say__text {
+  font-family: var(--f-display);
+  font-weight: 900;
+  font-size: 14px;
+  fill: var(--ink);
+}
+.say--angry .say__text {
+  fill: var(--vermilion);
+}
+.say--angry .say__pop {
+  animation-name: say-pop, say-shake;
+  animation-duration: 1.7s, 0.08s;
+  animation-iteration-count: 1, 6;
+}
+@keyframes say-shake {
+  50% {
+    translate: 1.5px 0;
+  }
+}

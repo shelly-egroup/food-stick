@@ -1,0 +1,25 @@
+.share {
+  display: grid;
+  justify-items: center;
+  gap: 18px;
+}
+.share__img {
+  display: block;
+  width: min(100%, 340px);
+  height: auto;
+  border: 1.5px solid var(--ink);
+  box-shadow: var(--offset) var(--offset) 0 var(--accent);
+  animation: rise-in 0.45s var(--ease-out) both;
+}
+.share__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px 14px;
+}
+.share__hint {
+  font-size: var(--t-sm);
+  font-weight: 500;
+  color: var(--ink-2);
+  text-align: center;
+}

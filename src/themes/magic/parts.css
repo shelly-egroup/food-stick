@@ -1,0 +1,167 @@
+/* 魔法零件會動的地方：星星閃爍、燭火、星座、白色貓頭鷹 */
+.tw {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: art-tw 2.4s ease-in-out infinite;
+}
+@keyframes art-tw {
+  0%,
+  100% {
+    transform: scale(0.7);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.15) rotate(20deg);
+    opacity: 1;
+  }
+}
+.flame {
+  animation: art-flame 0.9s ease-in-out infinite alternate;
+}
+@keyframes art-flame {
+  from {
+    transform: scale(0.92, 1.06) rotate(-3deg);
+  }
+  to {
+    transform: scale(1.06, 0.94) rotate(3deg);
+  }
+}
+.constellation {
+  animation: const-glow 4s ease-in-out infinite;
+}
+@keyframes const-glow {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+/* ---------- 白色貓頭鷹 ---------- */
+.owl {
+  cursor: pointer;
+}
+.owl__face {
+  transform-box: fill-box;
+  transform-origin: 50% 90%;
+  animation: owl-tilt 6s ease-in-out infinite;
+}
+@keyframes owl-tilt {
+  0%,
+  60%,
+  100% {
+    transform: none;
+  }
+  68% {
+    transform: rotate(-12deg);
+  }
+  78% {
+    transform: rotate(8deg);
+  }
+  86% {
+    transform: none;
+  }
+}
+.owl__eyes {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: owl-blink 3.8s infinite;
+}
+@keyframes owl-blink {
+  0%,
+  90%,
+  100% {
+    transform: scaleY(1);
+  }
+  94% {
+    transform: scaleY(0.1);
+  }
+}
+.owl__body {
+  animation: owl-bob 3s ease-in-out infinite;
+}
+@keyframes owl-bob {
+  50% {
+    transform: translateY(-1.5px);
+  }
+}
+
+/* 翅膀：飛的時候以肩膀為軸拍動 */
+.owl__wing {
+  transform-box: fill-box;
+}
+.owl__wing--l {
+  transform-origin: 90% 0%;
+}
+.owl__wing--r {
+  transform-origin: 10% 0%;
+}
+@keyframes owl-flap-l {
+  to {
+    transform: rotate(-40deg);
+  }
+}
+@keyframes owl-flap-r {
+  to {
+    transform: rotate(40deg);
+  }
+}
+
+/* 飛行中：翅膀一直拍、斗篷往後飄 */
+.owl-run.is-flying .owl__wing--l {
+  animation: owl-flap-l 0.12s ease-in-out infinite alternate;
+}
+.owl-run.is-flying .owl__wing--r {
+  animation: owl-flap-r 0.12s ease-in-out infinite alternate;
+}
+.owl__cape {
+  transform-box: fill-box;
+  transform-origin: 50% 0%;
+}
+.owl-run.is-flying .owl__cape {
+  animation: owl-cape 0.24s ease-in-out infinite alternate;
+}
+@keyframes owl-cape {
+  from {
+    transform: skewX(-8deg) scaleY(1.04);
+  }
+  to {
+    transform: skewX(8deg) scaleY(0.96);
+  }
+}
+/* 歪頭想事情：左歪、右歪、回正 */
+.owl-run.is-puzzled .owl__face {
+  animation: owl-puzzle 1.3s ease-in-out;
+}
+@keyframes owl-puzzle {
+  20%,
+  35% {
+    transform: rotate(-34deg);
+  }
+  60%,
+  75% {
+    transform: rotate(30deg);
+  }
+  100% {
+    transform: none;
+  }
+}
+/* 帽子跟著頭一起歪 */
+.owl__hat {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+.owl-run.is-puzzled .owl__hat {
+  animation: owl-puzzle 1.3s ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tw,
+  .flame,
+  .constellation,
+  .owl__face,
+  .owl__eyes,
+  .owl__body,
+  .owl__cape,
+  .owl__hat {
+    animation: none !important;
+  }
+}

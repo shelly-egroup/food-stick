@@ -1,0 +1,113 @@
+/* 金榜：前三名站在放射光的榜單上 */
+.podium {
+  display: grid;
+  grid-template-columns: 1fr 1.15fr 1fr;
+  align-items: end;
+  gap: clamp(10px, 2.4vw, 26px);
+  padding: 30px clamp(10px, 3vw, 40px) 0;
+  background: repeating-conic-gradient(from 0deg at 50% 100%, var(--marigold-tint) 0deg 6deg, transparent 6deg 12deg);
+  border: 1.5px solid var(--ink);
+  border-bottom-width: 6px;
+}
+.podium__slot {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 14px;
+  padding: 26px 8px 18px;
+  border: 1.5px solid var(--ink);
+  border-bottom: 0;
+  background: var(--paper-hi);
+  min-height: 260px;
+}
+.podium__slot--1 {
+  min-height: 330px;
+  background: var(--marigold);
+}
+.podium__slot--2 {
+  min-height: 280px;
+  background: var(--celadon);
+}
+.podium__slot--3 {
+  min-height: 250px;
+  background: var(--vermilion-tint);
+}
+.podium__title {
+  position: absolute !important;
+  top: -26px;
+}
+.podium__name {
+  margin-top: 26px;
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  white-space: nowrap;
+  letter-spacing: 0.08em;
+  line-height: 1;
+}
+/* 本月霸主：不旋轉、字放大，兩端剪成布條的燕尾 */
+.podium__crown {
+  padding: 4px 18px;
+  background: var(--ink);
+  color: var(--marigold);
+  font-family: var(--f-serif);
+  font-weight: 700;
+  font-size: 0.92rem;
+  line-height: 1.4;
+  letter-spacing: 0.24em;
+  text-indent: 0.24em;
+  white-space: nowrap;
+  clip-path: polygon(0 0, 100% 0, calc(100% - 9px) 50%, 100% 100%, 0 100%, 9px 50%);
+}
+.podium__stat {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  font-family: var(--f-serif);
+  font-weight: 700;
+  font-size: 0.92rem;
+  letter-spacing: 0.1em;
+}
+.podium__stat b {
+  font-family: var(--f-display);
+  font-weight: 900;
+  font-size: var(--t-xl);
+  letter-spacing: 0;
+}
+/* 空位：虛線框，直書「虛位以待」 */
+.podium__slot--vacant {
+  background: transparent;
+  border-style: dashed;
+  border-color: var(--rule-strong);
+}
+.podium__vacant {
+  margin-top: 30px;
+  writing-mode: vertical-rl;
+  font-family: var(--f-serif);
+  font-weight: 700;
+  font-size: 1.15rem;
+  letter-spacing: 0.4em;
+  color: var(--ink-3);
+}
+
+@media (max-width: 520px) {
+  .podium {
+    padding-top: 34px;
+  }
+  .podium__slot {
+    min-height: 220px;
+    padding-top: 22px;
+  }
+  .podium__slot--1 {
+    min-height: 280px;
+  }
+  .podium__slot--2 {
+    min-height: 240px;
+  }
+  .podium__crown {
+    padding: 3px 14px;
+    font-size: 0.84rem;
+    letter-spacing: 0.16em;
+    text-indent: 0.16em;
+  }
+}

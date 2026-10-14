@@ -1,0 +1,232 @@
+/* 魔法小插畫會動的地方：羽毛筆輕晃、星光閃、霧氣在球裡轉、外面的霧飄 */
+.vignette--magic .vg-quill {
+  transform-box: fill-box;
+  transform-origin: 0% 100%;
+  animation: vg-quill 3.4s ease-in-out infinite alternate;
+}
+@keyframes vg-quill {
+  from {
+    transform: rotate(-3deg);
+  }
+  to {
+    transform: rotate(4deg);
+  }
+}
+.vignette--magic .vg-twinkle path {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: vg-twinkle 2.4s ease-in-out infinite;
+}
+@keyframes vg-twinkle {
+  0%,
+  100% {
+    transform: scale(0.6);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.15) rotate(20deg);
+    opacity: 1;
+  }
+}
+.vignette--magic .vg-mist {
+  transform-box: view-box;
+  transform-origin: 100px 56px;
+  animation: vg-mist 9s linear infinite;
+}
+.vignette--magic .vg-mist--2 {
+  animation-duration: 13s;
+  animation-direction: reverse;
+}
+@keyframes vg-mist {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.vignette--magic .vg-puff {
+  animation: vg-puff 4s ease-in-out infinite alternate;
+}
+.vignette--magic .vg-puff--2 {
+  animation-duration: 5s;
+  animation-delay: -2s;
+}
+@keyframes vg-puff {
+  to {
+    transform: translateX(8px);
+    opacity: 0.6;
+  }
+}
+.vignette--magic .vg-dim {
+  animation: vg-dim 2.6s ease-in-out infinite;
+}
+@keyframes vg-dim {
+  50% {
+    opacity: 0.25;
+  }
+}
+/* 圓桌：空椅子頭上的問號浮上浮下、燭火搖 */
+.vignette--magic .vg-ask {
+  font-family: var(--f-display);
+  font-weight: 900;
+  font-size: 14px;
+  fill: #9b7bff;
+  animation: vg-ask 2.2s ease-in-out infinite;
+}
+@keyframes vg-ask {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.55;
+  }
+  50% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+}
+.vignette--magic .vg-flame {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: vg-flame 0.8s ease-in-out infinite alternate;
+}
+@keyframes vg-flame {
+  from {
+    transform: scale(0.92, 1.06) rotate(-4deg);
+  }
+  to {
+    transform: scale(1.06, 0.94) rotate(4deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .vignette--magic .vg-ask,
+  .vignette--magic .vg-flame,
+  .vignette--magic .vg-quill,
+  .vignette--magic .vg-twinkle path,
+  .vignette--magic .vg-mist,
+  .vignette--magic .vg-puff,
+  .vignette--magic .vg-dim {
+    animation: none;
+  }
+}
+
+/* 書櫃裡的灰塵慢慢飄、虛線書一明一暗、羽毛筆浮著、問號泡泡上下浮、貓頭鷹歪頭、星盤慢慢轉、空心的星偶爾閃一下 */
+.vignette--magic .vg-dust circle {
+  animation: vg-dust 4.2s ease-in-out infinite alternate;
+}
+.vignette--magic .vg-dust circle:nth-child(2n) {
+  animation-duration: 5.4s;
+  animation-delay: -2s;
+}
+.vignette--magic .vg-dust circle:nth-child(3n) {
+  animation-duration: 3.6s;
+  animation-delay: -1s;
+}
+@keyframes vg-dust {
+  from {
+    transform: translate(0, 0);
+    opacity: 0.35;
+  }
+  to {
+    transform: translate(5px, -7px);
+    opacity: 1;
+  }
+}
+.vignette--magic .vg-ghost {
+  animation: vg-ghost 2.2s ease-in-out infinite;
+}
+@keyframes vg-ghost {
+  50% {
+    opacity: 0.45;
+  }
+}
+.vignette--magic .vg-float {
+  animation: vg-float 3.2s ease-in-out infinite;
+}
+@keyframes vg-float {
+  50% {
+    transform: translate(-2px, -5px) rotate(-3deg);
+  }
+}
+.vignette--magic .vg-bob {
+  animation: vg-bob 2.4s ease-in-out infinite;
+}
+@keyframes vg-bob {
+  50% {
+    transform: translateY(-3px);
+  }
+}
+.vignette--magic .vg-owl .owl__face {
+  animation: owl-puzzle 3.4s ease-in-out infinite;
+}
+.vignette--magic .vg-q {
+  font-family: var(--f-display);
+  font-weight: 900;
+  font-size: 17px;
+  fill: var(--accent);
+}
+.vignette--magic .vg-turn {
+  transform-box: view-box;
+  transform-origin: 92px 58px;
+  animation: vg-turn 60s linear infinite;
+}
+@keyframes vg-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.vignette--magic .vg-unlit {
+  animation: vg-unlit 3.2s ease-in-out infinite;
+}
+@keyframes vg-unlit {
+  0%,
+  80%,
+  100% {
+    fill: #2b3b78;
+  }
+  88% {
+    fill: #8f7fd6;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .vignette--magic .vg-dust circle,
+  .vignette--magic .vg-ghost,
+  .vignette--magic .vg-float,
+  .vignette--magic .vg-bob,
+  .vignette--magic .vg-owl .owl__face,
+  .vignette--magic .vg-turn,
+  .vignette--magic .vg-unlit {
+    animation: none;
+  }
+}
+/* 打瞌睡的貓頭鷹：身體一起一伏，z 一個一個飄上去 */
+.vignette--magic .vg-doze {
+  animation: vg-doze 3.2s ease-in-out infinite;
+}
+@keyframes vg-doze {
+  50% {
+    transform: translateY(1.5px);
+  }
+}
+.vignette--magic .vg-zz path {
+  animation: vg-zz 2.4s ease-in-out infinite;
+}
+.vignette--magic .vg-zz path:nth-child(2) {
+  animation-delay: 0.8s;
+}
+@keyframes vg-zz {
+  0% {
+    opacity: 0;
+    transform: translate(0, 4px);
+  }
+  40% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(4px, -8px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .vignette--magic .vg-doze,
+  .vignette--magic .vg-zz path {
+    animation: none;
+  }
+}

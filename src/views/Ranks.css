@@ -1,0 +1,720 @@
+.ranks {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 26px var(--gutter) 56px;
+  display: grid;
+  gap: 28px;
+}
+.ranks__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+.ranks__title {
+  font-size: clamp(2.4rem, 7vw, 4rem);
+  letter-spacing: 0.08em;
+  line-height: 1;
+  margin: 4px 0 10px;
+}
+/* 「十月放榜・依大家的愛店數排名」：清楚的明體，月份用主色 */
+.ranks__sub {
+  font-family: var(--f-serif);
+  font-weight: 500;
+  font-size: 1.02rem;
+  line-height: 1.5;
+  letter-spacing: 0.08em;
+  color: var(--ink-2);
+}
+.ranks__sub b {
+  font-weight: 700;
+  color: var(--accent);
+}
+.ranks__sub span {
+  margin: 0 0.2em;
+  color: var(--ink-3);
+}
+.ranks__empty {
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  padding: 36px 0 56px;
+}
+.ranks__empty .vignette svg {
+  width: min(320px, 84%);
+}
+.ranks__empty .vignette b {
+  font-family: var(--f-display);
+  font-weight: 900;
+  font-size: var(--t-xl);
+  letter-spacing: 0.08em;
+}
+.ranks__empty .vignette span {
+  font-family: var(--f-serif);
+  font-size: 0.95rem;
+}
+.ranks__loading {
+  min-height: 320px;
+}
+
+/* ---------- 第四名以後 ---------- */
+.ranklist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+}
+.ranklist li {
+  display: grid;
+  grid-template-columns: 4.5em minmax(0, 1fr) auto minmax(60px, 120px) 2em;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 4px;
+  border-bottom: 1px solid var(--rule-2);
+}
+.ranklist__no {
+  font-family: var(--f-serif);
+  font-weight: 700;
+  font-size: var(--t-sm);
+  letter-spacing: 0.06em;
+  color: var(--ink-2);
+}
+.ranklist__name {
+  font-family: var(--f-display);
+  font-weight: 900;
+  font-size: var(--t-lg);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ranklist__cat {
+  font-size: var(--t-xs);
+  font-weight: 500;
+  padding: 1px 8px;
+  border: 1px solid var(--rule-strong);
+  color: var(--ink-2);
+}
+.ranklist__bar {
+  height: 10px;
+  border: 1.5px solid var(--ink);
+  background: var(--paper-hi);
+}
+.ranklist__bar i {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}
+.ranklist__val {
+  font-family: var(--f-display);
+  font-weight: 900;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 稱號、冷宮、紙條 ---------- */
+.ranks__more {
+  display: grid;
+  gap: 28px;
+}
+.ranks__more h2 {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: var(--t-lg);
+  letter-spacing: 0.24em;
+  margin-bottom: 14px;
+}
+.ranks__more h2::after {
+  content: '';
+  flex: 1;
+  height: 1.5px;
+  background: var(--ink);
+}
+.rack ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 16px;
+}
+
+/* ---------- 本月稱號：廟宇是掛在木桿上的錦旗，魔法是塔羅牌；每張都寫明怎麼選出來 ---------- */
+.honors {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.honor {
+  position: relative;
+  display: grid;
+  align-content: start;
+  min-width: 0;
+}
+.honor__silk {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 8px;
+  min-height: 236px;
+  padding: 14px 6px;
+  text-align: center;
+}
+.honor__rule {
+  font-family: var(--f-serif);
+  font-weight: 700;
+  font-size: 0.74rem;
+  line-height: 1.35;
+  letter-spacing: 0.06em;
+  text-wrap: balance;
+}
+.honor__mark {
+  line-height: 0;
+}
+.honor__name {
+  font-family: var(--f-display);
+  font-weight: 900;
+}
+.honor__who {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  max-width: 100%;
+  font-family: var(--f-serif);
+  font-weight: 700;
+  font-size: 0.86rem;
+  letter-spacing: 0.06em;
+}
+.honor__who > span:not(.avatar) {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.honor__stat {
+  font-size: 0.76rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+
+/* 廟宇：朱紅綢緞的錦旗，金邊、金字直書，底下垂著金流蘇；一面一面從木桿上展開 */
+[data-theme='temple'] .honors {
+  position: relative;
+  gap: 14px;
+  padding-top: 11px;
+}
+[data-theme='temple'] .honors::before {
+  content: '';
+  position: absolute;
+  left: -4px;
+  right: -4px;
+  top: 0;
+  z-index: 1;
+  height: 10px;
+  border: 1.5px solid var(--ink);
+  border-radius: 5px;
+  background: linear-gradient(var(--wood), var(--wood-lo));
+}
+/* 木桿兩端的金色桿頭 */
+[data-theme='temple'] .honors::after {
+  content: '';
+  position: absolute;
+  left: -13px;
+  right: -13px;
+  top: -3px;
+  z-index: 2;
+  height: 16px;
+  background:
+    radial-gradient(circle at 8px 50%, var(--marigold) 0 5.4px, var(--ink) 5.6px 7px, transparent 7.3px) left / 16px
+      16px no-repeat,
+    radial-gradient(circle at 8px 50%, var(--marigold) 0 5.4px, var(--ink) 5.6px 7px, transparent 7.3px) right / 16px
+      16px no-repeat;
+}
+[data-theme='temple'] .honor {
+  filter: drop-shadow(3px 4px 0 rgba(38, 33, 29, 0.16));
+}
+[data-theme='temple'] .honor__silk {
+  min-height: 248px;
+  padding: 14px 6px 16px;
+  border: 1.5px solid var(--ink);
+  border-top: 0;
+  color: #fff3d0;
+  background:
+    linear-gradient(118deg, transparent 30%, rgba(255, 255, 255, 0.16) 44%, transparent 58%),
+    repeating-linear-gradient(90deg, rgba(38, 33, 29, 0.04) 0 2px, transparent 2px 5px), var(--vermilion);
+  box-shadow:
+    inset 0 0 0 4px var(--vermilion),
+    inset 0 0 0 5.5px var(--marigold);
+  animation: honor-unroll 0.8s var(--ease-out) calc(0.25s + var(--i) * 0.16s) backwards;
+}
+@keyframes honor-unroll {
+  from {
+    clip-path: inset(0 0 100% 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+[data-theme='temple'] .honor__rule {
+  margin-top: 4px;
+  color: #ffe6a8;
+}
+/* 錦旗上不蓋章：稱號直接用金字直書 */
+[data-theme='temple'] .honor__mark {
+  display: none;
+}
+[data-theme='temple'] .honor__name {
+  writing-mode: vertical-rl;
+  margin: 2px 0 4px;
+  font-size: 1.55rem;
+  line-height: 1;
+  letter-spacing: 0.2em;
+  color: #ffd977;
+  text-shadow: 0 1.5px 0 var(--vermilion-lo);
+}
+[data-theme='temple'] .honor__who .avatar {
+  box-shadow:
+    0 0 0 2px var(--vermilion),
+    0 0 0 3.5px #ffd977;
+}
+[data-theme='temple'] .honor__stat {
+  color: #ffe6a8;
+}
+/* 金流蘇：一條金色的邊、底下一排細細的金線，風一吹輕輕擺 */
+[data-theme='temple'] .honor__fringe {
+  height: 17px;
+  margin: -1px 4px 0;
+  background:
+    linear-gradient(var(--marigold), var(--marigold)) top / 100% 3px no-repeat,
+    repeating-linear-gradient(90deg, var(--marigold) 0 1.6px, transparent 1.6px 4px) bottom / 100% 14px no-repeat;
+  transform-origin: 50% 0;
+  animation:
+    honor-fringe-in 0.35s ease-out calc(1s + var(--i) * 0.16s) backwards,
+    honor-fringe 2.6s ease-in-out calc(var(--i) * -0.7s) infinite alternate;
+}
+@keyframes honor-fringe-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes honor-fringe {
+  from {
+    transform: skewX(-7deg);
+  }
+  to {
+    transform: skewX(7deg);
+  }
+}
+
+/* 魔法：三張塔羅牌，夜空牌面、金框，牌頂羅馬數字、中間一枚徽章，最下面寫怎麼選出來；一張一張翻開 */
+[data-theme='magic'] .honors {
+  gap: 10px;
+  perspective: 900px;
+  counter-reset: honor;
+}
+[data-theme='magic'] .honor {
+  counter-increment: honor;
+  animation: honor-flip 0.7s var(--ease-out) calc(0.25s + var(--i) * 0.15s) backwards;
+}
+@keyframes honor-flip {
+  from {
+    opacity: 0;
+    transform: rotateY(-100deg) translateY(10px);
+  }
+}
+[data-theme='magic'] .honor__silk {
+  min-height: 252px;
+  padding: 30px 10px 14px;
+  border: 1.5px solid var(--ink);
+  border-radius: 12px;
+  overflow: hidden;
+  color: #fff3d0;
+  background:
+    radial-gradient(circle at 16% 24%, rgba(255, 255, 255, 0.85) 0 1px, transparent 1.6px),
+    radial-gradient(circle at 84% 18%, rgba(242, 185, 64, 0.9) 0 1.2px, transparent 1.8px),
+    radial-gradient(circle at 76% 62%, rgba(255, 255, 255, 0.7) 0 1px, transparent 1.6px),
+    radial-gradient(circle at 22% 80%, rgba(201, 184, 255, 0.9) 0 1.1px, transparent 1.7px),
+    radial-gradient(ellipse 90% 55% at 50% 30%, rgba(155, 123, 255, 0.45), transparent 70%),
+    linear-gradient(170deg, #2c3e7a, #3f3590 55%, #241f5c);
+  outline: 1.5px solid var(--marigold);
+  outline-offset: -7px;
+  box-shadow: 4px 5px 0 var(--accent-tint);
+}
+/* 牌頂的羅馬數字 */
+[data-theme='magic'] .honor__silk::before {
+  content: counter(honor, upper-roman);
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 11px;
+  font-family: var(--f-latin);
+  font-style: italic;
+  font-weight: 600;
+  font-size: 0.95rem;
+  line-height: 1;
+  color: var(--marigold);
+}
+/* 牌面偶爾掃過一道光 */
+[data-theme='magic'] .honor__silk::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 42%, rgba(255, 255, 255, 0.2) 50%, transparent 58%) 0 0 / 300% 100%
+    no-repeat;
+  background-position: 120% 0;
+  pointer-events: none;
+  animation: honor-shine 6s ease-in-out calc(1.4s + var(--i) * 1.3s) infinite;
+}
+@keyframes honor-shine {
+  0% {
+    background-position: 120% 0;
+  }
+  22%,
+  100% {
+    background-position: -20% 0;
+  }
+}
+[data-theme='magic'] .honor__rule {
+  order: 5;
+  margin-top: 2px;
+  padding-top: 7px;
+  border-top: 1px solid rgba(242, 185, 64, 0.45);
+  font-family: var(--f-serif);
+  font-size: 0.72rem;
+  color: #d9ccff;
+}
+[data-theme='magic'] .honor__mark {
+  margin: 2px 0;
+  filter: drop-shadow(0 0 8px rgba(242, 185, 64, 0.55));
+}
+[data-theme='magic'] .honor__name {
+  font-size: 1rem;
+  line-height: 1.3;
+  letter-spacing: 0.1em;
+  color: var(--marigold);
+  text-wrap: balance;
+}
+[data-theme='magic'] .honor__who .avatar {
+  box-shadow:
+    0 0 0 2px #2f3b80,
+    0 0 0 3.5px var(--marigold),
+    0 0 10px rgba(155, 123, 255, 0.7);
+}
+[data-theme='magic'] .honor__stat {
+  color: #e9e0ff;
+}
+[data-theme='magic'] .honor__fringe {
+  display: none;
+}
+
+.cold {
+  padding: 18px;
+  border: 1.5px dashed var(--ink);
+}
+.cold p {
+  font-family: var(--f-serif);
+  font-weight: 500;
+  color: var(--ink-2);
+}
+.cold ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.cold li {
+  padding: 4px 12px;
+  background: var(--celadon);
+  border: 1.5px solid var(--ink);
+  font-family: var(--f-display);
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+.cold h2::before {
+  content: '❄';
+  font-size: 0.9em;
+  color: var(--cobalt);
+}
+/* 廟宇的冷宮：結了霜的冷色牆、細雪慢慢落，沒被抽中的菜牌也結了一層霜 */
+[data-theme='temple'] .cold {
+  position: relative;
+  overflow: hidden;
+  border: 1.5px solid var(--ink);
+  background: linear-gradient(180deg, #d9e4e6, #eef3f3);
+}
+[data-theme='temple'] .cold::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle, #fff 0 1.6px, transparent 2px),
+    radial-gradient(circle, rgba(255, 255, 255, 0.85) 0 1.1px, transparent 1.5px);
+  background-size:
+    46px 46px,
+    31px 31px;
+  background-position:
+    0 0,
+    15px 20px;
+  pointer-events: none;
+  animation: cold-snow 10s linear infinite;
+}
+@keyframes cold-snow {
+  to {
+    background-position:
+      14px 184px,
+      33px 144px;
+  }
+}
+[data-theme='temple'] .cold > * {
+  position: relative;
+}
+[data-theme='temple'] .cold li {
+  background: #c9d9d6;
+  color: var(--ink-2);
+  box-shadow:
+    inset 0 4px 0 rgba(255, 255, 255, 0.9),
+    2px 2px 0 rgba(38, 33, 29, 0.15);
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-theme='temple'] .cold::before {
+    animation: none;
+  }
+}
+/* ---------- 最新紙條：廟宇是廟口的繪馬掛架，魔法是一面星空留言板（紙條本身的樣子在 components/NoteCard.css） ---------- */
+.rack {
+  position: relative;
+}
+.rack__top {
+  display: none;
+}
+
+/* 廟宇：上面一片琉璃瓦屋簷，兩根木柱，繪馬一排排掛在橫木上 */
+[data-theme='temple'] .rack__top {
+  position: relative;
+  display: block;
+  z-index: 1;
+  height: 24px;
+  margin: 0 -12px -2px;
+  filter: drop-shadow(1.5px 0 0 var(--ink)) drop-shadow(-1.5px 0 0 var(--ink)) drop-shadow(0 1.5px 0 var(--ink))
+    drop-shadow(0 -1.5px 0 var(--ink));
+}
+[data-theme='temple'] .rack__top::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(90deg, rgba(38, 33, 29, 0.28) 0 1.5px, transparent 1.5px 13px) 0 6px / 100% 18px no-repeat,
+    linear-gradient(var(--jade) 0 6px, #3fb197 6px);
+  clip-path: polygon(0 100%, 2% 46%, 7% 18%, 12% 0, 88% 0, 93% 18%, 98% 46%, 100% 100%);
+}
+[data-theme='temple'] .rack ul {
+  position: relative;
+  overflow: hidden;
+  margin: 0 2px;
+  padding: 30px 16px 18px;
+  border-inline: 10px solid var(--wood-lo);
+  box-shadow:
+    inset 1.5px 0 0 var(--ink),
+    inset -1.5px 0 0 var(--ink),
+    -1.5px 0 0 var(--ink),
+    1.5px 0 0 var(--ink);
+  background: linear-gradient(180deg, rgba(200, 143, 85, 0.14), transparent 50%), var(--paper);
+}
+/* 每塊繪馬的繩子繞在一根橫木上：同一排的橫木接成一整條，到柱子為止 */
+[data-theme='temple'] .rack .note__hang::before {
+  content: '';
+  position: absolute;
+  left: -100vw;
+  right: -100vw;
+  top: -7.5px;
+  z-index: -1;
+  height: 10px;
+  border-block: 1.5px solid var(--ink);
+  background: linear-gradient(var(--wood), var(--wood-lo));
+}
+
+/* 魔法：深藍星空的留言板，角落掛著一彎月亮，星星一閃一閃 */
+[data-theme='magic'] .rack {
+  padding: 22px 16px 18px;
+  border: 1.5px solid var(--ink);
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 8% 12%, rgba(255, 255, 255, 0.9) 0 1px, transparent 1.6px),
+    radial-gradient(circle at 46% 6%, rgba(242, 185, 64, 0.9) 0 1.3px, transparent 1.9px),
+    radial-gradient(circle at 70% 46%, rgba(255, 255, 255, 0.6) 0 0.9px, transparent 1.5px),
+    radial-gradient(circle at 16% 64%, rgba(201, 184, 255, 0.9) 0 1.1px, transparent 1.7px),
+    radial-gradient(circle at 56% 96%, rgba(255, 255, 255, 0.7) 0 1px, transparent 1.6px),
+    radial-gradient(circle at 94% 78%, rgba(242, 185, 64, 0.8) 0 1.1px, transparent 1.7px),
+    radial-gradient(ellipse 80% 45% at 85% 0%, rgba(155, 123, 255, 0.35), transparent 70%),
+    linear-gradient(165deg, #1f2a5c, #2c3e7a 55%, #3a2f7a);
+  box-shadow: 4px 5px 0 var(--accent-tint);
+}
+[data-theme='magic'] .rack__top {
+  position: absolute;
+  display: block;
+  right: 20px;
+  top: -15px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  box-shadow: inset -9px 4px 0 0 var(--marigold);
+  filter: drop-shadow(0 0 6px rgba(242, 185, 64, 0.7));
+  rotate: -20deg;
+}
+[data-theme='magic'] .rack::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at 30% 30%, #fff 0 1.2px, transparent 1.8px),
+    radial-gradient(circle at 82% 24%, #fff 0 1px, transparent 1.6px),
+    radial-gradient(circle at 62% 74%, #fff 0 1.2px, transparent 1.8px);
+  pointer-events: none;
+  animation: rack-twinkle 3.6s ease-in-out infinite;
+}
+@keyframes rack-twinkle {
+  50% {
+    opacity: 0.15;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .honor,
+  .honor__silk,
+  .honor__silk::after,
+  .honor__fringe,
+  [data-theme='magic'] .rack::after {
+    animation: none !important;
+  }
+}
+
+/* ---------- 魔法版：星盤下的名次、稱號、塵封書架 ---------- */
+[data-theme='magic'] .ranklist li {
+  border-bottom: 1px dashed var(--rule-2);
+}
+[data-theme='magic'] .ranklist__no {
+  font-family: var(--f-latin);
+  font-style: italic;
+  font-weight: 500;
+  font-size: 1.45rem;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+}
+[data-theme='magic'] .ranklist__cat {
+  border-radius: 99px;
+  border-color: var(--rule-2);
+}
+/* 星光的軌跡：細細一條，尾端一顆星 */
+[data-theme='magic'] .ranklist__bar {
+  position: relative;
+  height: 6px;
+  border: 0;
+  border-radius: 99px;
+  background: var(--cobalt-tint);
+}
+[data-theme='magic'] .ranklist__bar i {
+  position: relative;
+  border-radius: 99px;
+  background: linear-gradient(90deg, #8c74e6, var(--cobalt));
+}
+[data-theme='magic'] .ranklist__bar i::after {
+  content: '';
+  position: absolute;
+  right: -7px;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  margin-top: -7px;
+  background: var(--marigold);
+  clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
+}
+[data-theme='magic'] .ranklist__val {
+  font-family: var(--f-latin);
+  font-weight: 600;
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+[data-theme='magic'] .ranks__more h2::after {
+  height: 1px;
+  background: linear-gradient(90deg, var(--ink), transparent);
+}
+[data-theme='magic'] .ranks__more h2::before {
+  content: '';
+  flex: none;
+  width: 14px;
+  height: 14px;
+  background: var(--marigold);
+  clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
+  order: -1;
+}
+
+/* 塵封書架：沒被選中的店是一本本躺平、蒙上灰的書 */
+[data-theme='magic'] .cold {
+  border: 0;
+  padding: 0;
+}
+[data-theme='magic'] .cold h2::before {
+  content: '';
+  font-size: inherit;
+  background: #a6a1b8;
+}
+[data-theme='magic'] .cold ul {
+  gap: 10px;
+  padding: 14px 12px 0;
+  border-bottom: 9px solid var(--wood-lo);
+  box-shadow: 0 1.5px 0 var(--ink);
+}
+[data-theme='magic'] .cold li {
+  position: relative;
+  padding: 6px 16px 6px 22px;
+  border-radius: 3px 6px 6px 3px;
+  background: #8f8aa6;
+  color: #fbf8ff;
+  letter-spacing: 0.1em;
+  box-shadow:
+    inset 8px 0 0 rgba(0, 0, 0, 0.18),
+    inset 0 3px 0 rgba(255, 255, 255, 0.28);
+}
+[data-theme='magic'] .cold li::after {
+  content: '';
+  position: absolute;
+  left: 13px;
+  top: 4px;
+  bottom: 4px;
+  width: 0;
+  border-left: 1.5px solid rgba(255, 255, 255, 0.5);
+}
+
+@media (min-width: 900px) {
+  .ranks__more {
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+    column-gap: 36px;
+  }
+  .latest {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+  }
+  .rack ul {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (max-width: 520px) {
+  .ranklist li {
+    grid-template-columns: 4em minmax(0, 1fr) minmax(48px, 70px) 1.6em;
+  }
+  [data-theme='magic'] .ranklist li {
+    grid-template-columns: 2.6em minmax(0, 1fr) minmax(48px, 70px) 1.6em;
+  }
+  .ranklist__cat {
+    display: none;
+  }
+}

@@ -1,0 +1,46 @@
+.incense {
+  display: inline-block;
+  flex: none;
+}
+.incense svg {
+  overflow: visible;
+  display: block;
+}
+.incense__smoke path {
+  stroke-dasharray: 10 30;
+  opacity: 0.65;
+  animation: incense-smoke 2.2s linear infinite;
+}
+.incense__smoke path:nth-child(2) {
+  animation-delay: 0.5s;
+}
+.incense__smoke path:nth-child(3) {
+  animation-delay: 1s;
+}
+@keyframes incense-smoke {
+  from {
+    stroke-dashoffset: 40;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.incense__embers circle {
+  animation: incense-ember 0.9s ease-in-out infinite alternate;
+}
+.incense__embers circle:nth-child(2) {
+  animation-delay: 0.3s;
+}
+.incense__embers circle:nth-child(3) {
+  animation-delay: 0.6s;
+}
+@keyframes incense-ember {
+  to {
+    fill: var(--marigold);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .incense__smoke path {
+    stroke-dasharray: none;
+  }
+}

@@ -1,0 +1,64 @@
+/* 水晶球平常的樣子：光暈呼吸、符文環與星雲慢轉、球心脈動、輕輕浮動 */
+.crystal__aura {
+  animation: crystal-aura 3.2s ease-in-out infinite;
+}
+@keyframes crystal-aura {
+  50% {
+    transform: scale(1.08);
+    opacity: 0.75;
+  }
+}
+.crystal__rays {
+  animation: crystal-spin 36s linear infinite;
+}
+.crystal__runes {
+  animation: crystal-spin 48s linear infinite reverse;
+}
+.crystal__nebula {
+  animation: crystal-spin 11s linear infinite;
+}
+.crystal__nebula--b {
+  animation-duration: 15s;
+  animation-direction: reverse;
+}
+.crystal__orbit {
+  animation: crystal-spin 7s linear infinite;
+}
+@keyframes crystal-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.crystal__heart {
+  animation: crystal-heart 2.6s ease-in-out infinite;
+}
+@keyframes crystal-heart {
+  50% {
+    transform: scale(1.18);
+    opacity: 0.7;
+  }
+}
+.crystal__glass {
+  animation: crystal-float 4s ease-in-out infinite;
+}
+@keyframes crystal-float {
+  50% {
+    transform: translateY(-5px);
+  }
+}
+.crystal__rune {
+  font-family: var(--f-display);
+  font-weight: 900;
+  fill: var(--ink);
+}
+@media (prefers-reduced-motion: reduce) {
+  .crystal__aura,
+  .crystal__rays,
+  .crystal__runes,
+  .crystal__nebula,
+  .crystal__orbit,
+  .crystal__heart,
+  .crystal__glass {
+    animation: none !important;
+  }
+}

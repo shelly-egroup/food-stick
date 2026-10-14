@@ -1,0 +1,64 @@
+/* 抽籤儀式：全部用 CSS，以元素自己的框為中心，各瀏覽器一致 */
+.bagua {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.45s;
+}
+.bagua.is-on {
+  opacity: 1;
+}
+.bagua.is-off {
+  opacity: 0;
+}
+.bagua__beam,
+.bagua__pool,
+.bagua__spin,
+.bagua__flecks rect {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.bagua__beam {
+  transform-origin: 50% 0%;
+}
+.bagua__flecks rect {
+  opacity: 0;
+}
+.bagua.is-on .bagua__beam {
+  animation:
+    rit-beam 0.55s var(--ease-out) both,
+    rit-flicker 0.24s 0.6s ease-in-out 4 alternate;
+}
+.bagua.is-on .bagua__pool {
+  animation: rit-grow 0.6s 0.1s var(--ease-out) both;
+}
+.bagua.is-on .bagua__spin {
+  animation:
+    rit-spin-in 1.4s 0.05s var(--ease-out) both,
+    rit-spin 7s 1.45s linear infinite;
+}
+.bagua.is-on .bagua__flecks rect {
+  animation: rit-fall 1.3s ease-in both;
+}
+@keyframes rit-beam {
+  from {
+    transform: scaleY(0);
+    opacity: 0;
+  }
+  to {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+@keyframes rit-fall {
+  0% {
+    transform: translateY(0) rotate(0);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(260px) rotate(300deg);
+    opacity: 0;
+  }
+}

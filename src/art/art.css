@@ -1,0 +1,80 @@
+/*
+ * 兩個主題的場景共用的動作：吊燈搖擺、光暈呼吸、光芒慢轉、供桌上的字，
+ * 以及抽籤儀式共用的關鍵影格（rit-*）。各主題自己的零件樣式放在 src/themes/<主題>/。
+ */
+.lantern-sway {
+  animation: art-sway 3.6s ease-in-out infinite alternate;
+}
+@keyframes art-sway {
+  from {
+    transform: rotate(-4deg);
+  }
+  to {
+    transform: rotate(4deg);
+  }
+}
+.lantern-glow {
+  animation: art-glow 2.2s ease-in-out infinite alternate;
+}
+@keyframes art-glow {
+  to {
+    opacity: 0.42;
+  }
+}
+.sun__rays {
+  animation: art-rays 40s linear infinite;
+}
+@keyframes art-rays {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.altar-label {
+  font-family: var(--f-classic);
+  font-size: 15px;
+  letter-spacing: 0.36em;
+  fill: var(--paper-hi);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lantern-sway,
+  .lantern-glow,
+  .sun__rays {
+    animation: none !important;
+  }
+}
+
+/* 抽籤儀式共用：閃爍、長大、旋轉進場、持續旋轉 */
+@keyframes rit-flicker {
+  to {
+    opacity: 0.6;
+  }
+}
+@keyframes rit-grow {
+  from {
+    transform: scale(0.2);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+@keyframes rit-spin-in {
+  from {
+    transform: scale(0.15) rotate(0deg);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) rotate(220deg);
+    opacity: 1;
+  }
+}
+@keyframes rit-spin {
+  from {
+    transform: rotate(220deg);
+  }
+  to {
+    transform: rotate(580deg);
+  }
+}

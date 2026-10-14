@@ -1,0 +1,116 @@
+/* 每個選項自己帶 data-theme，所以 var(--accent) 是那個主題的顏色 */
+.theme-switch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.theme-switch__opt {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1.5px solid var(--ink);
+  border-radius: 2px;
+  background: var(--paper-hi);
+  text-align: left;
+  transition:
+    transform 0.15s var(--ease-out),
+    box-shadow 0.15s;
+}
+.theme-switch__opt[aria-checked='true'] {
+  box-shadow: var(--offset) var(--offset) 0 var(--accent);
+}
+.theme-switch__icon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  border: 1.5px solid var(--ink);
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.theme-switch__text {
+  display: grid;
+}
+.theme-switch__text b {
+  font-family: var(--f-display);
+  font-weight: 900;
+  font-size: var(--t-lg);
+  letter-spacing: 0.12em;
+  line-height: 1.2;
+}
+.theme-switch__text i {
+  font-style: normal;
+  font-size: var(--t-sm);
+  color: var(--ink-3);
+}
+
+/* 入口右上角的小開關 */
+.theme-switch--compact {
+  gap: 0;
+  border: 1.5px solid var(--ink);
+  background: var(--paper-hi);
+  box-shadow: 3px 3px 0 var(--ink);
+}
+.theme-switch--compact .theme-switch__opt {
+  padding: 6px 10px 6px 8px;
+  gap: 6px;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.theme-switch--compact .theme-switch__opt + .theme-switch__opt {
+  border-left: 1.5px solid var(--ink);
+}
+.theme-switch--compact .theme-switch__icon {
+  width: 26px;
+  height: 26px;
+  border-width: 1px;
+  background: transparent;
+  color: var(--ink-3);
+}
+.theme-switch--compact .theme-switch__text b {
+  font-size: var(--t-sm);
+  color: var(--ink-3);
+}
+.theme-switch--compact .theme-switch__opt[aria-checked='true'] {
+  background: var(--ink);
+  box-shadow: none;
+}
+.theme-switch--compact .theme-switch__opt[aria-checked='true'] .theme-switch__text b {
+  color: var(--paper-hi);
+}
+.theme-switch--compact .theme-switch__opt[aria-checked='true'] .theme-switch__icon {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-color: var(--paper-hi);
+}
+
+/* 換主題的儀式：新主題的顏色從按鈕擴散開來 */
+.theme-wipe {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  pointer-events: none;
+  background: repeating-conic-gradient(
+    from 0deg at var(--x) var(--y),
+    var(--accent) 0deg 8deg,
+    var(--accent-lo) 8deg 16deg
+  );
+  clip-path: circle(0 at var(--x) var(--y));
+  animation: theme-wipe 1s var(--ease-out) forwards;
+}
+@keyframes theme-wipe {
+  0% {
+    clip-path: circle(0 at var(--x) var(--y));
+  }
+  42% {
+    clip-path: circle(150vmax at var(--x) var(--y));
+    opacity: 1;
+  }
+  100% {
+    clip-path: circle(150vmax at var(--x) var(--y));
+    opacity: 0;
+  }
+}

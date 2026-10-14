@@ -1,0 +1,230 @@
+.shops {
+  max-width: 1240px;
+  margin: 0 auto;
+}
+.shops__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 26px var(--gutter) 10px;
+}
+.shops__title {
+  font-size: clamp(2.4rem, 7vw, 4rem);
+  letter-spacing: 0.08em;
+  line-height: 1;
+  margin: 4px 0 8px;
+}
+.shops__sub {
+  font-family: var(--f-serif);
+  font-weight: 500;
+  font-size: 1.02rem;
+  line-height: 1.5;
+  letter-spacing: 0.08em;
+  color: var(--ink-2);
+}
+.shops__sub span {
+  margin: 0 0.2em;
+  color: var(--ink-3);
+}
+.shops__sub b {
+  font-family: var(--f-display);
+  font-weight: 900;
+  color: var(--accent);
+}
+.shops__loading {
+  min-height: 360px;
+}
+.shops__add {
+  flex: none;
+}
+
+/* 搜尋與篩選：手機上不黏在頂端（兩列類型會佔太多畫面），電腦上一行黏著 */
+.shops__tools {
+  z-index: 10;
+  display: grid;
+  /* 搜尋框要能縮：不然輸入框原本的寬度會把整列撐出畫面 */
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+  padding: 12px var(--gutter) 14px;
+  background: var(--paper);
+  border-bottom: 1.5px solid var(--ink);
+}
+.shops__find {
+  display: flex;
+  gap: 10px;
+}
+.shops__search {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 0 12px;
+  border: 1.5px solid var(--ink);
+  background: var(--paper-hi);
+  color: var(--ink-3);
+}
+/* 只看愛店、只看我掛（放）的：愛心是線條圖示，「我掛的」前面是那條紅流蘇（書籤緞帶） */
+.shops__scope {
+  flex: none;
+  min-height: 46px;
+  gap: 5px;
+  padding: 0 0.75em 0 0.6em;
+}
+.shops__scope--liked svg {
+  color: var(--accent);
+}
+.shops__scope--liked[aria-pressed='true'] svg {
+  color: var(--paper-hi);
+  fill: currentColor;
+}
+.shops__scope--mine .glyph {
+  transform-origin: 50% 0;
+  transition: rotate 0.3s var(--ease-spring);
+}
+.shops__scope--mine[aria-pressed='true'] .glyph {
+  rotate: -10deg;
+}
+@media (hover: hover) {
+  .shops__scope--mine:hover .glyph {
+    rotate: 8deg;
+  }
+}
+/*
+ * 篩選結果：廟宇是一顆朱紅印章蓋著中文數字＋「撤下條件」木牌；
+ * 魔法是一顆發光的魔力球裡浮著數字＋「解除篩選咒」。
+ */
+.shops__status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  animation: rise-in 0.25s var(--ease-out) both;
+}
+.shops__count {
+  display: grid;
+  place-items: center;
+  min-width: 38px;
+  height: 38px;
+  padding: 0 6px;
+  background: var(--accent);
+  border: 1.5px solid var(--ink);
+  box-shadow:
+    inset 0 0 0 2.5px var(--accent),
+    inset 0 0 0 3.5px var(--paper-hi);
+  color: var(--paper-hi);
+  font-family: var(--f-display);
+  font-weight: 900;
+  font-size: 1rem;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  animation: count-stamp 0.32s var(--ease-spring) both;
+}
+@keyframes count-stamp {
+  from {
+    opacity: 0;
+    transform: scale(1.8) rotate(-12deg);
+  }
+}
+.shops__matched {
+  font-family: var(--f-serif);
+  font-weight: 700;
+  font-size: 0.98rem;
+  letter-spacing: 0.1em;
+  color: var(--ink);
+}
+/* 魔法版：數字浮在發光的魔力球裡（清除鈕 .clear-chip 在 base.css） */
+[data-theme='magic'] .shops__count {
+  border-radius: 50%;
+  min-width: 40px;
+  height: 40px;
+  background: radial-gradient(circle at 36% 30%, #efe9ff 0%, #9b7bff 42%, #3a3f9e 100%);
+  box-shadow:
+    0 0 0 4px rgba(155, 123, 255, 0.22),
+    0 0 16px rgba(155, 123, 255, 0.55);
+  font-family: var(--f-latin);
+  font-weight: 600;
+  font-size: 1.25rem;
+  text-shadow: 0 1px 2px rgba(25, 20, 70, 0.6);
+}
+.shops__search:focus-within {
+  box-shadow: var(--offset) var(--offset) 0 var(--accent);
+}
+.shops__search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  font-size: 1rem;
+  color: var(--ink);
+  outline: none;
+}
+
+/* ---------- 菜牌牆 ---------- */
+.wall {
+  list-style: none;
+  margin: 0;
+  padding: 26px var(--gutter) 48px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 26px 12px;
+}
+.wall__item {
+  display: grid;
+  /* 進場動畫放在外層：菜牌本身的搖晃、掛上、掉落動畫結束時，不會讓進場動畫重播（看起來像閃一下） */
+  transform-origin: 50% 4px;
+  animation: plaque-in 0.55s var(--ease-spring) backwards;
+}
+
+/* ---------- 空狀態 ---------- */
+.shops__empty {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  padding: 56px var(--gutter) 72px;
+  text-align: center;
+}
+/* 空狀態的插畫放大一點，標題用大字 */
+.shops__empty .vignette svg {
+  width: min(300px, 82%);
+}
+.shops__empty .vignette b {
+  font-family: var(--f-display);
+  font-weight: 900;
+  font-size: var(--t-xl);
+  letter-spacing: 0.08em;
+}
+.shops__empty .vignette span {
+  font-family: var(--f-serif);
+  font-size: 0.95rem;
+}
+.shops__empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px 16px;
+  margin-top: 4px;
+}
+
+@media (min-width: 760px) {
+  .wall {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 34px 18px;
+  }
+  .shops__tools {
+    grid-template-columns: minmax(300px, 420px) minmax(0, 1fr);
+    align-items: center;
+  }
+  .shops__status {
+    grid-column: 1 / -1;
+  }
+}
+@media (min-width: 960px) {
+  .shops__tools {
+    position: sticky;
+    top: var(--bar-h);
+  }
+}

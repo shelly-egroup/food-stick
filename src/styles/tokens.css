@@ -1,0 +1,81 @@
+/*
+ * 食在難選 — 明亮廟宇版畫
+ * 木版年畫 × 現代東方編輯插畫：乾淨的平面色塊、細線刻、朱紅為主角，畫面明亮、會呼吸。
+ * 刻意只做一種亮色風格（像一張印好的版畫），不跟系統切換暗色。
+ */
+:root {
+  color-scheme: light;
+
+  /* 紙與墨 */
+  --paper: #faf6ef;
+  --paper-hi: #fffdf8;
+  --paper-lo: #f1e9dc;
+  --paper-shade: #e7ddcc;
+  --ink: #26211d;
+  --ink-2: #514841;
+  /* 最淡的字也要在紙上清楚可讀（對比 5:1 以上） */
+  --ink-3: #6c6259;
+
+  /* 朱紅與點綴色 */
+  --vermilion: #c8432a;
+  --vermilion-lo: #a23421;
+  --vermilion-tint: #f7ddd4;
+  --marigold: #f2b940;
+  --marigold-tint: #fcebc3;
+  --gold: #c39a4a;
+  --gold-hi: #e2c27a;
+  --jade: #2e9c83;
+  --jade-tint: #d5ece6;
+  --cobalt: #3a68ad;
+  --cobalt-tint: #dbe5f3;
+  --celadon: #8fb0ab;
+  --celadon-lo: #6f948e;
+  --bamboo: #ead7ae;
+  --wood: #c88f55;
+  --wood-lo: #9d6b3c;
+  --orange: #ee8a2e;
+
+  --rule: rgba(38, 33, 29, 0.14);
+  --rule-2: rgba(38, 33, 29, 0.3);
+  --rule-strong: rgba(38, 33, 29, 0.62);
+  --focus: var(--cobalt);
+
+  /*
+   * 字體。原則是「每個字都清楚」：
+   * - --f-display 900 只用在大字（標題、店名、主要按鈕）
+   * - 小字的明體用 --f-serif（500／700），不要用 900，筆畫才不會糊成一團
+   * - --f-classic（古典明朝）筆畫細，只用在 20px 以上的籤詩、匾額這類大字
+   * - 西文字體後面接思源宋體，中文字才不會掉到系統的細明體
+   */
+  --f-display: 'Noto Serif TC', 'Songti TC', serif;
+  --f-serif: 'Noto Serif TC', 'Songti TC', serif;
+  --f-classic: 'Cactus Classical Serif', 'Noto Serif TC', 'Songti TC', serif;
+  --f-kai: 'LXGW WenKai TC', 'Kaiti TC', 'BiauKai', 'DFKai-SB', serif;
+  --f-body: 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', system-ui, sans-serif;
+  --f-latin: 'Cormorant Garamond', 'Noto Serif TC', 'Times New Roman', serif;
+
+  /* 字級：最小 13px */
+  --t-xs: 0.8125rem;
+  --t-sm: 0.875rem;
+  --t-md: 1rem;
+  --t-lg: 1.25rem;
+  --t-xl: 1.625rem;
+  --t-2xl: 2.25rem;
+  --t-hero: clamp(2.6rem, 5.2vw, 4.6rem);
+
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --gutter: clamp(16px, 4vw, 48px);
+  --bar-h: 60px;
+  --tab-h: 64px;
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-t: env(safe-area-inset-top, 0px);
+
+  /* 版畫錯版影子 */
+  --offset: 4px;
+}
+
+/*
+ * 跟著主題變的顏色（--accent、--ray-tint、--tap-* …）定義在 src/themes/<主題>/theme.css，
+ * 用 [data-theme] 套用：<html> 決定整站的主題，任何元素也可以自己帶 data-theme 局部換主題。
+ */

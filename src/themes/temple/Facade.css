@@ -1,0 +1,192 @@
+/* 廟宇門面：祥雲、石柱對聯、朱門、門環、門口燈籠與香客小人 */
+.cloud {
+  animation: cloud-drift 14s ease-in-out infinite alternate;
+}
+.cloud--b {
+  animation-duration: 18s;
+  animation-delay: -6s;
+}
+.cloud--c {
+  animation-duration: 11s;
+  animation-delay: -3s;
+}
+@keyframes cloud-drift {
+  from {
+    transform: translateX(-18px);
+  }
+  to {
+    transform: translateX(22px);
+  }
+}
+
+/* ---------- 石柱與朱門 ---------- */
+.pillar {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  padding-top: clamp(16px, 3vh, 34px);
+  background: var(--celadon);
+  border: 1.5px solid var(--ink);
+  border-bottom: 0;
+  overflow: hidden;
+}
+.pillar::before,
+.pillar::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 10px;
+  background: var(--ink);
+}
+.pillar::before {
+  top: 0;
+}
+.pillar::after {
+  bottom: 0;
+}
+.pillar__text {
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  white-space: nowrap;
+  font-family: var(--f-display);
+  font-weight: 900;
+  font-size: clamp(1rem, 2.6vw, 1.9rem);
+  letter-spacing: 0.3em;
+  line-height: 1;
+  color: var(--ink);
+}
+
+.gate__doors {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  perspective: 1600px;
+  background: var(--ink);
+  border: 2px solid var(--ink);
+  border-bottom: 0;
+  min-height: 0;
+}
+.gate__inside {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: repeating-conic-gradient(
+    from 0deg at 50% 60%,
+    var(--marigold) 0deg 7deg,
+    var(--marigold-tint) 7deg 14deg
+  );
+  opacity: 0.4;
+}
+.gate__doors::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  translate: -50% 0;
+  background: var(--marigold);
+  box-shadow: 0 0 14px 3px rgba(242, 185, 64, 0.7);
+  animation: crack 3s ease-in-out infinite;
+  z-index: 3;
+  pointer-events: none;
+}
+.gate--enter .gate__doors::after {
+  animation: none;
+  opacity: 0;
+}
+@keyframes crack {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+.door {
+  position: relative;
+  z-index: 2;
+  background: var(--vermilion);
+  border: 1.5px solid var(--ink);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform-style: preserve-3d;
+}
+.door--l {
+  transform-origin: left center;
+}
+.door--r {
+  transform-origin: right center;
+}
+.door::before {
+  content: '';
+  position: absolute;
+  inset: 5% 9%;
+  border: 1.5px solid var(--marigold);
+  outline: 1.5px solid var(--ink);
+  outline-offset: 4px;
+}
+.door__studs {
+  --stud: clamp(5px, 0.9vw, 9px);
+  position: absolute;
+  inset: 11% 17% 12%;
+  background-image: radial-gradient(
+    circle,
+    var(--marigold) 0 calc(var(--stud) * 0.62),
+    var(--ink) calc(var(--stud) * 0.62) calc(var(--stud) * 0.8),
+    transparent calc(var(--stud) * 0.82)
+  );
+  background-size: calc(100% / 3) calc(100% / 6);
+}
+.knocker {
+  position: absolute;
+  top: 50%;
+  width: clamp(24px, 3.4vw, 40px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--marigold);
+  border: 1.5px solid var(--ink);
+  transform-origin: 50% 20%;
+  z-index: 1;
+}
+.knocker::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 60%;
+  width: 80%;
+  aspect-ratio: 1;
+  translate: -50% 0;
+  border-radius: 50%;
+  border: clamp(3px, 0.45vw, 5px) solid var(--marigold);
+  outline: 1.5px solid var(--ink);
+}
+.door--l .knocker {
+  right: 10%;
+}
+.door--r .knocker {
+  left: 10%;
+}
+
+/* ---------- 燈籠與小人 ---------- */
+.gate-lantern {
+  position: absolute;
+  top: calc(min(1000px, 100vw) * 0.17);
+  width: clamp(46px, 8vw, 90px);
+  height: auto;
+  aspect-ratio: 90 / 190;
+  z-index: 4;
+  overflow: visible;
+}
+.gate-lantern--l {
+  left: clamp(-6px, 1vw, 30px);
+}
+.gate-lantern--r {
+  right: clamp(-6px, 1vw, 30px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .cloud,
+  .gate__doors::after {
+    animation: none;
+  }
+}

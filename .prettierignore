@@ -1,0 +1,8 @@
+.next
+.next-live
+out
+shots
+node_modules
+package-lock.json
+next-env.d.ts
+*.log

@@ -1,0 +1,13 @@
+.loading {
+  display: grid;
+  place-items: center;
+  min-height: 96px;
+  padding: 20px 0;
+  animation: loading-in 0.4s 0.18s var(--ease-out) both;
+}
+@keyframes loading-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}

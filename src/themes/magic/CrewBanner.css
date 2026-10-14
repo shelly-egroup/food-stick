@@ -1,0 +1,420 @@
+/* 冒險小隊的徽章：盾形徽章、隊名緞帶、浮在四周的隊員、腳下的法陣 */
+.party {
+  position: relative;
+  height: 186px;
+  isolation: isolate;
+  user-select: none;
+  pointer-events: none;
+}
+/* 徽章背後的紫色光暈 */
+.party::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 80px;
+  width: 240px;
+  height: 170px;
+  margin: -85px 0 0 -120px;
+  background: radial-gradient(closest-side, rgba(155, 123, 255, 0.3), transparent);
+  z-index: -1;
+  transition: opacity 0.4s;
+}
+.party.is-fresh::before,
+.party.is-asking::before {
+  opacity: 0.4;
+}
+
+/* ---------- 法陣：兩圈虛線橢圓，慢慢流動 ---------- */
+.party__circle {
+  position: absolute;
+  left: 50%;
+  bottom: 2px;
+  width: min(320px, 100%);
+  height: 44px;
+  translate: -50% 0;
+  overflow: visible;
+  fill: none;
+  stroke-linecap: round;
+  z-index: -1;
+}
+.party__circle ellipse {
+  vector-effect: non-scaling-stroke;
+}
+.party__circle ellipse:first-child {
+  stroke: var(--marigold);
+  stroke-width: 1.6;
+  stroke-dasharray: 2 7;
+  animation: party-flow 6s linear infinite;
+}
+.party__circle ellipse:last-child {
+  stroke: #9b7bff;
+  stroke-width: 1.2;
+  stroke-dasharray: 14 6 3 6;
+  opacity: 0.7;
+  animation: party-flow 9s linear infinite reverse;
+}
+@keyframes party-flow {
+  to {
+    stroke-dashoffset: -180;
+  }
+}
+
+/* ---------- 徽章：左右兩半疊在一起（解散時才分開），還沒成形時只有一圈虛線 ---------- */
+.party__crest {
+  position: absolute;
+  left: 50%;
+  top: 41px;
+  width: 68px;
+  height: 78px;
+  margin-left: -34px;
+  filter: drop-shadow(0 6px 10px rgba(43, 30, 110, 0.35));
+}
+.party__half,
+.party__ghost,
+.party__crack {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.party__half svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+/* 左半邊多留一點點，兩半疊著時看不到接縫 */
+.party__half--l {
+  clip-path: polygon(0 0, 53% 0, 46.8% 29.7%, 56.2% 51.4%, 48.4% 74.3%, 51.5% 96%, 51.5% 100%, 0 100%);
+}
+.party__half--r {
+  clip-path: polygon(51.5% 0, 100% 0, 100% 100%, 50% 100%, 50% 96%, 46.9% 74.3%, 54.7% 51.4%, 45.3% 29.7%);
+}
+.party__ghost {
+  fill: rgba(155, 123, 255, 0.08);
+  stroke: var(--accent);
+  stroke-width: 1.8;
+  stroke-dasharray: 5 4;
+  stroke-linecap: round;
+  opacity: 0;
+  transition: opacity 0.3s;
+  animation: party-flow 5s linear infinite;
+}
+.party.is-fresh .party__ghost {
+  opacity: 1;
+}
+.party.is-fresh .party__half {
+  opacity: 0;
+  scale: 0.5;
+}
+.party__crack {
+  fill: none;
+  stroke: #fff6dc;
+  stroke-width: 2.2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  filter: drop-shadow(0 0 3px #c9b8ff);
+  transition: stroke-dashoffset 0.5s ease-out;
+}
+.party:is(.is-asking, .is-parting) .party__crack {
+  stroke-dashoffset: 0;
+}
+
+/* 星光碎片：成形與碎裂時往外迸 */
+.party__spark {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  width: 11px;
+  height: 11px;
+  margin: -5.5px 0 0 -5.5px;
+  background: var(--marigold);
+  clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
+  opacity: 0;
+}
+.party__spark:nth-of-type(2n) {
+  width: 7px;
+  height: 7px;
+  margin: -3.5px 0 0 -3.5px;
+  background: #c9b8ff;
+}
+
+/* ---------- 緞帶：寫著隊名，平常不做任何變形，字才清楚 ---------- */
+.party__ribbon {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 102px;
+  display: flex;
+  justify-content: center;
+  filter: drop-shadow(1.5px 0 0 var(--ink)) drop-shadow(-1.5px 0 0 var(--ink)) drop-shadow(0 1.5px 0 var(--ink))
+    drop-shadow(0 -1.5px 0 var(--ink)) drop-shadow(0 4px 8px rgba(43, 30, 110, 0.3));
+  transition: opacity 0.3s;
+}
+.party__ribbon b {
+  display: block;
+  max-width: 11em;
+  padding: 7px 28px 8px;
+  font-family: var(--f-serif);
+  font-weight: 900;
+  font-size: 1.06rem;
+  line-height: 1.3;
+  letter-spacing: 0.16em;
+  text-align: center;
+  color: #fff3d0;
+  overflow-wrap: anywhere;
+  background:
+    linear-gradient(105deg, transparent 35%, rgba(255, 246, 220, 0.6) 50%, transparent 65%) -200% 0 / 200% 100%
+      no-repeat,
+    linear-gradient(180deg, #4b5cc4, #2f3f8f);
+  clip-path: polygon(0 0, 100% 0, calc(100% - 13px) 50%, 100% 100%, 0 100%, 13px 50%);
+}
+.party__ribbon b.is-blank {
+  color: rgba(255, 243, 208, 0.55);
+}
+.party.is-fresh .party__ribbon {
+  opacity: 0.82;
+}
+
+/* ---------- 隊員：浮在徽章四周，帶著金框與紫光 ---------- */
+.party__mate {
+  position: absolute;
+  left: 50%;
+  top: 80px;
+  display: grid;
+  margin: calc(var(--y) - 17px) 0 0 calc(var(--x) - 17px);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 2px var(--paper-hi),
+    0 0 0 3.5px var(--marigold),
+    0 0 16px rgba(155, 123, 255, 0.75);
+  transition:
+    filter 0.4s,
+    box-shadow 0.4s;
+  animation:
+    party-pop 0.5s var(--ease-spring) calc(var(--i) * 50ms) both,
+    party-float 3.4s ease-in-out calc(var(--i) * -0.5s) infinite;
+}
+@keyframes party-pop {
+  from {
+    opacity: 0;
+    scale: 0.2;
+  }
+  60% {
+    scale: 1.15;
+  }
+}
+@keyframes party-float {
+  50% {
+    translate: 0 -5px;
+  }
+}
+.party.is-fresh .party__mate {
+  box-shadow:
+    0 0 0 2px var(--paper-hi),
+    0 0 0 3.5px rgba(155, 123, 255, 0.55);
+}
+
+/* ---------- 組好了：徽章成形、星光迸開、緞帶掃過一道光、隊員跳一下 ---------- */
+.party.is-forming .party__ghost {
+  opacity: 0;
+}
+.party.is-forming .party__half {
+  animation: party-form 0.7s cubic-bezier(0.2, 1.5, 0.4, 1) 0.1s both;
+}
+@keyframes party-form {
+  from {
+    opacity: 0;
+    scale: 0.3;
+    filter: brightness(2.4);
+  }
+  55% {
+    opacity: 1;
+    scale: 1.14;
+    filter: brightness(1.7);
+  }
+  to {
+    opacity: 1;
+    scale: 1;
+    filter: brightness(1);
+  }
+}
+.party.is-forming .party__spark {
+  animation: party-spark 0.85s cubic-bezier(0.1, 0.7, 0.3, 1) 0.22s both;
+}
+.party.is-forming .party__ribbon {
+  opacity: 1;
+}
+.party.is-forming .party__ribbon b {
+  animation: party-shine 0.8s ease-out 0.4s both;
+}
+@keyframes party-shine {
+  to {
+    background-position:
+      200% 0,
+      0 0;
+  }
+}
+.party.is-forming .party__mate {
+  box-shadow:
+    0 0 0 2px var(--paper-hi),
+    0 0 0 3.5px var(--marigold),
+    0 0 16px rgba(155, 123, 255, 0.75);
+  animation: party-hop 0.55s var(--ease-spring) calc(0.35s + var(--i) * 45ms) both;
+}
+@keyframes party-spark {
+  from {
+    opacity: 1;
+    translate: 0 0;
+    scale: 0.3;
+  }
+  60% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    translate: var(--sx) var(--sy);
+    scale: 1;
+    rotate: 90deg;
+  }
+}
+.party.is-cheering .party__crest {
+  animation: party-pulse 0.6s ease-out both;
+}
+@keyframes party-pulse {
+  40% {
+    scale: 1.1;
+  }
+}
+.party.is-cheering .party__mate {
+  animation: party-hop 0.5s var(--ease-spring) calc(var(--i) * 40ms) both;
+}
+@keyframes party-hop {
+  40% {
+    translate: 0 -12px;
+    scale: 1.08;
+  }
+}
+
+/* ---------- 問要不要解散：徽章忽明忽暗、裂開一條縫，隊員的光暗下來 ---------- */
+.party.is-asking .party__half {
+  animation: party-flicker 1.6s steps(1) infinite;
+}
+@keyframes party-flicker {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  10% {
+    opacity: 0.45;
+  }
+  14% {
+    opacity: 1;
+  }
+  47% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+  53% {
+    opacity: 0.5;
+  }
+  56% {
+    opacity: 1;
+  }
+}
+.party:is(.is-asking, .is-parting) .party__mate {
+  filter: saturate(0.35);
+  box-shadow:
+    0 0 0 2px var(--paper-hi),
+    0 0 0 3.5px var(--rule-2);
+}
+
+/* ---------- 解散：抖一下、碎成兩半、化成星光，緞帶收起，隊員各自飄走 ---------- */
+.party.is-parting .party__crest {
+  animation: party-shake 0.3s ease-in-out both;
+}
+@keyframes party-shake {
+  20% {
+    rotate: -6deg;
+  }
+  40% {
+    rotate: 5deg;
+  }
+  60% {
+    rotate: -4deg;
+  }
+  80% {
+    rotate: 2deg;
+  }
+}
+.party.is-parting .party__half--l {
+  animation: party-half-l 0.62s cubic-bezier(0.4, 0, 0.8, 0.5) 0.3s both;
+}
+.party.is-parting .party__half--r {
+  animation: party-half-r 0.62s cubic-bezier(0.4, 0, 0.8, 0.5) 0.3s both;
+}
+@keyframes party-half-l {
+  to {
+    translate: -40px 30px;
+    rotate: -26deg;
+    opacity: 0;
+  }
+}
+@keyframes party-half-r {
+  to {
+    translate: 40px 34px;
+    rotate: 22deg;
+    opacity: 0;
+  }
+}
+.party.is-parting .party__crack {
+  animation: party-fade 0.2s 0.3s both;
+}
+.party.is-parting .party__spark {
+  animation: party-spark 0.9s cubic-bezier(0.1, 0.7, 0.3, 1) 0.3s both;
+}
+.party.is-parting .party__ribbon {
+  animation: party-ribbon-out 0.5s ease-in 0.34s both;
+}
+@keyframes party-ribbon-out {
+  to {
+    opacity: 0;
+    scale: 0.2 1;
+  }
+}
+.party.is-parting .party__mate {
+  animation: party-drift 0.7s ease-in calc(0.24s + var(--i) * 40ms) both;
+}
+@keyframes party-drift {
+  20% {
+    translate: 0 -6px;
+  }
+  to {
+    translate: var(--ox) var(--oy);
+    scale: 0.45;
+    opacity: 0;
+  }
+}
+.party.is-parting .party__circle,
+.party.is-parting::before {
+  animation: party-fade 0.6s ease-in 0.45s both;
+}
+@keyframes party-fade {
+  to {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .party *,
+  .party::before {
+    animation: none !important;
+    transition: none !important;
+  }
+  .party.is-parting {
+    opacity: 0.3;
+  }
+}

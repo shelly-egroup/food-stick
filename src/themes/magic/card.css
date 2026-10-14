@@ -1,0 +1,93 @@
+/* 魔法預言卡：圓角、四角的星、火漆印、橫書兩欄 */
+.card--spell,
+.card--spell .card__paper {
+  border-radius: 6px;
+}
+.card--spell .card__frame {
+  border-radius: 3px;
+}
+/* 預言卡四角的星 */
+.card--spell .card__frame::before,
+.card--spell .card__frame::after {
+  content: '✦';
+  position: absolute;
+  top: -15px;
+  left: -14px;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--marigold);
+  -webkit-text-stroke: 1px var(--ink);
+}
+.card--spell .card__frame::after {
+  left: auto;
+  right: -14px;
+  top: auto;
+  bottom: -14px;
+}
+/* 火漆印：歪的是蠟（::before），字本身不轉，才清楚 */
+.card__wax {
+  display: grid;
+  place-items: center;
+  width: 70px;
+  height: 70px;
+  isolation: isolate;
+}
+.card__wax::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: 46% 54% 50% 50% / 52% 48% 54% 46%;
+  background: var(--vermilion);
+  border: 2px solid var(--ink);
+  box-shadow:
+    inset 0 0 0 5px var(--vermilion),
+    inset 0 0 0 6.5px var(--paper-hi);
+  rotate: -8deg;
+}
+.card__wax span {
+  font-family: var(--f-display);
+  font-weight: 900;
+  font-size: 1.2rem;
+  color: var(--paper-hi);
+  letter-spacing: 0.04em;
+}
+.card--spell .card__love {
+  right: 16px;
+  bottom: 16px;
+}
+
+.card--spell .card__body {
+  display: grid;
+  gap: 16px;
+  justify-items: center;
+  margin: 22px 0 16px;
+  text-align: center;
+}
+.card--spell .card__name {
+  font-size: min(44px, calc(320px / var(--n)));
+  letter-spacing: 0.08em;
+  line-height: 1.1;
+  padding-bottom: 14px;
+  border-bottom: 1px dashed var(--rule-2);
+}
+.card--spell .card__lines {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 18px;
+  font-family: var(--f-serif);
+  font-weight: 500;
+  font-size: 1.1rem;
+  letter-spacing: 0.1em;
+  color: var(--ink);
+}
+@media (max-height: 760px) {
+  .card--spell .card__body {
+    margin: 14px 0 10px;
+  }
+}
+@media (max-width: 380px) {
+  .card--spell .card__lines {
+    font-size: 1rem;
+  }
+}

@@ -1,0 +1,78 @@
+/* 愛店按鈕的共用版面；左邊的圖和按下去的動畫在各主題的 LoveSlot.css */
+.love-btn {
+  --slot: 56px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: calc(100% - var(--offset));
+  min-height: 78px;
+  padding: 10px 18px 10px 11px;
+  border: 1.5px solid var(--ink);
+  border-radius: 2px;
+  background: var(--paper-hi);
+  color: var(--ink);
+  box-shadow: var(--offset) var(--offset) 0 var(--accent);
+  font: inherit;
+  text-align: left;
+  -webkit-user-select: none;
+  user-select: none;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease,
+    background-color 0.35s ease;
+}
+@media (hover: hover) {
+  .love-btn:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: calc(var(--offset) + 1px) calc(var(--offset) + 1px) 0 var(--accent);
+  }
+}
+.love-btn:active {
+  transform: translate(var(--offset), var(--offset));
+  box-shadow: 0 0 0 var(--accent);
+}
+.love-btn__slot {
+  position: relative;
+  flex: none;
+  width: var(--slot);
+  height: var(--slot);
+}
+/* 主題的 LoveSlot 鋪滿這一格 */
+.slot {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+/* 換字等章落下（或咒語亮起）那一刻才出現 */
+.love-btn__text {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  animation: love-text-in 0.32s 0.16s var(--ease-out) both;
+}
+.love-btn__text b {
+  font-family: var(--f-display);
+  font-weight: 900;
+  font-size: 1.14rem;
+  line-height: 1.25;
+  letter-spacing: 0.14em;
+  color: var(--ink);
+  transition: color 0.3s;
+}
+.love-btn__text small {
+  font-size: var(--t-xs);
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0.04em;
+  color: var(--ink-2);
+}
+.love-btn.is-on .love-btn__text b {
+  color: var(--accent);
+}
+@keyframes love-text-in {
+  from {
+    opacity: 0;
+    transform: translateX(-6px);
+  }
+}

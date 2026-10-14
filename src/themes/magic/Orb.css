@@ -1,0 +1,22 @@
+.orb {
+  display: inline-block;
+  flex: none;
+}
+.orb svg {
+  overflow: visible;
+  display: block;
+}
+.orb__spin {
+  transform-origin: 30px 30px;
+  animation: orb-spin 1.6s var(--ease-spring) infinite;
+}
+@keyframes orb-spin {
+  to {
+    transform: rotate(90deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .orb__spin {
+    animation: none;
+  }
+}

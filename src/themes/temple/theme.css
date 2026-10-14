@@ -1,0 +1,49 @@
+/* 廟宇主題的顏色：朱紅為主角，金黃點綴 */
+[data-theme='temple'] {
+  --accent: var(--vermilion);
+  --accent-lo: var(--vermilion-lo);
+  --accent-tint: var(--vermilion-tint);
+  /* 印在主色上的圖案（切換鈕的小圖） */
+  --accent-ink: var(--paper-hi);
+  /* 籤詩展開時背後的放射光 */
+  --ray-tint: var(--marigold-tint);
+  /* 搖籤時舞台四周暗下來 */
+  --stage-dim: radial-gradient(ellipse 70% 60% at 50% 62%, transparent 40%, rgba(38, 33, 29, 0.32) 100%);
+  /* 點畫面：朱紅圓圈與金紙 */
+  --tap-ring: var(--vermilion);
+  --tap-glow: transparent;
+  --tap-spark: transparent;
+  --tap-a: var(--marigold);
+  --tap-b: var(--vermilion);
+}
+
+/* 起駕出發按鈕上的鞭炮：引信的火花一閃一閃；滑過或按住時整支抖起來，像要炸了 */
+.glyph--depart .glyph__spark {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: depart-spark 0.9s steps(2, jump-none) infinite;
+}
+@keyframes depart-spark {
+  50% {
+    opacity: 0.35;
+    scale: 0.8;
+  }
+}
+.btn:hover .glyph--depart .glyph__cracker,
+.btn:active .glyph--depart .glyph__cracker {
+  animation: depart-jitter 0.12s linear infinite;
+}
+@keyframes depart-jitter {
+  25% {
+    translate: -0.6px 0.4px;
+  }
+  75% {
+    translate: 0.6px -0.4px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .glyph--depart .glyph__spark,
+  .glyph--depart .glyph__cracker {
+    animation: none !important;
+  }
+}

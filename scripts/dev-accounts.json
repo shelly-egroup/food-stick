@@ -1,0 +1,14 @@
+{
+  "_note": "只給本機模擬器用的測試帳號，不是真的帳號",
+  "password": "lunch-dev-only",
+  "accounts": [
+    { "uid": "u-ming", "email": "egroup.ming@gmail.com", "name": "小明" },
+    { "uid": "u-hua", "email": "egroup.hua@gmail.com", "name": "阿華" },
+    { "uid": "u-mei", "email": "egroup.mei@gmail.com", "name": "美美" },
+    { "uid": "u-jie", "email": "egroup.jie@gmail.com", "name": "阿傑" },
+    { "uid": "u-ting", "email": "egroup.ting@gmail.com", "name": "婷婷" },
+    { "uid": "u-kai", "email": "egroup.kai@gmail.com", "name": "凱文" },
+    { "uid": "u-new", "email": "egroup.new@gmail.com", "name": "新同事", "member": false },
+    { "uid": "u-out", "email": "someone.else@gmail.com", "name": "外人", "member": false }
+  ]
+}

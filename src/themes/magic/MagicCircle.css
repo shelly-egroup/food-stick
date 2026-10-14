@@ -1,0 +1,89 @@
+/* 抽籤儀式：全部用 CSS，以元素自己的框為中心，各瀏覽器一致 */
+.summon {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.45s;
+}
+.summon.is-on {
+  opacity: 1;
+}
+.summon.is-off {
+  opacity: 0;
+}
+.summon__glow,
+.summon__spin,
+.summon__pillar,
+.summon__candle,
+.summon__motes circle {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.summon__pillar,
+.summon__candle {
+  transform-origin: 50% 100%;
+}
+.summon__pillar,
+.summon__candle,
+.summon__motes circle {
+  opacity: 0;
+}
+.summon.is-on .summon__glow {
+  animation: rit-grow 0.5s var(--ease-out) both;
+}
+.summon.is-on .summon__spin {
+  animation:
+    rit-spin-in 1.5s var(--ease-out) both,
+    rit-spin 6s 1.5s linear infinite;
+}
+.summon.is-on .summon__pillar {
+  animation:
+    rit-rise 0.45s var(--ease-out) both,
+    rit-flicker 0.16s ease-in-out 8 alternate;
+}
+.summon.is-on .summon__candle {
+  animation: rit-pop 0.32s var(--ease-spring) both;
+}
+.summon.is-on .summon__motes circle {
+  animation: rit-mote 1.2s ease-out both;
+}
+.summon__rune {
+  font-size: 14px;
+  fill: var(--marigold);
+}
+.flame--box {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+@keyframes rit-rise {
+  from {
+    transform: scaleY(0);
+    opacity: 0;
+  }
+  to {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+@keyframes rit-pop {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+@keyframes rit-mote {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-170px);
+    opacity: 0;
+  }
+}

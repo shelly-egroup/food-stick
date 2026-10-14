@@ -1,0 +1,75 @@
+.tp {
+  overflow: visible;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.tp--busy {
+  cursor: default;
+}
+.tp-body {
+  transform-origin: 160px 430px;
+}
+/* 閒置時每隔幾秒自己跳一下：搖我 */
+.tp:not(.tp--busy) .tp-body {
+  animation: tp-hop 6s ease-in-out 2s infinite;
+}
+@keyframes tp-hop {
+  0%,
+  84%,
+  100% {
+    transform: none;
+  }
+  87% {
+    transform: translateY(-10px) rotate(-3deg);
+  }
+  90% {
+    transform: translateY(0) rotate(2deg);
+  }
+  93% {
+    transform: translateY(-5px) rotate(-1.5deg);
+  }
+  96% {
+    transform: none;
+  }
+}
+@media (hover: hover) {
+  .tp:not(.tp--busy):hover .tp-body {
+    animation: tp-wiggle 0.7s ease-in-out infinite;
+  }
+}
+@keyframes tp-wiggle {
+  25% {
+    transform: rotate(-1.6deg);
+  }
+  75% {
+    transform: rotate(1.6deg);
+  }
+}
+.tp-label {
+  font-family: var(--f-display);
+  font-weight: 900;
+  font-size: 21px;
+  fill: var(--gold-hi);
+}
+.tp-stick {
+  transition:
+    transform 0.5s var(--ease-out),
+    opacity 0.4s;
+}
+.tp-stick.is-out {
+  transform: translateY(-60px);
+  opacity: 0;
+}
+.tp-stick.is-chosen .tp-stick__wood {
+  fill: #f6e6c0;
+}
+.tp--empty .tp-sticks {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tp:not(.tp--busy) .tp-body,
+  .tp:not(.tp--busy):hover .tp-body {
+    animation: none;
+  }
+}

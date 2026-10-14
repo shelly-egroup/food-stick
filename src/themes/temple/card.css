@@ -1,0 +1,51 @@
+/* 廟宇籤卡：直書籤詩、毛邊紙（clip-path 在 Oracle.tsx 依籤號產生） */
+.card--slip .card__body {
+  writing-mode: vertical-rl;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  height: var(--body-h);
+  margin: 20px auto 14px;
+  padding: 0 8px;
+}
+.card--slip .card__name {
+  flex: none;
+  font-size: min(48px, calc((var(--body-h) - 8px) / (var(--n) * 1.1)));
+  white-space: nowrap;
+  letter-spacing: 0.1em;
+  line-height: 1;
+  padding-left: 14px;
+  border-left: 1px solid var(--rule);
+  max-height: 100%;
+  overflow: hidden;
+}
+.card--slip .card__lines {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  font-family: var(--f-classic);
+  font-size: 1.5rem;
+  letter-spacing: 0.24em;
+  line-height: 1.2;
+}
+.card--slip .card__lines p {
+  white-space: nowrap;
+}
+
+/* 愛店章蓋在左下：直書詩句結束的地方，像落款 */
+.card--slip .card__love {
+  left: 24px;
+  bottom: 150px;
+}
+
+@media (max-height: 760px) {
+  .card--slip .card__lines {
+    font-size: 1.25rem;
+  }
+}
+@media (max-width: 380px) {
+  .card--slip .card__lines {
+    font-size: 1.3rem;
+    gap: 8px;
+  }
+}

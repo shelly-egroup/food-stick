@@ -1,0 +1,50 @@
+/* 魔法主題的顏色：鈷藍為主角，星光金與紫色光暈 */
+[data-theme='magic'] {
+  --accent: var(--cobalt);
+  --accent-lo: #2c5596;
+  --accent-tint: var(--cobalt-tint);
+  /* 印在主色上的圖案（切換鈕的小圖） */
+  --accent-ink: var(--marigold);
+  /* 預言展開時背後的放射光 */
+  --ray-tint: var(--cobalt-tint);
+  /* 施法時舞台四周暗下來，帶一點紫 */
+  --stage-dim: radial-gradient(ellipse 70% 60% at 50% 62%, transparent 38%, rgba(43, 30, 110, 0.4) 100%);
+  /* 點畫面：紫色光圈與星芒 */
+  --tap-ring: #9b7bff;
+  --tap-glow: rgba(155, 123, 255, 0.6);
+  --tap-spark: rgba(155, 123, 255, 0.9);
+  --tap-a: var(--marigold);
+  --tap-b: #c9b8ff;
+}
+
+/* 魔法版的標籤、篩選列是圓角的，跟廟宇的方正木牌分開 */
+[data-theme='magic'] .chip {
+  border-radius: 999px;
+}
+[data-theme='magic'] .filters__toggle,
+[data-theme='magic'] .shops__search {
+  border-radius: 10px;
+}
+
+/* 啟程冒險按鈕上的掃帚：平常上下飄；滑過或按住時往前一傾，準備起飛 */
+.glyph--depart .glyph__broom {
+  transform-box: view-box;
+  transform-origin: 50% 60%;
+  animation: depart-broom 1.6s ease-in-out infinite;
+  transition: rotate 0.25s var(--ease-out);
+}
+@keyframes depart-broom {
+  50% {
+    translate: 0 -1.4px;
+  }
+}
+.btn:hover .glyph--depart .glyph__broom,
+.btn:active .glyph--depart .glyph__broom {
+  rotate: -14deg;
+  animation-duration: 0.5s;
+}
+@media (prefers-reduced-motion: reduce) {
+  .glyph--depart .glyph__broom {
+    animation: none;
+  }
+}

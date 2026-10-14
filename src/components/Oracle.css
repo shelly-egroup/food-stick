@@ -1,0 +1,256 @@
+.oracle {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: max(64px, calc(var(--safe-t) + 56px)) 16px max(20px, calc(var(--safe-b) + 12px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.oracle__veil {
+  position: fixed;
+  inset: 0;
+  background: rgba(250, 246, 239, 0.86);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.oracle__burst {
+  position: fixed;
+  left: 50%;
+  top: 46%;
+  width: 160vmax;
+  height: 160vmax;
+  translate: -50% -50%;
+  pointer-events: none;
+  background: repeating-conic-gradient(from 0deg, var(--ray-tint) 0deg 6deg, transparent 6deg 14deg);
+  mask-image: radial-gradient(circle, #000 0%, rgba(0, 0, 0, 0.7) 16%, transparent 44%);
+  -webkit-mask-image: radial-gradient(circle, #000 0%, rgba(0, 0, 0, 0.7) 16%, transparent 44%);
+  animation: oracle-spin 50s linear infinite;
+}
+@keyframes oracle-spin {
+  to {
+    rotate: 360deg;
+  }
+}
+
+.oracle__wrap {
+  position: relative;
+  display: grid;
+  gap: 20px;
+  justify-items: center;
+  width: min(410px, 100%);
+}
+.card-shadow {
+  width: 100%;
+  filter: drop-shadow(7px 8px 0 var(--accent));
+}
+
+/* ---------- 卡片共用 ---------- */
+.card {
+  --print: var(--accent);
+  --body-h: 292px;
+  position: relative;
+  width: 100%;
+  padding: 26px 24px 20px;
+  color: var(--ink);
+}
+/* 卡片裡的東西預設照順序排；紙、外框、印章這些疊在上面的，下面再個別改成 absolute */
+.card > * {
+  position: relative;
+}
+.card__paper {
+  position: absolute;
+  inset: 0;
+  background: var(--paper-hi);
+}
+.card__frame {
+  position: absolute;
+  inset: 11px;
+  border: 2px solid var(--print);
+  outline: 1px solid var(--print);
+  outline-offset: -6px;
+  pointer-events: none;
+}
+
+.card__head {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  padding: 6px 6px 12px;
+  border-bottom: 1.5px solid var(--print);
+}
+.card__no {
+  font-family: var(--f-display);
+  font-weight: 900;
+  font-size: 1.5rem;
+  letter-spacing: 0.1em;
+  color: var(--print);
+}
+.card__brand {
+  font-family: var(--f-serif);
+  font-weight: 700;
+  font-size: 0.86rem;
+  letter-spacing: 0.32em;
+  color: var(--ink-2);
+}
+.card__seal {
+  position: absolute;
+  top: -14px;
+  right: -8px;
+  z-index: 4;
+}
+.card__love {
+  position: absolute;
+  z-index: 4;
+}
+.confetti {
+  position: absolute;
+  left: 50%;
+  top: 40px;
+  width: 0;
+  height: 0;
+  z-index: 6;
+  pointer-events: none;
+}
+.confetti i {
+  position: absolute;
+  width: 8px;
+  height: 12px;
+  border: 1px solid var(--ink);
+  opacity: 0;
+}
+
+.card__name span {
+  display: inline-block;
+}
+
+.card__foot {
+  display: grid;
+  gap: 10px;
+  padding: 12px 6px 4px;
+  border-top: 1.5px solid var(--print);
+}
+.card__verdict {
+  font-family: var(--f-serif);
+  font-weight: 500;
+  font-size: 1.02rem;
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+.card__verdict b {
+  font-family: var(--f-display);
+  font-weight: 900;
+  color: var(--print);
+  margin-right: 0.7em;
+  letter-spacing: 0.14em;
+}
+.card__meta {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.card__meta li {
+  padding: 1px 8px;
+  border: 1px solid var(--rule-strong);
+  font-size: var(--t-xs);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  color: var(--ink-2);
+}
+
+/* ---------- 動作 ---------- */
+.oracle__actions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+  width: 100%;
+}
+.oracle__go,
+.oracle__actions > .btn--line,
+.oracle__taunt {
+  width: calc(100% - var(--offset));
+}
+.oracle__actions .charges {
+  margin-left: 4px;
+}
+.oracle__taunt {
+  display: grid;
+  place-items: center;
+  min-height: 50px;
+  padding: 0 12px;
+  border: 1.5px dashed var(--ink);
+  font-family: var(--f-kai);
+  font-size: var(--t-md);
+  text-align: center;
+}
+/* 愛店按鈕佔大部分，分享縮在右邊 */
+.oracle__minor {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: stretch;
+  width: calc(100% - var(--offset));
+}
+.oracle__minor .love-btn {
+  width: 100%;
+}
+.oracle__share {
+  flex-direction: column;
+  gap: 4px;
+  min-height: 0;
+  padding: 0 14px;
+  font-family: var(--f-serif);
+  font-weight: 700;
+  font-size: 0.86rem;
+  letter-spacing: 0.12em;
+  text-indent: 0.12em;
+}
+
+/* ---------- 揪團：一行小小的消息（已經通知幾個人、誰要去），不擋住籤卡 ---------- */
+.oracle__crew {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-self: start;
+  min-height: 40px;
+  padding: 4px 14px 4px 8px;
+  border: 1.5px dashed var(--rule-strong);
+  border-radius: 999px;
+  background: var(--paper-hi);
+  font-family: var(--f-serif);
+  font-weight: 700;
+  font-size: var(--t-xs);
+  letter-spacing: 0.06em;
+  color: var(--ink-2);
+  animation: rise-in 0.35s var(--ease-out) both;
+}
+.oracle__crew .glyph {
+  flex: none;
+}
+@keyframes count-stamp {
+  from {
+    opacity: 0;
+    transform: scale(1.8) rotate(-12deg);
+  }
+}
+
+@media (max-height: 760px) {
+  .card {
+    --body-h: 240px;
+  }
+}
+@media (max-width: 380px) {
+  .card {
+    padding: 22px 18px 16px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .oracle__burst {
+    animation: none;
+  }
+}

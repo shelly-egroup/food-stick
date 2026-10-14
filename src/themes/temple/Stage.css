@@ -1,0 +1,8 @@
+/* 搖籤時：香煙飄快一點、廟貓尾巴甩快一點（燈籠和太陽光芒在 Home.css，兩個主題共用） */
+/* 要蓋過 .smoke path:nth-child(n) 的個別速度，所以多一層 .stage */
+.stage.stage--busy .smoke path {
+  animation-duration: 1.1s;
+}
+.stage--busy .cat__tail {
+  animation-duration: 0.4s;
+}

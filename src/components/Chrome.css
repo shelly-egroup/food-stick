@@ -1,0 +1,203 @@
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  height: calc(var(--bar-h) + var(--safe-t));
+  padding: var(--safe-t) var(--gutter) 0;
+  background: var(--paper);
+  border-bottom: 1.5px solid var(--ink);
+}
+.topbar__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink);
+  text-decoration: none;
+}
+/* 「食」是一顆印章，後面接著「在難選」 */
+.topbar__seal {
+  display: grid;
+  transition: transform 0.25s var(--ease-spring);
+}
+@media (hover: hover) {
+  .topbar__brand:hover .topbar__seal {
+    transform: rotate(-8deg) scale(1.06);
+  }
+}
+.topbar__brand:active .topbar__seal {
+  transform: scale(0.9);
+}
+.topbar__name {
+  font-family: var(--f-display);
+  font-weight: 900;
+  font-size: 1.28rem;
+  line-height: 1;
+  letter-spacing: 0.14em;
+}
+[data-theme='magic'] .topbar__name {
+  background: linear-gradient(120deg, var(--ink) 40%, #4a3d9e);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.topbar__nav {
+  display: none;
+}
+.topbar__end {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.topbar__me {
+  border: 0;
+  padding: 0;
+  background: none;
+  border-radius: 50%;
+  transition: transform 0.2s var(--ease-spring);
+}
+.topbar__me:active {
+  transform: scale(0.92);
+}
+
+@media (min-width: 960px) {
+  .topbar__nav {
+    display: flex;
+    gap: 4px;
+    position: absolute;
+    left: 50%;
+    translate: -50% 0;
+  }
+  .topbar__link {
+    position: relative;
+    padding: 8px 18px;
+    text-decoration: none;
+    font-family: var(--f-serif);
+    font-weight: 700;
+    font-size: 1.02rem;
+    letter-spacing: 0.28em;
+    text-indent: 0.28em;
+    color: var(--ink-3);
+    transition: color 0.2s;
+  }
+  .topbar__link:hover {
+    color: var(--ink);
+  }
+  .topbar__link[aria-current='page'] {
+    color: var(--ink);
+  }
+  .topbar__link[aria-current='page']::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: -12px;
+    width: 24px;
+    height: 4px;
+    translate: -50% 0;
+    background: var(--accent);
+  }
+}
+
+.tabbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  height: calc(var(--tab-h) + var(--safe-b));
+  padding-bottom: var(--safe-b);
+  background: var(--paper);
+  border-top: 1.5px solid var(--ink);
+}
+.tabbar__item {
+  position: relative;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 2px;
+  text-decoration: none;
+  font-family: var(--f-serif);
+  font-weight: 700;
+  font-size: 0.86rem;
+  letter-spacing: 0.22em;
+  text-indent: 0.24em;
+  color: var(--ink-3);
+  transition: color 0.2s;
+}
+.tabbar__item svg {
+  transition: transform 0.3s var(--ease-spring);
+}
+.tabbar__item[aria-current='page'] {
+  color: var(--accent);
+}
+.tabbar__item[aria-current='page']::before {
+  content: '';
+  position: absolute;
+  top: -1.5px;
+  left: 50%;
+  width: 28px;
+  height: 4px;
+  translate: -50% 0;
+  background: currentColor;
+}
+.tabbar__item[aria-current='page'] svg {
+  transform: translateY(-1px) scale(1.08);
+}
+.tabbar__item:active svg {
+  transform: scale(0.88);
+}
+@media (min-width: 960px) {
+  .tabbar {
+    display: none;
+  }
+}
+
+/* ---------- 換頁：朱紅一刷 ---------- */
+/* 只用 backwards：播完不能留下 transform，否則頁面裡 position: fixed 的東西（籤卡）會以頁面為準、跟著頁面捲走 */
+.page {
+  animation: page-in 0.45s var(--ease-out) backwards;
+  padding-bottom: calc(var(--tab-h) + var(--safe-b));
+}
+@media (min-width: 960px) {
+  .page {
+    padding-bottom: 0;
+  }
+}
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+.page-wipe {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 100dvh;
+  z-index: 45;
+  pointer-events: none;
+  background: var(--accent);
+  animation: wipe 0.6s var(--ease-out) both;
+}
+@keyframes wipe {
+  0% {
+    clip-path: polygon(0 0, 0 0, -20% 100%, -20% 100%);
+  }
+  45% {
+    clip-path: polygon(0 0, 120% 0, 100% 100%, -20% 100%);
+  }
+  100% {
+    clip-path: polygon(120% 0, 120% 0, 100% 100%, 100% 100%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .page-wipe {
+    display: none;
+  }
+}

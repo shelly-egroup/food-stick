@@ -1,0 +1,177 @@
+/* 廟宇小插畫會動的地方：空白紙條輕輕晃、被風吹走的紙條一直飄 */
+.vignette--temple .vg-sway {
+  transform-box: fill-box;
+  transform-origin: 50% 0%;
+  animation: vg-sway 3.2s ease-in-out infinite alternate;
+}
+@keyframes vg-sway {
+  from {
+    transform: rotate(-4deg);
+  }
+  to {
+    transform: rotate(4deg);
+  }
+}
+.vignette--temple .vg-wind path {
+  stroke-dasharray: 18 26;
+  opacity: 0.45;
+  animation: vg-wind 1.6s linear infinite;
+}
+.vignette--temple .vg-wind path:nth-child(2) {
+  animation-duration: 1.9s;
+}
+.vignette--temple .vg-wind path:nth-child(3) {
+  animation-duration: 1.3s;
+}
+@keyframes vg-wind {
+  to {
+    stroke-dashoffset: -88;
+  }
+}
+.vignette--temple .vg-fly {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: vg-fly 2.6s ease-in-out infinite;
+}
+.vignette--temple .vg-fly--2 {
+  animation-delay: -0.9s;
+  animation-duration: 2.2s;
+}
+.vignette--temple .vg-fly--3 {
+  animation-delay: -1.6s;
+  animation-duration: 3s;
+}
+@keyframes vg-fly {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  50% {
+    transform: translate(6px, -7px) rotate(14deg);
+  }
+}
+/* 辦桌：碗裡的白飯冒煙 */
+.vignette--temple .vg-steam path {
+  stroke-dasharray: 8 10;
+  animation: vg-steam 1.8s linear infinite;
+}
+.vignette--temple .vg-steam path:nth-child(2) {
+  animation-delay: -0.9s;
+}
+@keyframes vg-steam {
+  to {
+    stroke-dashoffset: -36;
+  }
+}
+/* 新菜牌上的「＋」輕輕亮、問號泡泡上下浮、金榜上一道光掃過、毛筆點一點 */
+.vignette--temple .vg-plus {
+  animation: vg-plus 1.8s ease-in-out infinite;
+}
+@keyframes vg-plus {
+  50% {
+    opacity: 0.35;
+  }
+}
+.vignette--temple .vg-bob {
+  animation: vg-bob 2.4s ease-in-out infinite;
+}
+@keyframes vg-bob {
+  50% {
+    transform: translateY(-3px);
+  }
+}
+.vignette--temple .vg-shine {
+  animation: vg-shine 3.6s ease-in-out infinite;
+}
+@keyframes vg-shine {
+  0%,
+  35% {
+    transform: translateX(0);
+  }
+  75%,
+  100% {
+    transform: translateX(190px);
+  }
+}
+.vignette--temple .vg-brush {
+  animation: vg-dab 3s ease-in-out infinite;
+}
+@keyframes vg-dab {
+  0%,
+  70%,
+  100% {
+    transform: translate(0, 0);
+  }
+  80% {
+    transform: translate(0, -4px);
+  }
+  88% {
+    transform: translate(0, 0.6px);
+  }
+}
+.vignette--temple .vg-q,
+.vignette--temple .vg-rank,
+.vignette--temple .vg-board-title {
+  font-family: var(--f-display);
+  font-weight: 900;
+}
+.vignette--temple .vg-q {
+  font-size: 17px;
+  fill: var(--vermilion);
+}
+.vignette--temple .vg-rank {
+  font-size: 10px;
+  fill: var(--vermilion);
+}
+.vignette--temple .vg-board-title {
+  font-size: 12px;
+  letter-spacing: 0.3em;
+  fill: var(--ink);
+}
+/* 銅鑼輕輕晃、貓的 z 一個一個飄上去 */
+.vignette--temple .vg-gong {
+  transform-box: view-box;
+  transform-origin: 100px 30px;
+  animation: vg-gong 3.6s ease-in-out infinite alternate;
+}
+@keyframes vg-gong {
+  from {
+    transform: rotate(-2.5deg);
+  }
+  to {
+    transform: rotate(2.5deg);
+  }
+}
+.vignette--temple .vg-zz path {
+  animation: vg-zz 2.4s ease-in-out infinite;
+}
+.vignette--temple .vg-zz path:nth-child(2) {
+  animation-delay: 0.8s;
+}
+@keyframes vg-zz {
+  0% {
+    opacity: 0;
+    transform: translate(0, 4px);
+  }
+  40% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(4px, -8px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .vignette--temple .vg-gong,
+  .vignette--temple .vg-zz path,
+  .vignette--temple .vg-plus,
+  .vignette--temple .vg-bob,
+  .vignette--temple .vg-shine,
+  .vignette--temple .vg-brush,
+  .vignette--temple .vg-sway,
+  .vignette--temple .vg-wind path,
+  .vignette--temple .vg-fly,
+  .vignette--temple .vg-steam path {
+    animation: none;
+  }
+}
