@@ -2,20 +2,25 @@
   display: grid;
   gap: 26px;
 }
+/* 上排：店卡｜資料，垂直置中；下面整排是動作區 */
 .shop__top {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
-  gap: 20px;
-  align-items: start;
+  grid-template-areas:
+    'card info'
+    'acts acts';
+  gap: 22px;
+  align-items: center;
 }
 .shop__preview {
+  grid-area: card;
   transform-origin: 50% 4px;
   animation: plaque-in 0.55s var(--ease-spring) backwards;
 }
 .shop__info {
+  grid-area: info;
   display: grid;
   gap: 14px;
-  padding-top: 18px;
 }
 .shop__meta {
   list-style: none;
@@ -43,22 +48,28 @@
   align-items: center;
   gap: 8px;
 }
-.shop__prefs {
+.shop__acts {
+  grid-area: acts;
   display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 14px;
-  max-width: 340px;
+  align-items: stretch;
 }
-/* 不吃：比愛店低調一點的小按鈕，按下去後旁邊寫明會怎樣 */
+.shop__acts .love-btn__text small {
+  text-wrap: balance;
+}
+/* 不吃：跟愛店一樣高的直式按鈕，圖在上、字在下；按下去後底下寫明會怎樣 */
 .shop__block {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 12px;
+  display: grid;
+  padding-right: var(--offset);
 }
 .shop__block .btn {
   --shadow: var(--celadon);
+  flex-direction: column;
+  gap: 6px;
+  height: 100%;
   min-height: 42px;
-  padding: 0 1em;
+  padding: 0 1.1em;
   font-family: var(--f-serif);
   font-weight: 700;
   font-size: 0.92rem;
@@ -68,17 +79,20 @@
   --shadow: var(--rule-strong);
 }
 .shop__block-hint {
+  grid-column: 1 / -1;
+  margin: -2px 0 0;
+  text-align: right;
   font-size: var(--t-xs);
   font-weight: 500;
   color: var(--ink-2);
   animation: rise-in 0.3s var(--ease-out) both;
 }
 .shop__map {
+  grid-column: 1 / -1;
   display: flex;
   align-items: center;
   gap: 12px;
   width: calc(100% - var(--offset));
-  max-width: 340px;
   padding: 8px 12px 8px 8px;
   background: var(--paper-hi);
   border: 1.5px solid var(--ink);
@@ -310,10 +324,76 @@
 @media (max-width: 400px) {
   .shop__top {
     grid-template-columns: 1fr;
+    grid-template-areas:
+      'card'
+      'info'
+      'acts';
     justify-items: center;
+    gap: 18px;
   }
-  .shop__info {
+  .shop__info,
+  .shop__acts {
     width: 100%;
-    padding-top: 0;
   }
+}
+
+/* 張貼的人：頭像戴小帽子（廟宇紅團帽、魔法巫師帽），帽子會冒出頭像上緣，這一列上面多留一點空間 */
+.shop__meta .shop__by {
+  align-items: center;
+  padding-top: 12px;
+}
+.shop__poster {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.shop__poster-name {
+  overflow: hidden;
+  font-weight: 700;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.shop__walk {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.shop__walk svg {
+  color: var(--accent);
+}
+
+/* 張貼日期：靠右的一枚小日戳。廟宇是朱紅框、中文數字，微微蓋歪；魔法是金色虛線的小圓牌，前面一顆星 */
+.shop__posted {
+  flex: none;
+  margin-left: auto;
+  padding: 2px 8px;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-family: var(--f-classic);
+  font-size: var(--t-xs);
+  letter-spacing: 0.14em;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+[data-theme='temple'] .shop__posted {
+  box-shadow:
+    inset 0 0 0 2px var(--paper-hi),
+    inset 0 0 0 2.6px var(--accent);
+  padding: 3px 9px;
+  rotate: -3deg;
+}
+[data-theme='magic'] .shop__posted {
+  border: 1px dashed var(--marigold);
+  border-radius: 999px;
+  color: var(--cobalt);
+  font-family: var(--f-serif);
+  font-weight: 700;
+  font-variant-numeric: lining-nums;
+  letter-spacing: 0.08em;
+}
+[data-theme='magic'] .shop__posted::before {
+  content: '✦';
+  margin-right: 5px;
+  color: var(--marigold);
 }

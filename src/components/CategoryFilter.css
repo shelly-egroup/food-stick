@@ -25,6 +25,10 @@
   color: var(--paper-hi);
   transform: rotate(-8deg) scale(1.12);
 }
+/* 步行一排四格：最後一格「20 分以上」字比較多，給它寬一點 */
+.catgrid--walk {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(0, 1.45fr);
+}
 /* 很窄的手機（小於 360px）：小圖收起來，只留字 */
 @media (max-width: 359px) {
   .catgrid__chip svg {

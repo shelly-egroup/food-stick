@@ -1,6 +1,7 @@
 'use client';
 
-import { forwardRef, useImperativeHandle, useRef, type CSSProperties } from 'react';
+import { forwardRef, useCallback, useImperativeHandle, useRef, useState, type CSSProperties } from 'react';
+import { createPortal } from 'react-dom';
 import gsap from 'gsap';
 import { AltarTable } from '@/art/AltarTable';
 import { INK, fx } from '@/art/ink';
@@ -74,7 +75,14 @@ export const StageFloor = forwardRef<StageHandle, StageFloorProps>(function Stag
   { count, busy, onTap, label },
   ref,
 ) {
-  const svg = useRef<SVGSVGElement>(null);
+  const svg = useRef<SVGSVGElement | null>(null);
+  // 貓頭鷹畫在整個舞台最上層的另一張同尺寸 SVG：不會被布幔、吊星、封條擋住，飛起來也一樣
+  const owlSvg = useRef<SVGSVGElement>(null);
+  const [host, setHost] = useState<HTMLElement | null>(null);
+  const attach = useCallback((el: SVGSVGElement | null) => {
+    svg.current = el;
+    if (el) setHost(el.closest<HTMLElement>('.stage'));
+  }, []);
   const last = useRef<Artifact | null>(null);
 
   useImperativeHandle(ref, () => ({
@@ -188,7 +196,7 @@ export const StageFloor = forwardRef<StageHandle, StageFloorProps>(function Stag
       }),
   }));
 
-  const owl = useMagicOwl(svg);
+  const owl = useMagicOwl(owlSvg);
 
   const tap = (a: Artifact) => (busy ? undefined : () => onTap(a));
   const burst = (cx: number, cy: number) => (
@@ -209,7 +217,7 @@ export const StageFloor = forwardRef<StageHandle, StageFloorProps>(function Stag
 
   return (
     <svg
-      ref={svg}
+      ref={attach}
       className={`stage__art study-floor${count === 0 ? ' is-empty' : ''}${busy ? ' is-busy' : ''}`}
       viewBox="0 0 390 330"
       overflow="visible"
@@ -321,19 +329,27 @@ export const StageFloor = forwardRef<StageHandle, StageFloorProps>(function Stag
         {burst(270, 150)}
       </g>
 
-      {/* 白色貓頭鷹：點了會亂飛，連點三下會生氣飛走 */}
-      <g className="owl-run" transform={`translate(${owl.start.x} ${owl.start.y})`}>
-        <Owl x={0} y={0} onPoke={owl.poke} outfit={owl.outfit} />
-        {owl.line && (
-          <Say
-            key={owl.line.n}
-            text={owl.line.text}
-            angry={owl.line.angry}
-            x={owl.line.side ? 64 : 0}
-            y={owl.line.side ? -20 : owl.outfit === 'hat' ? -98 : -66}
-          />
+      {host &&
+        createPortal(
+          <div className="stage__floor stage__owl" aria-hidden="true">
+            <svg ref={owlSvg} className="stage__art" viewBox="0 0 390 330" overflow="visible">
+              {/* 白色貓頭鷹：點了會亂飛，連點三下會生氣飛走 */}
+              <g className="owl-run" transform={`translate(${owl.start.x} ${owl.start.y})`}>
+                <Owl x={0} y={0} onPoke={owl.poke} outfit={owl.outfit} />
+                {owl.line && (
+                  <Say
+                    key={owl.line.n}
+                    text={owl.line.text}
+                    angry={owl.line.angry}
+                    x={owl.line.side ? 64 : 0}
+                    y={owl.line.side ? -20 : owl.outfit === 'hat' ? -98 : -66}
+                  />
+                )}
+              </g>
+            </svg>
+          </div>,
+          host,
         )}
-      </g>
     </svg>
   );
 });

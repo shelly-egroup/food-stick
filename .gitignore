@@ -11,3 +11,5 @@ next-env.d.ts
 *.tsbuildinfo
 .env*.local
 .next-live
+.next-test
+.secrets

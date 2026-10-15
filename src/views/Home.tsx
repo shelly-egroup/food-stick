@@ -3,9 +3,11 @@
 import { useEffect, useEffectEvent, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Oracle } from '@/components/Oracle';
+import { UnsealCard } from '@/components/UnsealCard';
 import { Charges } from '@/components/Charges';
+import { Seal } from '@/components/Seal';
 import { Icon } from '@/components/Icon';
-import { CategoryFilter } from '@/components/CategoryFilter';
+import { CategoryFilter, WalkFilter } from '@/components/CategoryFilter';
 import { CrewPicker } from '@/components/CrewPicker';
 import { useHerald } from '@/components/Herald';
 import { MateMarks, tallyOf } from '@/components/MateMarks';
@@ -28,9 +30,19 @@ import {
   ensureJoined,
 } from '@/lib/store';
 import { newSeed, seeded } from '@/lib/random';
+import { saveSoloPick, soloReading } from '@/lib/soloPicks';
 import { askVerse } from '@/lib/verse';
 import { markDeparted } from '@/lib/depart';
-import { CATEGORIES, PRICES, type CategoryId, type DrawMode, type Price, type Restaurant } from '@/lib/types';
+import {
+  CATEGORIES,
+  PRICES,
+  WALKS,
+  type CategoryId,
+  type DrawMode,
+  type Price,
+  type Restaurant,
+  type Walk,
+} from '@/lib/types';
 import { reducedMotion, sleep } from '@/lib/motion';
 import { usePersisted } from '@/lib/usePersisted';
 import { useNow } from '@/lib/useBrowser';
@@ -41,7 +53,7 @@ const RECENT_MS = 3 * 86400_000;
 /** 儀式動畫結束後，最多再等 AI 寫籤詩多久；來不及就用原本的籤詩 */
 const VERSE_WAIT_MS = 1600;
 const NO_CREW: string[] = [];
-const NO_FILTERS: DrawFilters = { categories: [], prices: [] };
+const NO_FILTERS: DrawFilters = { categories: [], prices: [], walks: [] };
 
 type Phase = 'idle' | 'drawing' | 'revealed' | 'leaving';
 
@@ -75,6 +87,12 @@ function revealStage(el: HTMLElement | null): Promise<void> {
   });
 }
 /** 當地的日期：自己抽的額度每天重來 */
+/** 重抽的碎念：看這是第幾次重抽，從那一組隨機挑一句 */
+const tauntFor = (taunts: string[][], left: number) => {
+  const set = taunts[REROLLS - left] ?? [];
+  return set[Math.floor(Math.random() * set.length)] ?? '';
+};
+
 const dayOf = (t: number) => {
   const d = new Date(t);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -123,6 +141,8 @@ export function Home() {
       s?.id === id ? (s.rids.includes(rid) ? s : { id, rids: [...s.rids, rid] }) : { id, rids: [rid] },
     );
   const pendingReroll = useRef(false);
+  // 自己抽、重抽次數用完時最後看到的那一支：首頁大按鈕（點籤筒）可以再攤開來看
+  const [finalPick, setFinalPick] = useState<{ r: Restaurant; reading: Reading } | null>(null);
   // 揪團：我在的那一團（自己發的，或加入別人的），一切都即時更新；團裡誰都可以幫大家抽
   const { team: liveTeam, pulse, find: findOuting, drawAsk, doneDrawAsk } = useHerald();
   const team = mode === 'group' ? liveTeam : null;
@@ -161,8 +181,28 @@ export function Home() {
   const rerollsLeft = team ? team.rerolls : solo && soloUsed ? (me.today?.left ?? REROLLS) : REROLLS;
   const charged = team ? !!team.by : solo && soloUsed;
   const canDraw = !charged || rerollsLeft > 0;
+  // 自己抽的次數用完了：籤筒貼上封條，大按鈕換成「請看今日定案」，點了重新攤開今天最後那一支
+  const spentAll = !team && charged && rerollsLeft <= 0;
+  const finalCard = useMemo(() => {
+    if (!spentAll) return null;
+    const last = draws
+      .filter(
+        (d) =>
+          d.uid === me.id &&
+          d.mode === 'solo' &&
+          !d.rerolled &&
+          !!d.createdAt &&
+          dayOf(d.createdAt.getTime()) === today,
+      )
+      .sort((a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0))[0];
+    const r = last && restaurantMap.get(last.rid);
+    if (!r) return finalPick;
+    if (finalPick?.r.id === r.id) return finalPick;
+    // 重新整理過、記憶裡沒有那張籤卡：用這台裝置記下的那一首（沒有就用紀錄的 id 重寫，每次都一樣）
+    return { r, reading: soloReading(theme, r, me.id, last.id) };
+  }, [spentAll, draws, me.id, today, restaurantMap, finalPick, theme]);
   // 下面那行顯示剩幾次（香／魔力球）；揪團吃還沒成團時不提自己的次數
-  const showCharges = charged && (mode === 'solo' || !!team);
+  const showCharges = charged && (mode === 'solo' || !!team) && !spentAll;
   const recent = useMemo(() => {
     const cut = now - RECENT_MS;
     return draws.filter((d) => d.uid === me.id && !d.rerolled && (d.createdAt?.getTime() ?? 0) > cut).map((d) => d.rid);
@@ -190,7 +230,12 @@ export function Home() {
     }));
   const togglePrice = (v: Price) =>
     setFilters((f) => ({ ...f, prices: f.prices.includes(v) ? f.prices.filter((p) => p !== v) : [...f.prices, v] }));
-  const clearFilters = () => setFilters({ categories: [], prices: [] });
+  const toggleWalk = (v: Walk) =>
+    setFilters((f) => {
+      const walks = f.walks ?? [];
+      return { ...f, walks: walks.includes(v) ? walks.filter((w) => w !== v) : [...walks, v] };
+    });
+  const clearFilters = () => setFilters(NO_FILTERS);
   const toggleCrew = (id: string) => setCrew((c) => (c.includes(id) ? c.filter((x) => x !== id) : [...c, id]));
 
   /**
@@ -245,10 +290,24 @@ export function Home() {
     chain.current.seen = [...chain.current.seen, r.id];
     if (team) seeInTeam(team.id, r.id);
     chain.current.drawId = null;
-    recordDraw(me.id, r.id, m, ids)
+    const recorded = recordDraw(me.id, r.id, m, ids)
       .then((id) => (chain.current.drawId = id))
-      .catch(() => {});
+      .catch(() => null);
     const written = await Promise.race([verse, sleep(VERSE_WAIT_MS).then(() => null)]);
+    // 自己抽的：把這一首記在這台裝置，報馬仔「自己來拜拜」、「請看今日定案」攤開的是同一首
+    if (m === 'solo' && !team)
+      void recorded.then(
+        (id) =>
+          id &&
+          saveSoloPick(me.id, {
+            id,
+            rid: r.id,
+            seed,
+            variant: variant ?? '',
+            lines: written?.lines ? [...written.lines] : [],
+            verdict: written?.verdict ?? '',
+          }),
+      );
     setResult({
       key: `${r.id}:${seed}`,
       r,
@@ -297,12 +356,28 @@ export function Home() {
       showTeamPick(team);
   }
 
+  /** 攤開今天的定案：不扣次數、不另外記一筆，籤卡上落下定案章 */
+  function showFinal() {
+    if (phase !== 'idle' || !finalCard) return;
+    setTaunt('');
+    setResult({ key: `final-${Date.now()}`, r: finalCard.r, reading: finalCard.reading });
+    setPhase('revealed');
+  }
+
   const shake = useShake(() => {
-    if (phase === 'idle' && pool.length) void runDraw();
+    if (phase !== 'idle') return;
+    if (spentAll && finalCard) showFinal();
+    else if (pool.length) void runDraw();
   }, phase === 'idle');
 
   const startDraw = (pick?: string) => {
     if (phase !== 'idle') return;
+    if (spentAll && finalCard) {
+      showFinal();
+      return;
+    }
+    // 關掉籤卡後從外面（大按鈕、籤筒、搖手機）再抽，一樣會扣一次：碎念也一樣跳出來
+    if (charged && rerollsLeft > 0) setTaunt(tauntFor(copy.taunts, rerollsLeft));
     void runDraw(pick);
   };
 
@@ -328,7 +403,7 @@ export function Home() {
   const reroll = () => {
     if (phase !== 'revealed' || rerollsLeft <= 0 || overNote) return;
     pendingReroll.current = true;
-    setTaunt(copy.taunts[REROLLS - rerollsLeft] ?? '');
+    setTaunt(tauntFor(copy.taunts, rerollsLeft));
     const prev = chain.current.drawId;
     if (prev) markRerolled(prev).catch(() => {});
     setPhase('leaving');
@@ -362,6 +437,7 @@ export function Home() {
   };
 
   const onClosed = async () => {
+    if (result && !result.team) setFinalPick({ r: result.r, reading: result.reading });
     setResult(null);
     await stage.current?.settle();
     if (pendingReroll.current) {
@@ -385,8 +461,11 @@ export function Home() {
     router.push('/shops/');
   };
 
-  const filtered = filters.categories.length + filters.prices.length > 0;
+  const walks = filters.walks ?? [];
+  const filtered = filters.categories.length + filters.prices.length + walks.length > 0;
   const [filtersOpen, setFiltersOpen] = useState(false);
+  // 搖手機被 iOS 拒絕了：點首頁的封印小標籤，攤開解封籤教怎麼重新允許
+  const [unsealOpen, setUnsealOpen] = useState(false);
   const summary = [
     filters.categories.length
       ? CATEGORIES.filter((c) => filters.categories.includes(c.id))
@@ -398,6 +477,13 @@ export function Home() {
           .map((p) => p.label)
           .join('、')
       : '不限價位',
+    ...(walks.length
+      ? [
+          `步行 ${WALKS.filter((w) => walks.includes(w.v))
+            .map((w) => w.label)
+            .join('、')}`,
+        ]
+      : []),
   ].join('・');
   const big = party.length >= 3;
   const busy = phase !== 'idle';
@@ -417,7 +503,7 @@ export function Home() {
     <div className="home">
       <section
         ref={stageEl}
-        className={`stage${entering ? ' stage--enter' : ''}${phase === 'drawing' ? ' stage--busy' : ''}`}
+        className={`stage${entering ? ' stage--enter' : ''}${phase === 'drawing' ? ' stage--busy' : ''}${spentAll && finalCard ? ' stage--spent' : ''}`}
         aria-label={copy.place}
       >
         <StageTop />
@@ -426,12 +512,22 @@ export function Home() {
             {taunt}
           </p>
         )}
+        {spentAll && finalCard && (
+          // 今天的籤（魔力）用完了：一張封條斜斜貼過籤筒（水晶球）
+          <div className="stage__band" aria-hidden="true">
+            <span className="stage__band-seal">
+              <Seal text={copy.finalSeal} size={40} rotate={-6} />
+            </span>
+            <b>{copy.finalBand}</b>
+            <i>{finalCard.r.name}</i>
+          </div>
+        )}
         <div className="stage__floor">
           <StageFloor
             ref={stage}
             count={pool.length}
             busy={busy}
-            onTap={(pick) => pool.length > 0 && startDraw(pick)}
+            onTap={(pick) => (spentAll && finalCard ? showFinal() : pool.length > 0 && startDraw(pick))}
             label={label}
           />
         </div>
@@ -532,6 +628,7 @@ export function Home() {
                 </button>
               ))}
             </div>
+            <WalkFilter selected={walks} onToggle={toggleWalk} />
           </div>
         </Sheet>
 
@@ -543,6 +640,15 @@ export function Home() {
           <button type="button" className="btn btn--zhu btn--lg btn--block dock__cta" onClick={addShop}>
             <Icon name="plus" />
             先新增第一家店
+          </button>
+        ) : spentAll && finalCard && !busy ? (
+          <button
+            type="button"
+            className="btn btn--zhu btn--lg btn--block dock__cta dock__cta--final"
+            onClick={showFinal}
+          >
+            <Seal text={copy.finalSeal} size={36} variant="outline" color="var(--accent)" rotate={-8} />
+            {copy.finalCta}
           </button>
         ) : team && teamShop && !busy ? (
           <button
@@ -585,9 +691,14 @@ export function Home() {
               </span>
             )}
             {shake.supported &&
-              !shake.denied &&
               canDraw &&
-              (shake.enabled ? (
+              (shake.denied ? (
+                // iOS 拒絕過就不會再問：籤筒（水晶球）被封住、想搖卻卡住，點了攤開解封籤
+                <button type="button" className="dock__shake is-sealed" onClick={() => setUnsealOpen(true)}>
+                  <theme.Glyph name="shake" size={22} />
+                  {copy.shake.denied}
+                </button>
+              ) : shake.enabled ? (
                 <span className="dock__shake is-on">
                   <theme.Glyph name="shake" size={22} />
                   {copy.shake.on}
@@ -601,6 +712,8 @@ export function Home() {
           </p>
         )}
       </section>
+
+      {unsealOpen && <UnsealCard theme={theme} onClose={() => setUnsealOpen(false)} />}
 
       {result && (
         <Oracle

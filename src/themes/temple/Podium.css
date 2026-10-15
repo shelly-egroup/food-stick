@@ -1,41 +1,92 @@
-/* 金榜：前三名站在放射光的榜單上 */
+/* 金榜：上面三階頒獎台，下面一卷黃榜 */
+.hall {
+  display: grid;
+  gap: 26px;
+  min-width: 0;
+}
 .podium {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
   display: grid;
   grid-template-columns: 1fr 1.15fr 1fr;
   align-items: end;
   gap: clamp(10px, 2.4vw, 26px);
-  padding: 30px clamp(10px, 3vw, 40px) 0;
-  background: repeating-conic-gradient(from 0deg at 50% 100%, var(--marigold-tint) 0deg 6deg, transparent 6deg 12deg);
+  padding: 40px clamp(12px, 3vw, 44px) 0;
   border: 1.5px solid var(--ink);
   border-bottom-width: 6px;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .16 0 0 0 0 .13 0 0 0 0 .1 0 0 0 .08 0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E"),
+    linear-gradient(180deg, #f8f2e4, #f1e7d1);
+}
+.podium__rays {
+  position: absolute;
+  left: 50%;
+  bottom: -40%;
+  z-index: -1;
+  width: 180%;
+  aspect-ratio: 1;
+  translate: -50% 0;
+  background: repeating-conic-gradient(from 0deg, rgba(242, 185, 64, 0.32) 0deg 5deg, transparent 5deg 12deg);
+  -webkit-mask-image: radial-gradient(circle, #000 20%, transparent 62%);
+  mask-image: radial-gradient(circle, #000 20%, transparent 62%);
+  pointer-events: none;
+  animation: podium-rays 60s linear infinite;
+}
+@keyframes podium-rays {
+  to {
+    rotate: 360deg;
+  }
 }
 .podium__slot {
+  --ink-wash: 0;
   position: relative;
   display: grid;
   justify-items: center;
   align-content: start;
   gap: 14px;
-  padding: 26px 8px 18px;
+  min-height: 250px;
+  padding: 30px 8px 54px;
   border: 1.5px solid var(--ink);
   border-bottom: 0;
-  background: var(--paper-hi);
-  min-height: 260px;
+  background:
+    linear-gradient(rgba(255, 252, 240, calc(var(--ink-wash) * 0.5)), rgba(255, 252, 240, calc(var(--ink-wash) * 0.5))),
+    repeating-linear-gradient(90deg, rgba(38, 33, 29, 0.035) 0 1px, transparent 1px 5px), var(--slot);
+  box-shadow:
+    inset 0 0 0 6px var(--slot),
+    inset 0 0 0 7.5px rgba(166, 70, 48, 0.55);
+  transition: translate 0.35s var(--ease-spring);
+}
+.podium__slot::before {
+  content: '';
+  position: absolute;
+  left: -7px;
+  right: -7px;
+  top: -9px;
+  height: 10px;
+  border: 1.5px solid var(--ink);
+  border-radius: 3px 3px 0 0;
+  background: linear-gradient(180deg, #b4493a, #8a3226);
+}
+.podium__slot:hover {
+  translate: 0 -4px;
 }
 .podium__slot--1 {
-  min-height: 330px;
-  background: var(--marigold);
+  --slot: var(--marigold);
+  min-height: 340px;
 }
 .podium__slot--2 {
-  min-height: 280px;
-  background: var(--celadon);
+  --slot: #a9c2bd;
+  min-height: 290px;
 }
 .podium__slot--3 {
-  min-height: 250px;
-  background: var(--vermilion-tint);
+  --slot: #f3d6cb;
+  min-height: 260px;
 }
 .podium__title {
   position: absolute !important;
-  top: -26px;
+  top: -34px;
+  z-index: 2;
 }
 .podium__name {
   margin-top: 26px;
@@ -44,8 +95,8 @@
   white-space: nowrap;
   letter-spacing: 0.08em;
   line-height: 1;
+  color: #1f1b17;
 }
-/* 本月霸主：不旋轉、字放大，兩端剪成布條的燕尾 */
 .podium__crown {
   padding: 4px 18px;
   background: var(--ink);
@@ -74,11 +125,40 @@
   font-size: var(--t-xl);
   letter-spacing: 0;
 }
-/* 空位：虛線框，直書「虛位以待」 */
-.podium__slot--vacant {
+.podium__step {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: grid;
+  place-items: center;
+  height: 40px;
+  border-top: 1.5px solid var(--ink);
+  background: rgba(38, 33, 29, 0.08);
+  font-family: var(--f-display);
+  font-weight: 900;
+  font-size: 1.15rem;
+  letter-spacing: 0.2em;
+  text-indent: 0.2em;
+  color: rgba(38, 33, 29, 0.55);
+}
+.podium__open {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  padding: 0;
+  border: 0;
   background: transparent;
+  cursor: pointer;
+}
+.podium__slot--vacant {
+  --slot: transparent;
   border-style: dashed;
   border-color: var(--rule-strong);
+  box-shadow: none;
+}
+.podium__slot--vacant::before {
+  display: none;
 }
 .podium__vacant {
   margin-top: 30px;
@@ -89,20 +169,23 @@
   letter-spacing: 0.4em;
   color: var(--ink-3);
 }
-
 @media (max-width: 520px) {
   .podium {
-    padding-top: 34px;
+    padding-top: 42px;
   }
   .podium__slot {
-    min-height: 220px;
-    padding-top: 22px;
+    min-height: 230px;
+    padding: 24px 6px 48px;
   }
   .podium__slot--1 {
-    min-height: 280px;
+    min-height: 300px;
   }
   .podium__slot--2 {
-    min-height: 240px;
+    min-height: 254px;
+  }
+  .podium__step {
+    height: 34px;
+    font-size: 1rem;
   }
   .podium__crown {
     padding: 3px 14px;
@@ -110,4 +193,323 @@
     letter-spacing: 0.16em;
     text-indent: 0.16em;
   }
+}
+@media (prefers-reduced-motion: reduce) {
+  .podium__rays {
+    animation: none;
+  }
+}
+
+/* 續榜：第四名以後，象牙紙上一卷由右往左讀的黃榜，兩端是朱漆卷軸 */
+.bang {
+  position: relative;
+  padding: 0 0 6px;
+}
+.bang__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.bang__eyebrow {
+  font-family: var(--f-latin);
+  font-weight: 600;
+  font-size: 10px;
+  letter-spacing: 0.34em;
+  color: #8a7c68;
+}
+.bang__hint {
+  display: none;
+  font-family: var(--f-serif);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  color: #8a7c68;
+}
+.bang__frame {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  filter: drop-shadow(0 10px 18px rgba(80, 52, 24, 0.16));
+}
+.bang__roller {
+  position: relative;
+  z-index: 2;
+  flex: none;
+  width: 16px;
+  margin: -10px 0;
+  border: 1.5px solid var(--ink);
+  border-radius: 8px;
+  background: linear-gradient(90deg, #7a2a1c, #b4493a 40%, #8a3226);
+}
+.bang__roller::before,
+.bang__roller::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  width: 22px;
+  height: 10px;
+  margin-left: -11px;
+  border: 1.5px solid var(--ink);
+  border-radius: 4px;
+  background: linear-gradient(90deg, #a07a2c, #e2c27a 50%, #a07a2c);
+}
+.bang__roller::before {
+  top: -6px;
+}
+.bang__roller::after {
+  bottom: -6px;
+}
+.bang__scroll {
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.bang__scroll::-webkit-scrollbar {
+  display: none;
+}
+.bang__paper {
+  position: relative;
+  min-width: 100%;
+  width: max-content;
+  border-block: 1.5px solid var(--ink);
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.012 .1' numOctaves='3' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 .5 0 0 0 0 .38 0 0 0 0 .16 0 0 0 .16 -.03'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23f)'/%3E%3C/svg%3E"),
+    linear-gradient(180deg, #f5e6b8, #efdba0);
+}
+.bang__paper::before {
+  content: '';
+  position: absolute;
+  inset: 8px 0;
+  border-block: 1px solid rgba(166, 70, 48, 0.55);
+  pointer-events: none;
+}
+.bang__cols {
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: flex-start;
+  align-items: stretch;
+  min-height: 236px;
+  margin: 0;
+  padding: 22px 14px;
+  list-style: none;
+}
+.bang__col {
+  position: relative;
+  display: flex;
+  flex: none;
+  width: 34px;
+  border-left: 1px solid rgba(38, 33, 29, 0.14);
+}
+.bang__col:first-child {
+  border-left: 0;
+}
+.bang__col--big {
+  width: 64px;
+}
+.bang__col--big + .bang__col:not(.bang__col--big) {
+  margin-right: 10px;
+  border-right: 1px solid rgba(166, 70, 48, 0.55);
+}
+.bang__hit,
+.bang__col.is-vacant {
+  --ink-wash: 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 2px 0 6px;
+  border: 0;
+  background: rgba(242, 185, 64, calc(var(--ink-wash) * 0.45));
+  color: var(--ink);
+  cursor: pointer;
+  transition: background 0.25s;
+}
+.bang__col.is-vacant {
+  cursor: default;
+}
+.bang__hit:hover,
+.bang__hit:focus-visible {
+  background: rgba(255, 252, 240, 0.55);
+}
+.bang__rank {
+  writing-mode: vertical-rl;
+  font-family: var(--f-serif);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  color: var(--vermilion);
+}
+.bang__seal {
+  flex: none;
+  rotate: -5deg;
+}
+.bang__name {
+  flex: 1;
+  writing-mode: vertical-rl;
+  font-family: var(--f-display);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.12em;
+  white-space: nowrap;
+  color: #1f1b17;
+}
+.bang__col--big .bang__name {
+  font-weight: 900;
+}
+.bang__hit:hover .bang__name {
+  color: var(--vermilion-lo);
+}
+/* 幾人愛：數字蓋成一方朱印（白字、雙線框、微微歪），底下小字寫單位 */
+.bang__val {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.bang__num {
+  writing-mode: vertical-rl;
+  display: grid;
+  place-items: center;
+  min-width: 30px;
+  min-height: 30px;
+  padding: 5px 4px;
+  border-radius: 3px;
+  background: var(--vermilion);
+  box-shadow:
+    inset 0 0 0 1.5px var(--vermilion),
+    inset 0 0 0 2.6px rgba(255, 246, 225, 0.9),
+    1.5px 1.5px 0 rgba(122, 42, 28, 0.35);
+  font-family: var(--f-display);
+  font-weight: 900;
+  font-size: 18px;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  color: #fff6e1;
+  rotate: -4deg;
+  transition:
+    rotate 0.3s var(--ease-spring),
+    scale 0.3s var(--ease-spring);
+}
+.bang__col:nth-child(2n) .bang__num {
+  rotate: 3deg;
+}
+.bang__unit {
+  writing-mode: vertical-rl;
+  font-family: var(--f-serif);
+  font-weight: 700;
+  font-size: 12.5px;
+  letter-spacing: 0.16em;
+  color: #6b4f2f;
+}
+/* 零人愛：只剩朱色框線的空印 */
+.bang__val.is-zero .bang__num {
+  background: rgba(255, 252, 240, 0.5);
+  box-shadow: inset 0 0 0 2px var(--vermilion);
+  color: var(--vermilion);
+}
+.bang__hit:hover .bang__num {
+  rotate: 0deg;
+  scale: 1.1;
+}
+.bang__crown {
+  position: absolute;
+  top: 56px;
+  right: -9px;
+  writing-mode: vertical-rl;
+  padding: 6px 2px;
+  border: 1px solid var(--vermilion);
+  background: var(--paper-hi);
+  font-family: var(--f-serif);
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--vermilion);
+}
+.is-vacant .bang__name {
+  font-family: var(--f-serif);
+  font-size: 13px;
+  font-weight: 500;
+  color: #a4916a;
+}
+/* 榜尾：「右榜曉諭，咸使聞知」與日期，朱印蓋在字的正下方 */
+.bang__colophon {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 26px;
+  padding: 0 14px 0 18px;
+  border-left: 0;
+}
+.bang__decree {
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: flex-start;
+  gap: 6px;
+}
+.bang__words {
+  writing-mode: vertical-rl;
+  font-family: var(--f-classic);
+  font-size: 16px;
+  line-height: 1;
+  letter-spacing: 0.26em;
+  color: #2b2620;
+  white-space: nowrap;
+}
+.bang__date {
+  writing-mode: vertical-rl;
+}
+.bang__decree .bang__date {
+  align-self: flex-end;
+  font-family: var(--f-serif);
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  color: #6b4f2f;
+}
+.bang__stamp {
+  opacity: 0.92;
+}
+@media (max-width: 640px) {
+  .bang__hint {
+    display: inline;
+  }
+  .bang__cols {
+    min-height: 220px;
+    padding: 20px 10px;
+  }
+  .bang__col--big {
+    width: 58px;
+  }
+}
+.bang__head {
+  padding: 0 4px;
+  margin-bottom: 16px;
+}
+@media (min-width: 641px) {
+  .bang__cols {
+    justify-content: space-between;
+  }
+  .bang__col {
+    flex: 1 0 34px;
+    max-width: 120px;
+  }
+  .bang__col--big {
+    flex: 1.7 0 64px;
+    max-width: 120px;
+  }
+}
+.bang,
+.bang__frame {
+  min-width: 0;
+  max-width: 100%;
+}
+.bang__crown {
+  right: 2px;
 }

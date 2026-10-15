@@ -414,6 +414,143 @@ function SleepyOwl() {
   );
 }
 
+function FaceDownTarot() {
+  return (
+    <>
+      <ellipse cx="100" cy="119" rx="70" ry="4" fill={INK} opacity="0.12" />
+      {[
+        [56, -8],
+        [100, 0],
+        [144, 8],
+      ].map(([x, r], i) => (
+        <g key={x} className="vg-doze" style={{ animationDelay: `${i * -0.9}s` }}>
+          <g transform={`translate(${x} 64) rotate(${r})`}>
+            <rect x="-21" y="-38" width="42" height="72" rx="5" fill="#2c3e7a" stroke={INK} strokeWidth="1.6" />
+            <rect x="-16" y="-33" width="32" height="62" rx="3" fill="none" stroke="var(--marigold)" strokeWidth="1" />
+            <circle r="9" fill="none" stroke="#c9b8ff" strokeWidth="1.1" />
+            <path d={SPARK(0, 0, 6)} fill="var(--marigold)" stroke={INK} strokeWidth="0.7" />
+            <path d={SPARK(0, -22, 3)} fill="#c9b8ff" />
+            <path d={SPARK(0, 22, 3)} fill="#c9b8ff" />
+          </g>
+        </g>
+      ))}
+      <g className="vg-twinkle" fill="var(--marigold)" stroke={INK} strokeWidth="0.8">
+        <path d={SPARK(24, 26, 4.5)} />
+        <path d={SPARK(178, 20, 4)} style={{ animationDelay: '1s' }} />
+        <path d={SPARK(170, 104, 3.2)} style={{ animationDelay: '1.8s' }} />
+      </g>
+    </>
+  );
+}
+
+function EmptyWindow() {
+  return (
+    <>
+      <ellipse cx="100" cy="119" rx="64" ry="4" fill={INK} opacity="0.12" />
+      <path d="M58 104 V44 a42 42 0 0 1 84 0 V104 Z" fill="#2c3e7a" stroke={INK} strokeWidth="1.8" />
+      <path d="M126 34 a10 10 0 1 0 6 17 a8 8 0 0 1 -6 -17 Z" fill="var(--marigold)" stroke={INK} strokeWidth="1.1" />
+      <path d="M100 2 V104 M58 64 H142" stroke="#8b5b36" strokeWidth="4" />
+      <path d="M100 2 V104 M58 64 H142" stroke={INK} strokeWidth="1" opacity="0.5" />
+      <rect x="48" y="102" width="104" height="9" rx="2" fill="#a06a3f" stroke={INK} strokeWidth="1.5" />
+      <g className="vg-quill">
+        <path
+          d="M120 100 c 10 -10 22 -14 30 -12 c -4 6 -14 12 -30 12 Z"
+          fill="#f8efdc"
+          stroke={INK}
+          strokeWidth="1.1"
+        />
+        <path d="M120 100 l 26 -10" stroke={INK} strokeWidth="0.8" />
+      </g>
+      <g className="vg-twinkle" fill="#fff" stroke={INK} strokeWidth="0.6">
+        <path d={SPARK(76, 40, 3.4)} />
+        <path d={SPARK(84, 84, 2.6)} style={{ animationDelay: '0.9s' }} />
+        <path d={SPARK(124, 84, 3)} style={{ animationDelay: '1.6s' }} />
+      </g>
+    </>
+  );
+}
+
+function IdlePerch() {
+  return (
+    <>
+      <ellipse cx="100" cy="119" rx="66" ry="4" fill={INK} opacity="0.12" />
+      <path d="M72 116 V66" stroke="#8b5b36" strokeWidth="6" strokeLinecap="round" />
+      <rect x="40" y="60" width="66" height="8" rx="4" fill="#a06a3f" stroke={INK} strokeWidth="1.4" />
+      <path d="M56 116 h32" stroke={INK} strokeWidth="2.4" strokeLinecap="round" />
+      <g className="vg-doze">
+        <Owl x={66} y={62} s={0.5} />
+      </g>
+      {[0, 1, 2].map((i) => (
+        <g key={i} transform={`translate(${138 + i * 2} ${104 - i * 9}) rotate(${-4 + i * 5})`}>
+          <rect x="-22" y="-8" width="44" height="16" rx="2" fill="#f8efdc" stroke={INK} strokeWidth="1.3" />
+          <path d="M-22 -8 L0 3 L22 -8" fill="none" stroke={INK} strokeWidth="1" />
+          <circle cx="0" cy="3" r="3.6" fill="var(--vermilion)" stroke={INK} strokeWidth="1" />
+        </g>
+      ))}
+      <g className="vg-zz" fill="none" stroke="#9b7bff" strokeWidth="1.4" strokeLinejoin="round" strokeLinecap="round">
+        <path d="M84 34 h6 l-6 6 h6" />
+        <path d="M94 24 h4.5 l-4.5 4.5 h4.5" />
+      </g>
+    </>
+  );
+}
+
+function DimHeartCircle() {
+  return (
+    <>
+      <ellipse cx="100" cy="119" rx="60" ry="4" fill={INK} opacity="0.12" />
+      <ellipse cx="100" cy="98" rx="62" ry="16" fill="none" stroke="#9b7bff" strokeWidth="1.4" strokeDasharray="5 4" />
+      <ellipse cx="100" cy="98" rx="44" ry="10" fill="none" stroke="var(--marigold)" strokeWidth="1" opacity="0.6" />
+      <g className="vg-dim">
+        <path
+          d="M100 84 C 86 72, 70 60, 78 46 C 84 36, 96 38, 100 48 C 104 38, 116 36, 122 46 C 130 60, 114 72, 100 84 Z"
+          fill="#f4c6d6"
+          stroke={INK}
+          strokeWidth="1.6"
+          strokeLinejoin="round"
+        />
+      </g>
+      <g className="vg-quill">
+        <path d="M150 104 L170 56" stroke="#8b5b36" strokeWidth="4" strokeLinecap="round" />
+        <path d={SPARK(171, 52, 6)} fill="var(--marigold)" stroke={INK} strokeWidth="0.8" />
+      </g>
+      <g className="vg-twinkle" fill="var(--marigold)" stroke={INK} strokeWidth="0.8">
+        <path d={SPARK(44, 40, 4.4)} />
+        <path d={SPARK(60, 92, 3)} style={{ animationDelay: '1.1s' }} />
+      </g>
+    </>
+  );
+}
+
+function SleepingBall() {
+  return (
+    <>
+      <ellipse cx="100" cy="119" rx="58" ry="4" fill={INK} opacity="0.12" />
+      <path
+        d="M78 116 l6 -16 h32 l6 16 Z"
+        fill="var(--marigold)"
+        stroke={INK}
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+      <circle cx="100" cy="68" r="34" fill="#cfd8ef" stroke={INK} strokeWidth="1.8" />
+      <g className="vg-dim">
+        <circle cx="100" cy="68" r="26" fill="#9b7bff" opacity="0.35" />
+      </g>
+      <path d="M80 54 a24 24 0 0 1 14 -10" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" />
+      <path d="M86 74 q6 5 12 0 M104 74 q6 5 12 0" fill="none" stroke={INK} strokeWidth="1.5" strokeLinecap="round" />
+      <g className="vg-zz" fill="none" stroke="#9b7bff" strokeWidth="1.4" strokeLinejoin="round" strokeLinecap="round">
+        <path d="M138 36 h6 l-6 6 h6" />
+        <path d="M148 24 h4.5 l-4.5 4.5 h4.5" />
+      </g>
+      <g className="vg-twinkle" fill="var(--marigold)" stroke={INK} strokeWidth="0.8">
+        <path d={SPARK(40, 30, 4.5)} />
+        <path d={SPARK(170, 92, 3.6)} style={{ animationDelay: '1.2s' }} />
+      </g>
+    </>
+  );
+}
+
 export function Vignette({ kind, title, hint }: VignetteProps) {
   const scenes: Record<VignetteProps['kind'], [ReactNode, string, string]> = {
     'crew-empty': [<Table key="a" />, copy.crew.emptyTitle, copy.crew.emptyHint],
@@ -423,6 +560,11 @@ export function Vignette({ kind, title, hint }: VignetteProps) {
     'shops-none': [<PuzzledOwl key="a" />, '', ''],
     'ranks-empty': [<DarkChart key="a" />, copy.ranks.emptyTitle, copy.ranks.emptyHint],
     'herald-empty': [<SleepyOwl key="a" />, copy.herald.emptyTitle, copy.herald.emptyHint],
+    'herald-inbox': [<EmptyWindow key="a" />, copy.herald.none.inbox.title, copy.herald.none.inbox.hint],
+    'herald-sent': [<IdlePerch key="a" />, copy.herald.none.sent.title, copy.herald.none.sent.hint],
+    'herald-solo': [<SleepingBall key="a" />, copy.herald.none.solo.title, copy.herald.none.solo.hint],
+    'titles-empty': [<FaceDownTarot key="a" />, copy.ranks.titlesEmpty.title, copy.ranks.titlesEmpty.hint],
+    'fans-empty': [<DimHeartCircle key="a" />, copy.shops.fansEmpty.title, copy.shops.fansEmpty.hint],
   };
   const [art, t, h] = scenes[kind];
   return (

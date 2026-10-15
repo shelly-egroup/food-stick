@@ -16,15 +16,17 @@ import {
   type Outing,
 } from '@/lib/store';
 import { hoursAgo, seeded } from '@/lib/random';
-import { paper } from '@/lib/sound';
+import { paper, twinkle } from '@/lib/sound';
+import { soloReading } from '@/lib/soloPicks';
 import { useNow } from '@/lib/useBrowser';
 import { usePersisted } from '@/lib/usePersisted';
 import { useTheme, type ThemeCopy } from '@/themes';
-import type { Restaurant } from '@/lib/types';
+import { categoryOf, walkOf, type DrawRecord, type Restaurant } from '@/lib/types';
 import { Avatar } from './Avatar';
 import { Charges } from './Charges';
 import { Icon } from './Icon';
 import { MateMarks, tallyOf } from './MateMarks';
+import { Seal } from './Seal';
 import { Sheet } from './Sheet';
 import { useToast } from './Toast';
 import './Herald.css';
@@ -32,6 +34,33 @@ import './Herald.css';
 /** 超過這麼久的揪團就不提了 */
 const FRESH_MS = 3 * 3_600_000;
 const NONE: string[] = [];
+
+/** 通知處的三個分頁：別人揪我的、我發出的、我自己一個人抽的 */
+type Tab = 'inbox' | 'sent' | 'solo';
+const TABS: Tab[] = ['inbox', 'sent', 'solo'];
+
+const WEEK = '日一二三四五六';
+
+function Postmark({ at }: { at: Date | null | undefined }) {
+  if (!at) return null;
+  const hm = at.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', hour12: false });
+  return (
+    <time className="postmark" dateTime={at.toISOString()}>
+      <b>
+        {at.getMonth() + 1}/{at.getDate()}
+      </b>
+      <span>
+        週{WEEK[at.getDay()]} {hm}
+      </span>
+    </time>
+  );
+}
+
+/** 本地時間的日期（YYYY-MM-DD）：自己抽的只列今天的 */
+const dayOf = (t: number) => {
+  const d = new Date(t);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
 
 interface News {
   /** 第幾則：每來一則加一，橫幅與通知鈕的動畫跟著重播 */
@@ -143,7 +172,7 @@ function describe(
  * 上方的鑼（貓頭鷹）旁邊記著幾則還沒看；點開是一張張紅帖（封著火漆的信），直接在上面回覆。
  */
 export function HeraldProvider({ children }: { children: ReactNode }) {
-  const { me, memberMap, restaurantMap } = useAppData();
+  const { me, memberMap, restaurantMap, draws } = useAppData();
   const { theme } = useTheme();
   const { copy } = theme;
   const [since] = useState(() => hoursAgo(6));
@@ -160,6 +189,21 @@ export function HeraldProvider({ children }: { children: ReactNode }) {
   const team = hosting ?? invites.find((o) => inTeam(o, me.id) && live(o)) ?? null;
   const keys = [...invites, ...(hosting ? [hosting] : [])].flatMap((o) => keysOf(o, me.id));
   const unread = open ? 0 : keys.filter((k) => !seen.includes(k)).length;
+  // 今天自己一個人抽、沒有重抽掉的（最後定下來的那一支）
+  const today = now ? dayOf(now) : '';
+  const solos = draws
+    .filter(
+      (d) =>
+        d.uid === me.id &&
+        d.mode === 'solo' &&
+        !d.rerolled &&
+        !!d.createdAt &&
+        dayOf(d.createdAt.getTime()) === today &&
+        restaurantMap.has(d.rid),
+    )
+    .sort((a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0))
+    // 只列最新定下來的那一支：今天要去哪
+    .slice(0, 1);
   const markSeen = () => setSeen((s) => [...new Set([...s, ...keys])].slice(-160));
 
   // 資料一變就跟上一次比：有新消息就跳橫幅、通知鈕晃一下（第一次載入不跳）
@@ -187,9 +231,21 @@ export function HeraldProvider({ children }: { children: ReactNode }) {
       }
     }
   }
+  // 分頁：沒選過就停在第一個有東西的那一頁（有人揪你就先看收到的）
+  const [tab, setTab] = useState<Tab | null>(null);
+  const counts: Record<Tab, number> = { inbox: invites.length, sent: hosting ? 1 : 0, solo: solos.length };
+  const active: Tab = tab ?? TABS.find((k) => counts[k] > 0) ?? 'inbox';
+  const pickTab = (k: Tab) => {
+    if (k === active) return;
+    // 廟宇翻一頁簿子，魔法是信匣裡亮一下
+    if (theme.id === 'magic') twinkle(3);
+    else paper(0.12);
+    setTab(k);
+  };
   const show = () => {
     markSeen();
     setNews(null);
+    setTab(null);
     setOpen(true);
   };
   const hide = () => {
@@ -274,27 +330,44 @@ export function HeraldProvider({ children }: { children: ReactNode }) {
       >
         <div className="herald">
           <p className="herald__lede">{copy.herald.lede}</p>
-          {hosting && (
-            <section className="herald__sec" aria-label={copy.herald.sent}>
-              <h3>
-                <theme.Glyph name="invite" size={26} />
-                {copy.herald.sent}
-              </h3>
-              <HostCard o={hosting} />
-            </section>
+          {!hosting && invites.length === 0 && solos.length === 0 ? (
+            <theme.Vignette kind="herald-empty" />
+          ) : (
+            <>
+              {/* 三個分頁，各蓋一顆章（收／發／獨）；分頁裡的標題是那一頁的說法 */}
+              <div className="herald__tabs" role="tablist" aria-label={copy.herald.name}>
+                {TABS.map((k) => (
+                  <button
+                    key={k}
+                    type="button"
+                    role="tab"
+                    id={`herald-tab-${k}`}
+                    aria-selected={active === k}
+                    aria-controls="herald-panel"
+                    className={`herald__tab herald__tab--${k}${active === k ? ' is-on' : ''}`}
+                    onClick={() => pickTab(k)}
+                  >
+                    <Seal text={copy.herald.marks[k]} size={34} color="var(--sec)" className="herald__mark" />
+                    <span>{copy.herald.tabs[k]}</span>
+                    {counts[k] > 0 && <b className="herald__tab-count">{counts[k]}</b>}
+                  </button>
+                ))}
+              </div>
+              <section
+                key={active}
+                id="herald-panel"
+                role="tabpanel"
+                aria-labelledby={`herald-tab-${active}`}
+                className={`herald__sec herald__sec--${active}`}
+              >
+                <h3>{copy.herald[active]}</h3>
+                {active === 'inbox' && invites.map((o) => <InviteCard key={o.id} o={o} />)}
+                {active === 'sent' && hosting && <HostCard o={hosting} />}
+                {active === 'solo' && solos.map((d) => <SoloCard key={d.id} d={d} />)}
+                {counts[active] === 0 && <theme.Vignette kind={`herald-${active}`} />}
+              </section>
+            </>
           )}
-          {invites.length > 0 && (
-            <section className="herald__sec" aria-label={copy.herald.inbox}>
-              <h3>
-                <theme.Glyph name="invite" size={26} />
-                {copy.herald.inbox}
-              </h3>
-              {invites.map((o) => (
-                <InviteCard key={o.id} o={o} />
-              ))}
-            </section>
-          )}
-          {!hosting && invites.length === 0 && <theme.Vignette kind="herald-empty" />}
         </div>
       </Sheet>
     </HeraldContext.Provider>
@@ -309,7 +382,11 @@ export function HeraldButton() {
     <button
       type="button"
       className={`herald-btn${unread ? ' has-news' : ''}`}
-      onClick={show}
+      onClick={() => {
+        // 廟宇：木槌碰一下鑼（有新消息就整個敲響）；魔法：貓頭鷹拍翅探頭（有新信就叫兩聲）
+        theme.heraldTap(unread > 0);
+        show();
+      }}
       aria-label={theme.copy.herald.unread(unread)}
     >
       <span className={`herald-btn__glyph${ring ? ' is-ring' : ''}`} key={`ring-${ring}`}>
@@ -321,6 +398,55 @@ export function HeraldButton() {
         </b>
       )}
     </button>
+  );
+}
+
+/** 今天自己一個人定下來的那一支：一張小帖（廟宇松綠帖頭、魔法夜綠色的信），幾點抽的、哪一家，有地圖就帶我去 */
+function SoloCard({ d }: { d: DrawRecord }) {
+  const { me, restaurantMap } = useAppData();
+  const { theme } = useTheme();
+  const { copy } = theme;
+  const r = restaurantMap.get(d.rid);
+  if (!r) return null;
+  // 當時那一首籤詩（這台裝置記得的話原樣攤開）
+  const reading = soloReading(theme, r, me.id, d.id);
+  return (
+    <article className="invite invite--solo">
+      <span className="invite__paper" aria-hidden="true" />
+      <header className="invite__head">
+        <span className="invite__glyph">
+          <theme.Glyph name="shake" size={32} />
+        </span>
+        <p>
+          <b>{copy.herald.soloNote}</b>
+          <span>
+            {categoryOf(r.category).label}・步行{walkOf(r.walk).label}
+          </span>
+        </p>
+        <i className="invite__seal" aria-hidden="true" />
+      </header>
+      <div className="invite__body">
+        <Postmark at={d.createdAt} />
+        <h4 className="invite__shop">{r.name}</h4>
+        <p className="invite__lot">
+          {reading.numberText}・{reading.grade.name}
+        </p>
+        <p className="invite__verse">
+          {reading.lines.map((l) => (
+            <span key={l}>{l}</span>
+          ))}
+        </p>
+        <p className="invite__solo-line">{copy.herald.soloLine}</p>
+      </div>
+      {r.mapUrl && (
+        <div className="invite__actions">
+          <a className="btn btn--zhu" href={r.mapUrl} target="_blank" rel="noopener noreferrer">
+            <Icon name="pin" size={20} />
+            {copy.outing.map}
+          </a>
+        </div>
+      )}
+    </article>
   );
 }
 
@@ -368,6 +494,7 @@ function InviteCard({ o }: { o: Outing }) {
         <i className="invite__seal" aria-hidden="true" />
       </header>
       <div className="invite__body">
+        <Postmark at={o.createdAt} />
         {r && o.status !== 'gathering' && <Pick o={o} r={r} />}
         <MateMarks outing={o} size={32} />
       </div>
@@ -463,6 +590,7 @@ function HostCard({ o }: { o: Outing }) {
         <i className="invite__seal" aria-hidden="true" />
       </header>
       <div className="invite__body">
+        <Postmark at={o.createdAt} />
         {r && o.status === 'drawn' && <Pick o={o} r={r} />}
         <MateMarks outing={o} skip={me.id} size={32} />
       </div>

@@ -73,6 +73,116 @@
   white-space: nowrap;
   animation: taunt-pop 0.4s var(--ease-spring) both;
 }
+/* ---------- 今天的籤（魔力）用完：封條斜斜貼過籤筒（水晶球），整個舞台褪色 ---------- */
+.stage__floor,
+.stage__top {
+  transition: filter 0.8s var(--ease-out);
+}
+.stage--spent .stage__floor,
+.stage--spent .stage__top {
+  filter: saturate(0.35) contrast(0.92);
+}
+.stage__band {
+  position: absolute;
+  left: -12%;
+  right: -12%;
+  top: 52%;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  height: 66px;
+  padding: 0 24px;
+  rotate: -7deg;
+  pointer-events: none;
+  background: var(--paper-hi);
+  border-block: 2px solid var(--vermilion);
+  box-shadow:
+    inset 0 5px 0 var(--paper-hi),
+    inset 0 6px 0 var(--vermilion),
+    inset 0 -5px 0 var(--paper-hi),
+    inset 0 -6px 0 var(--vermilion),
+    0 6px 0 rgba(38, 33, 29, 0.18);
+  animation: band-in 0.7s 0.15s var(--ease-out) both;
+}
+.stage__band b {
+  font-family: var(--f-display);
+  font-weight: 900;
+  font-size: clamp(1.35rem, 5.4vw, 1.7rem);
+  letter-spacing: 0.42em;
+  text-indent: 0.42em;
+  color: var(--vermilion);
+  white-space: nowrap;
+}
+.stage__band i {
+  font-family: var(--f-kai);
+  font-style: normal;
+  font-size: var(--t-sm);
+  letter-spacing: 0.08em;
+  color: var(--ink-2);
+  white-space: nowrap;
+  max-width: 9em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.stage__band-seal {
+  display: grid;
+  animation: band-seal 0.4s 0.75s var(--ease-spring) both;
+}
+@keyframes band-in {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+@keyframes band-seal {
+  from {
+    opacity: 0;
+    transform: scale(2.4) rotate(-30deg);
+  }
+}
+/* 魔法：一條羊皮紙封印帶，兩端各一顆星 */
+[data-theme='magic'] .stage__band {
+  background: linear-gradient(160deg, #f8efdc, #efe2c4);
+  border-color: var(--cobalt);
+  box-shadow:
+    inset 0 5px 0 #f8efdc,
+    inset 0 6px 0 rgba(58, 104, 173, 0.45),
+    inset 0 -5px 0 #efe2c4,
+    inset 0 -6px 0 rgba(58, 104, 173, 0.45),
+    0 6px 0 rgba(44, 62, 122, 0.2),
+    0 0 24px rgba(155, 123, 255, 0.35);
+}
+[data-theme='magic'] .stage__band b {
+  color: var(--cobalt);
+}
+[data-theme='magic'] .stage__band::before,
+[data-theme='magic'] .stage__band::after {
+  content: '✦';
+  font-size: 1.3rem;
+  color: var(--marigold);
+  -webkit-text-stroke: 1px var(--ink);
+}
+
+/* 大按鈕：「請看今日定案」，前面一顆空心的定案章 */
+.dock__cta--final {
+  gap: 12px;
+}
+.dock__cta--final svg {
+  animation: band-seal 0.4s 0.4s var(--ease-spring) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stage__band,
+  .stage__band-seal,
+  .dock__cta--final svg {
+    animation: none;
+  }
+}
+
 @keyframes taunt-pop {
   from {
     opacity: 0;
@@ -187,11 +297,36 @@ button.dock__shake:active {
     rotate: -2deg;
   }
 }
+/* 被封印：朱紅虛線框，籤筒想搖卻被卡住，只抖一下 */
+.dock__shake.is-sealed {
+  border-color: var(--vermilion);
+  color: var(--vermilion);
+}
+.dock__shake.is-sealed .glyph {
+  animation: dock-stuck 2.6s ease-in-out infinite;
+}
+@keyframes dock-stuck {
+  0%,
+  78%,
+  100% {
+    translate: 0 0;
+  }
+  82% {
+    translate: -2px 0;
+  }
+  86% {
+    translate: 2px 0;
+  }
+  90% {
+    translate: -1px 0;
+  }
+}
 [data-theme='magic'] .dock__shake {
   border-radius: 999px;
 }
 @media (prefers-reduced-motion: reduce) {
-  .dock__shake.is-on .glyph {
+  .dock__shake.is-on .glyph,
+  .dock__shake.is-sealed .glyph {
     animation: none;
   }
 }

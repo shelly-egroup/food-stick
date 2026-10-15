@@ -267,6 +267,177 @@ function QuietGong() {
   );
 }
 
+function BlankBanners() {
+  return (
+    <>
+      <ellipse cx="100" cy="119" rx="72" ry="4" fill={INK} opacity="0.12" />
+      <rect x="20" y="13" width="160" height="7" rx="3.5" fill="var(--wood)" stroke={INK} strokeWidth="1.5" />
+      {[20, 180].map((x) => (
+        <circle key={x} cx={x} cy="16.5" r="5.5" fill="var(--marigold)" stroke={INK} strokeWidth="1.3" />
+      ))}
+      {[54, 100, 146].map((x, i) => (
+        <g key={x} className="vg-sway" style={{ animationDelay: `${i * -1.1}s` }}>
+          <path d={`M${x - 9} 20 L${x} 27 L${x + 9} 20`} fill="none" stroke={INK} strokeWidth="1.1" />
+          <path
+            d={`M${x - 18} 27 h36 v56 l-18 11 l-18 -11 Z`}
+            fill="var(--vermilion)"
+            stroke={INK}
+            strokeWidth="1.5"
+            strokeLinejoin="round"
+          />
+          <path
+            d={`M${x - 13} 32 h26 v48 l-13 8 l-13 -8 Z`}
+            fill="none"
+            stroke="var(--marigold)"
+            strokeWidth="1.1"
+            strokeLinejoin="round"
+          />
+          <rect x={x - 6} y="42" width="12" height="28" fill="var(--paper-hi)" stroke={INK} strokeWidth="1" />
+          <g stroke="var(--marigold)" strokeWidth="1.2" strokeLinecap="round">
+            {[-10, -5, 0, 5, 10].map((d) => (
+              <line key={d} x1={x + d} y1={94 - Math.abs(d) * 1.1} x2={x + d} y2={100 - Math.abs(d) * 1.1} />
+            ))}
+          </g>
+        </g>
+      ))}
+      <g className="vg-bob">
+        <text x="100" y="60" textAnchor="middle" className="vg-q">
+          ？
+        </text>
+      </g>
+    </>
+  );
+}
+
+function EmptyTray() {
+  return (
+    <>
+      <ellipse cx="100" cy="119" rx="70" ry="4" fill={INK} opacity="0.12" />
+      <path d="M40 78 h96 l-6 24 h-84 Z" fill="var(--wood)" stroke={INK} strokeWidth="1.6" strokeLinejoin="round" />
+      <path d="M46 86 h84" stroke="var(--wood-lo)" strokeWidth="1.2" />
+      <rect x="40" y="72" width="96" height="7" rx="2" fill="var(--wood-lo)" stroke={INK} strokeWidth="1.4" />
+      <g transform="translate(150 104) scale(0.6)">
+        <Cat />
+      </g>
+      <g className="vg-bob" style={{ animationDelay: '-1.2s' }}>
+        <rect
+          x="70"
+          y="30"
+          width="30"
+          height="20"
+          rx="2"
+          fill="var(--vermilion)"
+          stroke={INK}
+          strokeWidth="1.4"
+          opacity="0.35"
+          strokeDasharray="3 3"
+        />
+      </g>
+      <g className="vg-bob">
+        <path
+          d="M118 22 h28 a7 7 0 0 1 7 7 v14 a7 7 0 0 1 -7 7 h-15 l-9 8 l1.5 -8 h-5.5 a7 7 0 0 1 -7 -7 v-14 a7 7 0 0 1 7 -7 Z"
+          fill="var(--paper-hi)"
+          stroke={INK}
+          strokeWidth="1.4"
+          strokeLinejoin="round"
+        />
+        <text x="132" y="44" textAnchor="middle" className="vg-q">
+          ？
+        </text>
+      </g>
+    </>
+  );
+}
+
+function UnsentCards() {
+  return (
+    <>
+      <ellipse cx="100" cy="119" rx="74" ry="4" fill={INK} opacity="0.12" />
+      <rect x="22" y="92" width="156" height="10" rx="2" fill="var(--wood)" stroke={INK} strokeWidth="1.6" />
+      <path d="M32 102 v14 M168 102 v14" stroke={INK} strokeWidth="3" strokeLinecap="round" />
+      {[0, 1, 2].map((i) => (
+        <g key={i} transform={`translate(${62 + i * 3} ${86 - i * 5}) rotate(${-6 + i * 4})`}>
+          <rect x="-20" y="-14" width="40" height="26" rx="2" fill="var(--vermilion)" stroke={INK} strokeWidth="1.4" />
+          <rect x="-15" y="-9" width="30" height="16" fill="none" stroke="var(--marigold)" strokeWidth="1" />
+        </g>
+      ))}
+      <rect x="112" y="80" width="30" height="12" rx="2" fill={INK} />
+      <ellipse cx="127" cy="82" rx="10" ry="2.6" fill="#4a4038" />
+      <g className="vg-brush">
+        <g transform="rotate(-38 150 70)">
+          <rect x="147.5" y="34" width="5" height="40" rx="1" fill="var(--wood)" stroke={INK} strokeWidth="1.2" />
+          <path d="M147.5 74 h5 l-1 8 c-1 3 -2 3 -3 0 Z" fill={INK} />
+        </g>
+      </g>
+    </>
+  );
+}
+
+function HoveringStamp() {
+  return (
+    <>
+      <ellipse cx="100" cy="119" rx="58" ry="4" fill={INK} opacity="0.12" />
+      <path
+        d="M52 112 l8 -26 h80 l8 26 Z"
+        fill="var(--paper-hi)"
+        stroke={INK}
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+      <rect
+        x="78"
+        y="92"
+        width="44"
+        height="16"
+        fill="none"
+        stroke="var(--vermilion)"
+        strokeWidth="1.4"
+        strokeDasharray="4 3"
+      />
+      <g className="vg-bob">
+        <rect x="88" y="22" width="24" height="12" rx="3" fill="var(--jade)" stroke={INK} strokeWidth="1.4" />
+        <rect x="92" y="34" width="16" height="22" fill="var(--wood)" stroke={INK} strokeWidth="1.4" />
+        <rect x="84" y="56" width="32" height="12" rx="2" fill="var(--vermilion)" stroke={INK} strokeWidth="1.5" />
+      </g>
+      <g className="vg-zz" fill="var(--vermilion)">
+        <path d="M150 50 c0 -6 8 -6 8 0 c0 -6 8 -6 8 0 c0 6 -8 10 -8 12 c0 -2 -8 -6 -8 -12 Z" />
+        <path d="M36 62 c0 -4 6 -4 6 0 c0 -4 6 -4 6 0 c0 4 -6 7 -6 9 c0 -2 -6 -5 -6 -9 Z" />
+      </g>
+    </>
+  );
+}
+
+function ColdCenser() {
+  return (
+    <>
+      <ellipse cx="100" cy="119" rx="64" ry="4" fill={INK} opacity="0.12" />
+      <g stroke={INK} strokeWidth="1.6" strokeLinecap="round">
+        <line x1="86" y1="40" x2="90" y2="84" />
+        <line x1="100" y1="34" x2="100" y2="84" />
+        <line x1="114" y1="40" x2="110" y2="84" />
+      </g>
+      <g fill="var(--paper-hi)" stroke={INK} strokeWidth="1">
+        <circle cx="86" cy="40" r="2.6" />
+        <circle cx="100" cy="34" r="2.6" />
+        <circle cx="114" cy="40" r="2.6" />
+      </g>
+      <path d="M62 84 h76 c0 20 -14 32 -38 32 S 62 104 62 84 Z" fill="var(--marigold)" stroke={INK} strokeWidth="1.6" />
+      <path d="M70 94 q30 10 60 0" fill="none" stroke={INK} strokeWidth="1.1" />
+      <rect x="58" y="80" width="84" height="6" rx="3" fill="#d99a26" stroke={INK} strokeWidth="1.3" />
+      <g className="vg-bob">
+        <g transform="translate(150 50) rotate(28)">
+          <rect x="-2" y="-16" width="4" height="26" rx="1" fill="var(--wood)" stroke={INK} strokeWidth="1" />
+          <circle cx="0" cy="-17" r="3.4" fill="var(--vermilion)" stroke={INK} strokeWidth="1" />
+        </g>
+      </g>
+      <g className="vg-zz" fill="none" stroke={INK} strokeWidth="1.3" strokeLinejoin="round" strokeLinecap="round">
+        <path d="M44 52 h6 l-6 6 h6" />
+        <path d="M34 40 h4.5 l-4.5 4.5 h4.5" />
+      </g>
+    </>
+  );
+}
+
 export function Vignette({ kind, title, hint }: VignetteProps) {
   const scenes: Partial<Record<VignetteProps['kind'], [ReactNode, string, string]>> = {
     'crew-empty': [<Banquet key="a" />, copy.crew.emptyTitle, copy.crew.emptyHint],
@@ -274,6 +445,11 @@ export function Vignette({ kind, title, hint }: VignetteProps) {
     'shops-none': [<PuzzledCat key="a" />, '', ''],
     'ranks-empty': [<BlankBoard key="a" />, copy.ranks.emptyTitle, copy.ranks.emptyHint],
     'herald-empty': [<QuietGong key="a" />, copy.herald.emptyTitle, copy.herald.emptyHint],
+    'herald-inbox': [<EmptyTray key="a" />, copy.herald.none.inbox.title, copy.herald.none.inbox.hint],
+    'herald-sent': [<UnsentCards key="a" />, copy.herald.none.sent.title, copy.herald.none.sent.hint],
+    'herald-solo': [<ColdCenser key="a" />, copy.herald.none.solo.title, copy.herald.none.solo.hint],
+    'titles-empty': [<BlankBanners key="a" />, copy.ranks.titlesEmpty.title, copy.ranks.titlesEmpty.hint],
+    'fans-empty': [<HoveringStamp key="a" />, copy.shops.fansEmpty.title, copy.shops.fansEmpty.hint],
   };
   const scene = scenes[kind];
   if (scene) {

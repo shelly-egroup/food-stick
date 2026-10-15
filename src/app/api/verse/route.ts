@@ -14,10 +14,11 @@ const EGROUP = /^egroup\.[^@]+@gmail\.com$/i;
 const KEYS = createRemoteJWKSet(
   new URL('https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com'),
 );
-/** 本機開發連模擬器時，模擬器發的憑證沒有簽章：只有開發模式才接受 */
+/** 本機開發連模擬器時，模擬器發的憑證沒有簽章：只有開發模式才接受（dev:test、dev:live 連的是雲端，照樣驗章） */
+const MODE = process.env.NEXT_PUBLIC_FIREBASE_MODE;
 const emulator =
   process.env.NODE_ENV === 'development' &&
-  (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY || process.env.NEXT_PUBLIC_FIREBASE_MODE !== 'live');
+  (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY || (MODE !== 'live' && MODE !== 'test'));
 
 /** 每個人十分鐘內最多叫幾次（粗略的限制，避免被拿來亂用） */
 const LIMIT = 40;

@@ -8,8 +8,8 @@ import { useUi } from '@/lib/uiContext';
 import { useTheme } from '@/themes';
 import { deleteRestaurant } from '@/lib/store';
 import { useToast } from '@/components/Toast';
-import { CategoryFilter } from '@/components/CategoryFilter';
-import { type CategoryId } from '@/lib/types';
+import { CategoryFilter, WalkFilter } from '@/components/CategoryFilter';
+import { type CategoryId, type Walk } from '@/lib/types';
 import { ShopSheet } from './ShopSheet';
 import { ShopForm } from './ShopForm';
 import './Shops.css';
@@ -22,6 +22,7 @@ export function Shops() {
   const { addOpen, setAddOpen } = useUi();
   const [q, setQ] = useState('');
   const [cats, setCats] = useState<CategoryId[]>([]);
+  const [walks, setWalks] = useState<Walk[]>([]);
   // 只看我的愛店、只看我掛（放）上去的；再按一次回到全部
   const [scope, setScope] = useState<'all' | 'liked' | 'mine'>('all');
   const [openId, setOpenId] = useState<string | null>(null);
@@ -40,22 +41,25 @@ export function Shops() {
     return restaurants
       .filter((r) => !k || r.name.toLowerCase().includes(k))
       .filter((r) => cats.length === 0 || cats.includes(r.category))
+      .filter((r) => walks.length === 0 || walks.includes(r.walk))
       .filter((r) => scope !== 'liked' || me.likes.includes(r.id))
       .filter((r) => scope !== 'mine' || r.createdBy === me.id);
-  }, [restaurants, q, cats, scope, me.likes, me.id]);
+  }, [restaurants, q, cats, walks, scope, me.likes, me.id]);
 
-  const filtered = !!q.trim() || cats.length > 0 || scope !== 'all';
+  const filtered = !!q.trim() || cats.length > 0 || walks.length > 0 || scope !== 'all';
   const toggleScope = (s: 'liked' | 'mine') => setScope((v) => (v === s ? 'all' : s));
   const toggleCat = (id: CategoryId) => setCats((c) => (c.includes(id) ? c.filter((x) => x !== id) : [...c, id]));
+  const toggleWalk = (v: Walk) => setWalks((w) => (w.includes(v) ? w.filter((x) => x !== v) : [...w, v]));
   const showAll = () => {
     setQ('');
     setCats([]);
+    setWalks([]);
     setScope('all');
   };
 
   // 篩完一家都沒有：說清楚是哪個條件
   const noneText = () => {
-    const only = !q.trim() && cats.length === 0;
+    const only = !q.trim() && cats.length === 0 && walks.length === 0;
     if (q.trim()) return { title: `找不到「${q.trim()}」`, hint: '換個字找找看，或乾脆把它新增上來。' };
     if (only && scope === 'liked')
       return { title: '還沒有愛店', hint: `打開任何一家店${copy.likeStamp}，就會出現在這裡。` };
@@ -120,6 +124,7 @@ export function Shops() {
           </button>
         </div>
         <CategoryFilter selected={cats} onToggle={toggleCat} />
+        <WalkFilter selected={walks} onToggle={toggleWalk} />
         {filtered && ready && (
           <div className="shops__status" role="status">
             <span className="shops__count" key={list.length}>

@@ -22,11 +22,13 @@ import {
  * 連哪個 Firebase：
  * - 正式網站（next build）：用 .env.local 裡的 lunch-stick 專案
  * - npm run dev：本機模擬器與示範資料，不會碰到正式資料
+ * - npm run dev:test：開發時連雲端測試專案（.env.test.local 裡的 food-stick-dev）
  * - npm run dev:live：開發時直接連正式專案
  */
+const MODE = process.env.NEXT_PUBLIC_FIREBASE_MODE;
 export const usingEmulator =
   !process.env.NEXT_PUBLIC_FIREBASE_API_KEY ||
-  (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_FIREBASE_MODE !== 'live');
+  (process.env.NODE_ENV === 'development' && MODE !== 'live' && MODE !== 'test');
 
 let instance: { app: FirebaseApp; auth: Auth; db: Firestore } | null = null;
 

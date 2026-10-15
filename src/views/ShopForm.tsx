@@ -6,8 +6,8 @@ import { useToast } from '@/components/Toast';
 import { useAppData } from '@/lib/appData';
 import { addRestaurant, updateRestaurant, type RestaurantInput } from '@/lib/store';
 import { clack } from '@/lib/sound';
-import { PRICES, WALKS, type Restaurant } from '@/lib/types';
-import { CategoryFilter } from '@/components/CategoryFilter';
+import { PRICES, type Restaurant } from '@/lib/types';
+import { CategoryFilter, WalkFilter } from '@/components/CategoryFilter';
 import { Icon } from '@/components/Icon';
 import { useTheme } from '@/themes';
 import './ShopForm.css';
@@ -161,22 +161,10 @@ export function ShopForm({
           </div>
         </fieldset>
 
-        <fieldset className="field">
-          <legend className="label">從公司走過去</legend>
-          <div className="form__chips">
-            {WALKS.map((w) => (
-              <button
-                key={w.v}
-                type="button"
-                className="chip"
-                aria-pressed={v.walk === w.v}
-                onClick={() => setV({ ...v, walk: w.v })}
-              >
-                {w.label}
-              </button>
-            ))}
-          </div>
-        </fieldset>
+        <div className="field">
+          <span className="label">從公司走過去</span>
+          <WalkFilter single label="從公司走過去" selected={[v.walk]} onToggle={(w) => setV({ ...v, walk: w })} />
+        </div>
 
         <div className="form__toggle">
           <span>
