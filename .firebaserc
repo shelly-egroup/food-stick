@@ -2,6 +2,7 @@
   "projects": {
     "default": "lunch-stick",
     "live": "lunch-stick",
+    "test": "food-stick-dev",
     "demo": "demo-lunchstick"
   }
 }
