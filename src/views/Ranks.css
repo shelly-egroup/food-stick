@@ -3,6 +3,7 @@
   margin: 0 auto;
   padding: 26px var(--gutter) 56px;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 28px;
 }
 .ranks__head {
@@ -150,9 +151,18 @@
 }
 .honor {
   position: relative;
-  display: grid;
-  align-content: start;
   min-width: 0;
+}
+.honor__card {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  text-align: center;
+  cursor: pointer;
 }
 .honor__silk {
   position: relative;
@@ -160,14 +170,12 @@
   justify-items: center;
   align-content: start;
   gap: 8px;
-  min-height: 236px;
   padding: 14px 6px;
-  text-align: center;
 }
 .honor__rule {
   font-family: var(--f-serif);
   font-weight: 700;
-  font-size: 0.74rem;
+  font-size: 0.72rem;
   line-height: 1.35;
   letter-spacing: 0.06em;
   text-wrap: balance;
@@ -200,8 +208,12 @@
   font-weight: 500;
   letter-spacing: 0.04em;
 }
+.honor__back,
+.honor__tail {
+  display: none;
+}
 
-/* 廟宇：朱紅綢緞的錦旗，金邊、金字直書，底下垂著金流蘇；一面一面從木桿上展開 */
+/* 廟宇：燕尾錦旗。朱紅綢緞、金線刺繡框，稱號金字直書，得主頭像嵌在金色圓章裡；點一下會在木桿上晃 */
 [data-theme='temple'] .honors {
   position: relative;
   gap: 14px;
@@ -217,9 +229,8 @@
   height: 10px;
   border: 1.5px solid var(--ink);
   border-radius: 5px;
-  background: linear-gradient(var(--wood), var(--wood-lo));
+  background: linear-gradient(#b4493a, #7a2a1c);
 }
-/* 木桿兩端的金色桿頭 */
 [data-theme='temple'] .honors::after {
   content: '';
   position: absolute;
@@ -229,27 +240,20 @@
   z-index: 2;
   height: 16px;
   background:
-    radial-gradient(circle at 8px 50%, var(--marigold) 0 5.4px, var(--ink) 5.6px 7px, transparent 7.3px) left / 16px
-      16px no-repeat,
-    radial-gradient(circle at 8px 50%, var(--marigold) 0 5.4px, var(--ink) 5.6px 7px, transparent 7.3px) right / 16px
-      16px no-repeat;
+    radial-gradient(circle at 8px 50%, #e2c27a 0 5.4px, var(--ink) 5.6px 7px, transparent 7.3px) left / 16px 16px
+      no-repeat,
+    radial-gradient(circle at 8px 50%, #e2c27a 0 5.4px, var(--ink) 5.6px 7px, transparent 7.3px) right / 16px 16px
+      no-repeat;
 }
-[data-theme='temple'] .honor {
-  filter: drop-shadow(3px 4px 0 rgba(38, 33, 29, 0.16));
+[data-theme='temple'] .honor__card {
+  transform-origin: 50% 0;
+  filter: drop-shadow(3px 5px 0 rgba(38, 33, 29, 0.14));
 }
-[data-theme='temple'] .honor__silk {
-  min-height: 248px;
-  padding: 14px 6px 16px;
-  border: 1.5px solid var(--ink);
-  border-top: 0;
-  color: #fff3d0;
-  background:
-    linear-gradient(118deg, transparent 30%, rgba(255, 255, 255, 0.16) 44%, transparent 58%),
-    repeating-linear-gradient(90deg, rgba(38, 33, 29, 0.04) 0 2px, transparent 2px 5px), var(--vermilion);
-  box-shadow:
-    inset 0 0 0 4px var(--vermilion),
-    inset 0 0 0 5.5px var(--marigold);
-  animation: honor-unroll 0.8s var(--ease-out) calc(0.25s + var(--i) * 0.16s) backwards;
+[data-theme='temple'] .honors:not(.is-in) .honor__card {
+  clip-path: inset(0 0 100% 0);
+}
+[data-theme='temple'] .honors.is-in .honor__card {
+  animation: honor-unroll 0.9s var(--ease-out) calc(var(--i) * 0.18s) both;
 }
 @keyframes honor-unroll {
   from {
@@ -259,58 +263,113 @@
     clip-path: inset(0 0 0 0);
   }
 }
+[data-theme='temple'] .honor__card::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: -2px;
+  z-index: 2;
+  width: 18px;
+  height: 7px;
+  margin-left: -9px;
+  border: 1.5px solid var(--ink);
+  border-radius: 2px;
+  background: #e2c27a;
+}
+[data-theme='temple'] .honor__silk {
+  min-height: 236px;
+  padding: 18px 8px 10px;
+  border: 1.5px solid var(--ink);
+  border-top: 0;
+  border-bottom: 0;
+  color: #fff3d0;
+  background:
+    linear-gradient(112deg, transparent 32%, rgba(255, 255, 255, 0.14) 44%, transparent 56%),
+    repeating-linear-gradient(90deg, rgba(38, 33, 29, 0.05) 0 1px, transparent 1px 4px), #b8402a;
+  box-shadow:
+    inset 0 0 0 5px #b8402a,
+    inset 0 0 0 6.5px #e2c27a,
+    inset 0 0 0 9px #b8402a,
+    inset 0 0 0 9.8px rgba(226, 194, 122, 0.6);
+}
 [data-theme='temple'] .honor__rule {
-  margin-top: 4px;
+  margin-top: 2px;
+  padding: 0 6px;
   color: #ffe6a8;
 }
-/* 錦旗上不蓋章：稱號直接用金字直書 */
 [data-theme='temple'] .honor__mark {
   display: none;
 }
 [data-theme='temple'] .honor__name {
   writing-mode: vertical-rl;
-  margin: 2px 0 4px;
-  font-size: 1.55rem;
+  margin: 4px 0;
+  font-size: 1.6rem;
   line-height: 1;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.22em;
   color: #ffd977;
-  text-shadow: 0 1.5px 0 var(--vermilion-lo);
+  text-shadow:
+    0 1px 0 #7a2a1c,
+    0 -0.5px 0 rgba(255, 246, 214, 0.5);
 }
 [data-theme='temple'] .honor__who .avatar {
   box-shadow:
-    0 0 0 2px var(--vermilion),
-    0 0 0 3.5px #ffd977;
+    0 0 0 2px #b8402a,
+    0 0 0 4px #e2c27a,
+    0 0 0 5.5px var(--ink);
+}
+[data-theme='temple'] .honor__who > span:not(.avatar) {
+  margin-top: 4px;
+  color: #fff3d0;
 }
 [data-theme='temple'] .honor__stat {
   color: #ffe6a8;
 }
-/* 金流蘇：一條金色的邊、底下一排細細的金線，風一吹輕輕擺 */
-[data-theme='temple'] .honor__fringe {
-  height: 17px;
-  margin: -1px 4px 0;
+[data-theme='temple'] .honor__tail {
+  display: block;
+  width: 100%;
+  height: 26px;
+  margin-top: -1px;
+  overflow: visible;
+}
+[data-theme='temple'] .honor__tail path:first-child {
+  fill: #b8402a;
+  stroke: var(--ink);
+  stroke-width: 1.5px;
+  vector-effect: non-scaling-stroke;
+  stroke-linejoin: round;
+}
+[data-theme='temple'] .honor__tail-line {
+  fill: none;
+  stroke: #e2c27a;
+  stroke-width: 1.5px;
+}
+[data-theme='temple'] .honor::after {
+  content: '';
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  bottom: -14px;
+  height: 18px;
   background:
-    linear-gradient(var(--marigold), var(--marigold)) top / 100% 3px no-repeat,
-    repeating-linear-gradient(90deg, var(--marigold) 0 1.6px, transparent 1.6px 4px) bottom / 100% 14px no-repeat;
+    linear-gradient(#e2c27a, #e2c27a) 0 0 / 2px 10px no-repeat,
+    linear-gradient(#e2c27a, #e2c27a) 100% 0 / 2px 10px no-repeat,
+    radial-gradient(ellipse 5px 8px at 1px 12px, #e2c27a 0 4px, transparent 4.6px) 0 0 / 50% 100% no-repeat,
+    radial-gradient(ellipse 5px 8px at calc(100% - 1px) 12px, #e2c27a 0 4px, transparent 4.6px) 100% 0 / 50% 100%
+      no-repeat;
+  pointer-events: none;
   transform-origin: 50% 0;
-  animation:
-    honor-fringe-in 0.35s ease-out calc(1s + var(--i) * 0.16s) backwards,
-    honor-fringe 2.6s ease-in-out calc(var(--i) * -0.7s) infinite alternate;
+  animation: honor-tassel 2.8s ease-in-out calc(var(--i) * -0.8s) infinite alternate;
 }
-@keyframes honor-fringe-in {
+@keyframes honor-tassel {
   from {
-    opacity: 0;
-  }
-}
-@keyframes honor-fringe {
-  from {
-    transform: skewX(-7deg);
+    transform: skewX(-6deg);
   }
   to {
-    transform: skewX(7deg);
+    transform: skewX(6deg);
   }
 }
 
-/* 魔法：三張塔羅牌，夜空牌面、金框，牌頂羅馬數字、中間一枚徽章，最下面寫怎麼選出來；一張一張翻開 */
+/* 魔法：三張塔羅牌，先蓋著，捲到這裡一張一張翻開；點一下可以再蓋回去、再翻開 */
 [data-theme='magic'] .honors {
   gap: 10px;
   perspective: 900px;
@@ -318,102 +377,117 @@
 }
 [data-theme='magic'] .honor {
   counter-increment: honor;
-  animation: honor-flip 0.7s var(--ease-out) calc(0.25s + var(--i) * 0.15s) backwards;
 }
-@keyframes honor-flip {
-  from {
-    opacity: 0;
-    transform: rotateY(-100deg) translateY(10px);
+[data-theme='magic'] .honor__card {
+  transform-style: preserve-3d;
+  transition: transform 0.8s var(--ease-spring);
+}
+[data-theme='magic'] .honor__card.is-open {
+  transform: rotateY(180deg);
+}
+[data-theme='magic'] .honor__card:not(.is-open):hover {
+  transform: rotateY(-12deg) translateY(-4px);
+}
+[data-theme='magic'] .honor__back,
+[data-theme='magic'] .honor__silk {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border: 1.5px solid var(--ink);
+  border-radius: 12px;
+}
+[data-theme='magic'] .honor__back {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 50%, transparent 0 30%, rgba(242, 185, 64, 0.7) 30.5% 31.5%, transparent 32%),
+    radial-gradient(circle at 50% 50%, transparent 0 40%, rgba(242, 185, 64, 0.4) 40.5% 41.2%, transparent 41.6%),
+    radial-gradient(circle, rgba(255, 253, 248, 0.5) 0 0.8px, transparent 1.2px) 0 0 / 12px 14px,
+    var(--cobalt);
+  outline: 1.5px solid var(--marigold);
+  outline-offset: -7px;
+}
+[data-theme='magic'] .honor__back i {
+  width: 30px;
+  height: 30px;
+  background: var(--marigold);
+  clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
+  animation: back-glint 3s ease-in-out infinite;
+}
+@keyframes back-glint {
+  50% {
+    transform: scale(1.25) rotate(45deg);
   }
 }
 [data-theme='magic'] .honor__silk {
   min-height: 252px;
   padding: 30px 10px 14px;
-  border: 1.5px solid var(--ink);
-  border-radius: 12px;
   overflow: hidden;
-  color: #fff3d0;
+  transform: rotateY(180deg);
+  color: var(--ink);
   background:
-    radial-gradient(circle at 16% 24%, rgba(255, 255, 255, 0.85) 0 1px, transparent 1.6px),
-    radial-gradient(circle at 84% 18%, rgba(242, 185, 64, 0.9) 0 1.2px, transparent 1.8px),
-    radial-gradient(circle at 76% 62%, rgba(255, 255, 255, 0.7) 0 1px, transparent 1.6px),
-    radial-gradient(circle at 22% 80%, rgba(201, 184, 255, 0.9) 0 1.1px, transparent 1.7px),
-    radial-gradient(ellipse 90% 55% at 50% 30%, rgba(155, 123, 255, 0.45), transparent 70%),
-    linear-gradient(170deg, #2c3e7a, #3f3590 55%, #241f5c);
-  outline: 1.5px solid var(--marigold);
+    radial-gradient(circle, rgba(58, 104, 173, 0.1) 0 0.8px, transparent 1.2px) 0 0 / 12px 14px,
+    var(--paper-hi);
+  outline: 1.5px solid var(--cobalt);
   outline-offset: -7px;
   box-shadow: 4px 5px 0 var(--accent-tint);
 }
-/* 牌頂的羅馬數字 */
 [data-theme='magic'] .honor__silk::before {
   content: counter(honor, upper-roman);
   position: absolute;
   left: 0;
   right: 0;
-  top: 11px;
+  top: 12px;
   font-family: var(--f-latin);
   font-style: italic;
   font-weight: 600;
   font-size: 0.95rem;
   line-height: 1;
-  color: var(--marigold);
-}
-/* 牌面偶爾掃過一道光 */
-[data-theme='magic'] .honor__silk::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(105deg, transparent 42%, rgba(255, 255, 255, 0.2) 50%, transparent 58%) 0 0 / 300% 100%
-    no-repeat;
-  background-position: 120% 0;
-  pointer-events: none;
-  animation: honor-shine 6s ease-in-out calc(1.4s + var(--i) * 1.3s) infinite;
-}
-@keyframes honor-shine {
-  0% {
-    background-position: 120% 0;
-  }
-  22%,
-  100% {
-    background-position: -20% 0;
-  }
+  color: var(--cobalt);
 }
 [data-theme='magic'] .honor__rule {
   order: 5;
   margin-top: 2px;
   padding-top: 7px;
-  border-top: 1px solid rgba(242, 185, 64, 0.45);
+  border-top: 1px dashed rgba(58, 104, 173, 0.45);
   font-family: var(--f-serif);
-  font-size: 0.72rem;
-  color: #d9ccff;
-}
-[data-theme='magic'] .honor__mark {
-  margin: 2px 0;
-  filter: drop-shadow(0 0 8px rgba(242, 185, 64, 0.55));
+  font-size: 0.7rem;
+  color: var(--ink-3);
 }
 [data-theme='magic'] .honor__name {
   font-size: 1rem;
   line-height: 1.3;
   letter-spacing: 0.1em;
-  color: var(--marigold);
+  color: var(--cobalt);
   text-wrap: balance;
 }
 [data-theme='magic'] .honor__who .avatar {
   box-shadow:
-    0 0 0 2px #2f3b80,
+    0 0 0 2px var(--paper-hi),
     0 0 0 3.5px var(--marigold),
-    0 0 10px rgba(155, 123, 255, 0.7);
+    0 0 0 5px var(--ink);
 }
 [data-theme='magic'] .honor__stat {
-  color: #e9e0ff;
+  color: var(--ink-2);
 }
-[data-theme='magic'] .honor__fringe {
-  display: none;
+@media (prefers-reduced-motion: reduce) {
+  [data-theme='temple'] .honors.is-in .honor__card,
+  [data-theme='temple'] .honor::after,
+  [data-theme='magic'] .honor__back i {
+    animation: none;
+  }
+  [data-theme='temple'] .honors:not(.is-in) .honor__card {
+    clip-path: none;
+  }
 }
 
 .cold {
+  position: relative;
   padding: 18px;
-  border: 1.5px dashed var(--ink);
+  border: 1.5px solid var(--ink);
 }
 .cold h2::before {
   content: '❄';
@@ -429,16 +503,21 @@
 }
 .shelf {
   position: relative;
-  padding: 20px 10px 0;
+  isolation: isolate;
+  overflow: hidden;
+  margin-top: 14px;
+  padding: 26px 12px 0;
+  border: 1.5px solid var(--ink);
+  border-bottom: 0;
 }
 .shelf__row {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
   align-items: end;
   gap: 8px;
-  min-height: 184px;
+  min-height: 190px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -454,21 +533,23 @@
   align-items: center;
   justify-content: space-between;
   gap: 6px;
-  width: 100%;
+  width: var(--w, 100%);
   max-width: 58px;
-  padding: 14px 4px 8px;
+  padding: 16px 4px 8px;
   border: 1.5px solid var(--ink);
   border-bottom: 0;
   color: var(--ink);
   cursor: pointer;
   transform-origin: 50% 100%;
-  rotate: calc((var(--i) - 2.5) * 0.7deg);
+  rotate: calc((var(--i) - 2.5) * 0.6deg);
   transition:
-    transform 0.4s var(--ease-spring),
-    rotate 0.4s var(--ease-spring),
+    transform 0.45s var(--ease-spring),
+    rotate 0.45s var(--ease-spring),
     filter 0.3s;
 }
 .shelf__name {
+  position: relative;
+  z-index: 1;
   writing-mode: vertical-rl;
   white-space: nowrap;
   max-height: 100%;
@@ -479,6 +560,8 @@
   letter-spacing: 0.06em;
 }
 .shelf__cat {
+  position: relative;
+  z-index: 1;
   font-size: 0.62rem;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -486,154 +569,358 @@
 }
 .shelf__item:hover,
 .shelf__item:focus-visible {
-  transform: translateY(-10px);
-  rotate: -3deg;
+  transform: translateY(-12px);
+  rotate: -2deg;
 }
 .shelf__item:active {
   transform: translateY(-4px) scale(0.96);
 }
 .shelf__plank {
   position: relative;
-  z-index: 2;
+  z-index: 3;
   display: block;
-  height: 14px;
-  margin: 0 -10px;
-  border: 1.5px solid var(--ink);
-  background: linear-gradient(var(--wood), var(--wood-lo));
-  box-shadow: 0 6px 0 rgba(38, 33, 29, 0.15);
-}
-.shelf__motes {
-  display: none;
+  height: 16px;
+  margin: 0 -12px;
+  border-top: 1.5px solid var(--ink);
+  border-bottom: 1.5px solid var(--ink);
 }
 
-/* 廟宇：結霜的冷宮，菜牌在木架上排排站，頂上結著一排冰柱 */
-[data-theme='temple'] .cold {
-  position: relative;
-  overflow: hidden;
-  border: 1.5px solid var(--ink);
-  background: linear-gradient(180deg, #d9e4e6, #eef3f3);
-}
-[data-theme='temple'] .cold::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image:
-    radial-gradient(circle, #fff 0 1.6px, transparent 2px),
-    radial-gradient(circle, rgba(255, 255, 255, 0.85) 0 1.1px, transparent 1.5px);
-  background-size:
-    46px 46px,
-    31px 31px;
-  background-position:
-    0 0,
-    15px 20px;
-  pointer-events: none;
-  animation: cold-snow 10s linear infinite;
-}
-@keyframes cold-snow {
-  to {
-    background-position:
-      14px 184px,
-      33px 144px;
-  }
-}
-[data-theme='temple'] .cold > * {
-  position: relative;
-}
-[data-theme='temple'] .shelf__item {
-  background:
-    linear-gradient(90deg, transparent 0 46%, rgba(38, 33, 29, 0.06) 46% 54%, transparent 54%),
-    linear-gradient(180deg, #ecd9b6, #d6b98a);
-  box-shadow:
-    inset 0 7px 0 rgba(255, 255, 255, 0.85),
-    3px 0 0 rgba(38, 33, 29, 0.12);
-  color: #4a3a2c;
-}
-[data-theme='temple'] .shelf__item::before {
-  content: '';
-  position: absolute;
-  left: -1.5px;
-  right: -1.5px;
-  top: -1.5px;
-  height: 10px;
-  background: radial-gradient(circle at 5px 0, #fff 3.4px, transparent 3.9px) 0 0 / 10px 10px repeat-x;
-  filter: drop-shadow(0 1px 0 rgba(38, 33, 29, 0.25));
-}
-[data-theme='temple'] .shelf__cat {
-  padding: 1px 4px;
-  background: rgba(255, 255, 255, 0.6);
-  color: var(--ink-2);
-}
-[data-theme='temple'] .shelf__item:hover,
-[data-theme='temple'] .shelf__item:focus-visible {
-  filter: saturate(1.4) brightness(1.04);
-}
-
-/* 魔法：積灰塵的書架，書背排排站，角落結了蜘蛛網，灰塵在光裡飄 */
-[data-theme='magic'] .cold {
-  border: 1.5px solid var(--ink);
-  border-radius: 16px;
-  background: linear-gradient(160deg, #f8efdc, #efe2c4);
-}
-[data-theme='magic'] .shelf {
-  overflow: hidden;
-  margin-top: 12px;
-  padding: 22px 12px 0;
-  border: 1.5px solid var(--ink);
-  border-bottom: 0;
-  border-radius: 10px 10px 0 0;
-  background:
-    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.12) 0 1px, transparent 1px 22px),
-    linear-gradient(180deg, #4a3424, #2f2018);
-}
 [data-theme='magic'] .shelf::before {
   content: '';
   position: absolute;
-  left: 0;
-  top: 0;
+  inset: 0;
   z-index: 3;
-  width: 58px;
-  height: 58px;
+  background: radial-gradient(circle at 92% 82%, rgba(8, 5, 3, 0.35), rgba(8, 5, 3, 0.72) 60%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.9s ease;
+}
+[data-theme='magic'] .shelf.is-dark::before {
+  opacity: 1;
+}
+[data-theme='magic'] .shelf::after {
+  transition: opacity 0.9s ease;
+}
+[data-theme='magic'] .shelf.is-dark::after {
+  opacity: 0;
+  animation-play-state: paused;
+}
+[data-theme='magic'] .shelf .cobweb {
+  transition: opacity 0.9s ease;
+}
+[data-theme='magic'] .shelf.is-dark .cobweb {
+  opacity: 0.4;
+}
+
+/* 廟宇：冷宮。當代東方編輯海報：象牙紙、宋體直書、褪色宮牆與長影，菜牌立在牆腳 */
+.cold--poster {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas:
+    'label label'
+    'head scene'
+    'foot foot';
+  column-gap: 14px;
+  padding: 20px 18px 16px;
+  border: 1px solid #26211d;
   background:
-    repeating-conic-gradient(from 90deg at 0 0, rgba(255, 255, 255, 0.4) 0 0.8deg, transparent 0.8deg 15deg),
-    repeating-radial-gradient(circle at 0 0, transparent 0 9px, rgba(255, 255, 255, 0.35) 9px 10px);
-  mask-image: radial-gradient(circle at 0 0, #000 40px, transparent 56px);
-  -webkit-mask-image: radial-gradient(circle at 0 0, #000 40px, transparent 56px);
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .16 0 0 0 0 .13 0 0 0 0 .1 0 0 0 .1 0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E"),
+    linear-gradient(180deg, #f4eddd, #eee4cf);
+}
+.cold--poster::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  pointer-events: none;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.012 .09' numOctaves='3' seed='7'/%3E%3CfeColorMatrix values='0 0 0 0 .4 0 0 0 0 .33 0 0 0 0 .22 0 0 0 .18 -.04'/%3E%3C/filter%3E%3Crect width='260' height='260' filter='url(%23f)'/%3E%3C/svg%3E");
+  mix-blend-mode: multiply;
+  opacity: 0.7;
+}
+.cold--poster > :not(.particles):not(.critter):not(.arcane-sky) {
+  position: relative;
+}
+.cold--poster h2::before,
+.cold--poster h2::after {
+  display: none;
+}
+.poster__head {
+  grid-area: head;
+  z-index: 3;
+  align-self: start;
+}
+.poster__archive {
+  grid-area: label;
+  margin: 0 0 16px;
+  white-space: nowrap;
+  font-family: var(--f-latin);
+  font-weight: 600;
+  font-size: 10px;
+  letter-spacing: 0.32em;
+  color: #8a7c68;
+}
+.poster__title {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.ranks__more .poster__title h2 {
+  margin: 0;
+  writing-mode: vertical-rl;
+  font-family: var(--f-display);
+  font-weight: 500;
+  font-size: clamp(34px, 9vw, 48px);
+  line-height: 1;
+  letter-spacing: 0.4em;
+  color: #1f1b17;
+}
+.poster__title p {
+  margin: 2.6em 0 0;
+  writing-mode: vertical-rl;
+  font-family: var(--f-serif);
+  font-weight: 500;
+  font-size: 12.5px;
+  letter-spacing: 0.34em;
+  color: #6b5e4e;
+}
+[data-theme='temple'] .shelf {
+  grid-area: scene;
+  align-self: end;
+  z-index: 2;
+  overflow: visible;
+  margin-top: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+[data-theme='temple'] .shelf__row {
+  grid-template-columns: repeat(5, 38px);
+  justify-content: start;
+  gap: 9px;
+  min-height: 150px;
+  padding-left: 0;
+}
+[data-theme='temple'] .shelf__row li {
+  position: relative;
+}
+[data-theme='temple'] .shelf__row li::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  width: 38px;
+  height: 28px;
+  margin-left: -19px;
+  background: #3b4a63;
+  opacity: 0.14;
+  transform: skewX(-60deg);
+  transform-origin: 0 0;
   pointer-events: none;
 }
-[data-theme='magic'] .shelf__motes {
+[data-theme='temple'] .shelf__item {
+  width: 38px;
+  max-width: none;
+  padding: 14px 0 8px;
+  border: 1px solid #26211d;
+  border-bottom: 0;
+  border-radius: 19px 19px 2px 2px / 12px 12px 2px 2px;
+  background:
+    repeating-linear-gradient(90deg, rgba(110, 82, 50, 0.06) 0 1px, transparent 1px 5px),
+    linear-gradient(180deg, #efe6d3, #e4d8bf);
+  box-shadow: 2.5px -1.5px 0 rgba(166, 70, 48, 0.4);
+  color: #2b2620;
+  rotate: calc(var(--wind, 0) * 1.4deg);
+}
+[data-theme='temple'] .shelf__name {
+  font-family: var(--f-display);
+  font-weight: 500;
+  letter-spacing: 0.16em;
+}
+[data-theme='temple'] .shelf__cat {
+  font-size: 0.56rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  color: #8a7c68;
+}
+[data-theme='temple'] .shelf__item:hover,
+[data-theme='temple'] .shelf__item:focus-visible {
+  transform: translateY(-6px);
+  rotate: calc(var(--wind, 0) * 1.4deg);
+}
+[data-theme='temple'] .shelf__plank {
+  height: 0;
+  margin: 0 -18px;
+  border: 0;
+  border-top: 1.5px solid #a07a3c;
+  background: none;
+  box-shadow: none;
+}
+[data-theme='temple'] .shelf::after {
+  content: '';
+  position: absolute;
+  left: -18px;
+  right: -18px;
+  top: 100%;
+  height: 52px;
+  z-index: -1;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 58px, rgba(38, 33, 29, 0.07) 58px 59px),
+    linear-gradient(180deg, transparent 0 25px, rgba(38, 33, 29, 0.07) 25px 26px, transparent 26px),
+    linear-gradient(180deg, #f8f4ea, rgba(248, 244, 234, 0));
+  -webkit-mask-image: linear-gradient(180deg, #000 40%, transparent);
+  mask-image: linear-gradient(180deg, #000 40%, transparent);
+}
+.poster__foot {
+  grid-area: foot;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 36px;
+}
+.cold:not(.cold--poster) .poster__foot {
+  display: block;
+  margin-top: 0;
+}
+.poster__en {
+  margin: 0;
+  font-family: var(--f-latin);
+  font-style: italic;
+  font-weight: 500;
+  font-size: 15px;
+  letter-spacing: 0.06em;
+  color: #5a4e41;
+  white-space: nowrap;
+}
+.cold--poster .pager {
+  margin: 0;
+  gap: 10px;
+}
+.cold--poster .pager__btn {
+  min-height: 30px;
+  padding: 0 1px;
+  border: 0;
+  border-bottom: 1px solid #26211d;
+  background: none;
+  box-shadow: none;
+  font-size: 12px;
+  letter-spacing: 0.2em;
+}
+.cold--poster .pager__btn[aria-disabled='true'] {
+  border-color: transparent;
+}
+.cold--poster .pager__dots button {
+  width: 6px;
+  height: 6px;
+  border: 1px solid #26211d;
+  rotate: 0deg;
+  background: none;
+}
+.cold--poster .pager__dots button.is-on {
+  background: #a64630;
+  border-color: #a64630;
+  transform: none;
+}
+@media (min-width: 900px) {
+  [data-theme='temple'] .shelf__row {
+    grid-template-columns: repeat(5, 42px);
+    gap: 14px;
+  }
+  [data-theme='temple'] .shelf__item {
+    width: 42px;
+  }
+}
+
+/* 魔法：塵封書架。燭光從右邊照過來，光束裡灰塵在飄；書背高矮胖瘦不一，最後一本斜靠著，角落一隻小蜘蛛垂下來 */
+[data-theme='magic'] .cold {
+  border-radius: 16px;
+  background:
+    radial-gradient(ellipse 90% 60% at 50% 0%, rgba(255, 255, 255, 0.6), transparent 60%),
+    linear-gradient(160deg, #f8efdc, #ecdcbc);
+}
+[data-theme='magic'] .shelf {
+  padding: 26px 22px 0;
+  border-radius: 12px 12px 0 0;
+  border-top-width: 10px;
+  border-top-color: #6e4527;
+  background:
+    radial-gradient(circle at 90% 34%, rgba(255, 196, 110, 0.5), transparent 42%),
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.14) 0 1px, transparent 1px 26px),
+    linear-gradient(180deg, #3a291c, #2a1d14 60%, #33241a);
+  box-shadow:
+    inset 10px 0 0 #6e4527,
+    inset -10px 0 0 #6e4527,
+    inset 11.5px 0 0 var(--ink),
+    inset -11.5px 0 0 var(--ink),
+    inset 0 14px 22px -10px rgba(0, 0, 0, 0.7);
+}
+
+[data-theme='magic'] .shelf::after {
+  content: '';
   position: absolute;
   inset: 0;
   z-index: 3;
-  display: block;
   pointer-events: none;
-  background-image:
-    radial-gradient(circle, rgba(255, 236, 190, 0.9) 0 1px, transparent 1.6px),
-    radial-gradient(circle, rgba(255, 236, 190, 0.55) 0 1.3px, transparent 2px),
-    radial-gradient(ellipse 60% 70% at 70% 0%, rgba(255, 220, 150, 0.18), transparent 70%);
-  background-size:
-    37px 41px,
-    59px 53px,
-    100% 100%;
-  animation: shelf-motes 16s linear infinite;
+  background: linear-gradient(
+    116deg,
+    transparent 30%,
+    rgba(255, 226, 160, 0.16) 44%,
+    rgba(255, 226, 160, 0.05) 56%,
+    transparent 64%
+  );
+  animation: shelf-beam 7s ease-in-out infinite alternate;
 }
-@keyframes shelf-motes {
+@keyframes shelf-beam {
   to {
-    background-position:
-      40px -164px,
-      -60px -212px,
-      0 0;
+    opacity: 0.45;
+    transform: translateX(-12px);
   }
+}
+
+[data-theme='magic'] .shelf__row {
+  padding-right: 48px;
+}
+[data-theme='magic'] .shelf__row li:nth-child(6n + 1) {
+  --w: 52px;
+}
+[data-theme='magic'] .shelf__row li:nth-child(6n + 2) {
+  --w: 44px;
+}
+[data-theme='magic'] .shelf__row li:nth-child(6n + 3) {
+  --w: 56px;
+}
+[data-theme='magic'] .shelf__row li:nth-child(6n + 4) {
+  --w: 46px;
+}
+[data-theme='magic'] .shelf__row li:nth-child(6n + 5) {
+  --w: 54px;
+}
+[data-theme='magic'] .shelf__row li:nth-child(6n + 6) {
+  --w: 48px;
 }
 [data-theme='magic'] .shelf__item {
   --c: var(--cobalt);
-  border-radius: 4px 4px 0 0;
+  border-radius: 5px 5px 0 0;
   background:
-    linear-gradient(var(--marigold), var(--marigold)) 0 10px / 100% 2px no-repeat,
-    linear-gradient(var(--marigold), var(--marigold)) 0 calc(100% - 22px) / 100% 2px no-repeat,
-    linear-gradient(90deg, rgba(255, 255, 255, 0.18), transparent 35%, rgba(0, 0, 0, 0.2)),
+    linear-gradient(var(--marigold), var(--marigold)) 0 9px / 100% 1.5px no-repeat,
+    linear-gradient(var(--marigold), var(--marigold)) 0 13px / 100% 1.5px no-repeat,
+    linear-gradient(var(--marigold), var(--marigold)) 0 calc(100% - 26px) / 100% 1.5px no-repeat,
+    linear-gradient(var(--marigold), var(--marigold)) 0 calc(100% - 22px) / 100% 1.5px no-repeat,
+    linear-gradient(90deg, rgba(255, 255, 255, 0.22), transparent 30%, transparent 70%, rgba(0, 0, 0, 0.28)),
+    repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.05) 0 1px, transparent 1px 3px),
     var(--c);
-  color: #fdf6e6;
-  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
+  box-shadow: 2px 0 0 rgba(0, 0, 0, 0.35);
+  color: #fdf3d6;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.45);
+}
+[data-theme='magic'] .shelf__name {
+  padding: 5px 2px;
+  border: 1px solid rgba(242, 185, 64, 0.55);
+  background: rgba(0, 0, 0, 0.16);
 }
 [data-theme='magic'] .shelf__item::after {
   content: '';
@@ -641,15 +928,26 @@
   left: 0;
   right: 0;
   top: 0;
-  height: 42%;
-  border-radius: 4px 4px 0 0;
-  background: linear-gradient(rgba(236, 226, 205, 0.78), rgba(236, 226, 205, 0));
+  height: 46%;
+  border-radius: 5px 5px 0 0;
+  background:
+    radial-gradient(circle at 20% 18%, rgba(255, 255, 255, 0.5) 0 1px, transparent 1.4px) 0 0 / 9px 11px,
+    linear-gradient(rgba(228, 216, 192, 0.85), rgba(228, 216, 192, 0));
   pointer-events: none;
-  transition: opacity 0.4s;
+  transition:
+    opacity 0.45s,
+    transform 0.45s;
 }
+
 [data-theme='magic'] .shelf__item:hover::after,
 [data-theme='magic'] .shelf__item:focus-visible::after {
   opacity: 0;
+  transform: translateY(-8px);
+}
+
+[data-theme='magic'] .shelf__row li:last-child:not(:first-child) .shelf__item {
+  rotate: 7deg;
+  transform-origin: 100% 100%;
 }
 [data-theme='magic'] .shelf__row li:nth-child(6n + 2) .shelf__item {
   --c: var(--vermilion);
@@ -668,16 +966,27 @@
 }
 [data-theme='magic'] .shelf__cat {
   color: #f2e2b0;
-  opacity: 0.9;
 }
 [data-theme='magic'] .shelf__plank {
-  margin: 0 -12px;
-  border-radius: 0 0 6px 6px;
-  background: linear-gradient(#a06a3f, #6e4527);
+  margin: 0 -22px;
+  height: 18px;
+  background: linear-gradient(180deg, #b47a49, #7a4d2c 70%, #5e3a21);
+  box-shadow: 0 6px 0 rgba(38, 33, 29, 0.2);
+}
+@media (max-width: 420px) {
+  [data-theme='magic'] .shelf {
+    padding: 26px 16px 0;
+  }
+  [data-theme='magic'] .shelf__plank {
+    margin: 0 -16px;
+  }
+  [data-theme='magic'] .shelf__row {
+    gap: 5px;
+    padding-right: 42px;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
-  [data-theme='temple'] .cold::before,
-  [data-theme='magic'] .shelf__motes {
+  [data-theme='magic'] .shelf::after {
     animation: none;
   }
 }
@@ -717,9 +1026,11 @@
   background: transparent;
   cursor: pointer;
 }
-.podium__slot:hover .podium__name,
+.podium__slot:hover .podium__name {
+  color: var(--vermilion-lo);
+}
 .sky__star:hover .sky__name {
-  color: var(--accent);
+  color: #ffe7a3;
 }
 .titles .vignette {
   margin-top: -4px;
@@ -733,103 +1044,229 @@
   display: none;
 }
 
-/* 廟宇：上面一片琉璃瓦屋簷，兩根木柱，繪馬一排排掛在橫木上 */
-[data-theme='temple'] .rack__top {
-  position: relative;
-  display: block;
-  z-index: 1;
-  height: 24px;
-  margin: 0 -12px -2px;
-  filter: drop-shadow(1.5px 0 0 var(--ink)) drop-shadow(-1.5px 0 0 var(--ink)) drop-shadow(0 1.5px 0 var(--ink))
-    drop-shadow(0 -1.5px 0 var(--ink));
-}
-[data-theme='temple'] .rack__top::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background:
-    repeating-linear-gradient(90deg, rgba(38, 33, 29, 0.28) 0 1.5px, transparent 1.5px 13px) 0 6px / 100% 18px no-repeat,
-    linear-gradient(var(--jade) 0 6px, #3fb197 6px);
-  clip-path: polygon(0 100%, 2% 46%, 7% 18%, 12% 0, 88% 0, 93% 18%, 98% 46%, 100% 100%);
-}
+/* 廟宇：祈願繩。象牙紙上兩根朱漆柱子，繪馬一排排掛在紅繩上，風一吹輕輕晃；滑過的那塊晃得比較大 */
 [data-theme='temple'] .rack ul {
   position: relative;
   overflow: hidden;
-  margin: 0 2px;
-  padding: 30px 16px 18px;
-  border-inline: 10px solid var(--wood-lo);
+  margin: 0;
+  padding: 34px 18px 20px;
+  border: 1.5px solid var(--ink);
+  border-inline-width: 12px;
+  border-inline-color: #8a3226;
   box-shadow:
     inset 1.5px 0 0 var(--ink),
     inset -1.5px 0 0 var(--ink),
     -1.5px 0 0 var(--ink),
     1.5px 0 0 var(--ink);
-  background: linear-gradient(180deg, rgba(200, 143, 85, 0.14), transparent 50%), var(--paper);
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .16 0 0 0 0 .13 0 0 0 0 .1 0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E"),
+    linear-gradient(180deg, #f6f0e2, #efe6d2);
 }
-/* 每塊繪馬的繩子繞在一根橫木上：同一排的橫木接成一整條，到柱子為止 */
 [data-theme='temple'] .rack .note__hang::before {
   content: '';
   position: absolute;
   left: -100vw;
   right: -100vw;
-  top: -7.5px;
+  top: -6px;
   z-index: -1;
-  height: 10px;
-  border-block: 1.5px solid var(--ink);
-  background: linear-gradient(var(--wood), var(--wood-lo));
+  height: 5px;
+  border-block: 1px solid var(--ink);
+  background: repeating-linear-gradient(60deg, #c8432a 0 4px, #8a2a1a 4px 6px);
+}
+[data-theme='temple'] .rack .note {
+  transform-origin: 50% -16px;
+  animation: ema-sway 4.2s ease-in-out infinite alternate;
+}
+[data-theme='temple'] .rack .note:nth-child(2) {
+  animation-delay: -1.4s;
+}
+[data-theme='temple'] .rack .note:nth-child(3) {
+  animation-delay: -2.6s;
+}
+[data-theme='temple'] .rack .note:nth-child(4) {
+  animation-delay: -0.7s;
+}
+[data-theme='temple'] .rack .note:hover {
+  animation: ema-swing 1.6s ease-out;
+}
+@keyframes ema-sway {
+  from {
+    rotate: -1.2deg;
+  }
+  to {
+    rotate: 1.2deg;
+  }
+}
+@keyframes ema-swing {
+  15% {
+    rotate: 6deg;
+  }
+  35% {
+    rotate: -4.5deg;
+  }
+  55% {
+    rotate: 3deg;
+  }
+  75% {
+    rotate: -1.4deg;
+  }
 }
 
-/* 魔法：深藍星空的留言板，角落掛著一彎月亮，星星一閃一閃 */
+/* 魔法：塔羅牌陣。鈷藍桌布上一排蓋著的牌，捲到這裡一張張翻開；換頁時重新發牌 */
 [data-theme='magic'] .rack {
-  padding: 22px 16px 18px;
+  padding: 26px 18px 22px;
   border: 1.5px solid var(--ink);
   border-radius: 16px;
   background:
-    radial-gradient(circle at 8% 12%, rgba(255, 255, 255, 0.9) 0 1px, transparent 1.6px),
-    radial-gradient(circle at 46% 6%, rgba(242, 185, 64, 0.9) 0 1.3px, transparent 1.9px),
-    radial-gradient(circle at 70% 46%, rgba(255, 255, 255, 0.6) 0 0.9px, transparent 1.5px),
-    radial-gradient(circle at 16% 64%, rgba(201, 184, 255, 0.9) 0 1.1px, transparent 1.7px),
-    radial-gradient(circle at 56% 96%, rgba(255, 255, 255, 0.7) 0 1px, transparent 1.6px),
-    radial-gradient(circle at 94% 78%, rgba(242, 185, 64, 0.8) 0 1.1px, transparent 1.7px),
-    radial-gradient(ellipse 80% 45% at 85% 0%, rgba(155, 123, 255, 0.35), transparent 70%),
-    linear-gradient(165deg, #1f2a5c, #2c3e7a 55%, #3a2f7a);
-  box-shadow: 4px 5px 0 var(--accent-tint);
+    radial-gradient(circle, rgba(255, 253, 248, 0.35) 0 0.8px, transparent 1.2px) 0 0 / 16px 18px,
+    var(--cobalt);
+  box-shadow: 6px 6px 0 var(--marigold);
+}
+[data-theme='magic'] .rack::before {
+  content: '';
+  position: absolute;
+  inset: 9px;
+  border: 1px dashed rgba(242, 185, 64, 0.7);
+  border-radius: 10px;
+  pointer-events: none;
 }
 [data-theme='magic'] .rack__top {
   position: absolute;
   display: block;
-  right: 20px;
-  top: -15px;
+  right: 22px;
+  top: -16px;
+  z-index: 2;
   width: 32px;
   height: 32px;
   border-radius: 50%;
   box-shadow: inset -9px 4px 0 0 var(--marigold);
-  filter: drop-shadow(0 0 6px rgba(242, 185, 64, 0.7));
   rotate: -20deg;
 }
-[data-theme='magic'] .rack::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background:
-    radial-gradient(circle at 30% 30%, #fff 0 1.2px, transparent 1.8px),
-    radial-gradient(circle at 82% 24%, #fff 0 1px, transparent 1.6px),
-    radial-gradient(circle at 62% 74%, #fff 0 1.2px, transparent 1.8px);
-  pointer-events: none;
-  animation: rack-twinkle 3.6s ease-in-out infinite;
+[data-theme='magic'] .rack ul {
+  position: relative;
+  counter-reset: tarot;
+  gap: 14px;
 }
-@keyframes rack-twinkle {
+[data-theme='magic'] .rack .note {
+  counter-increment: tarot;
+  isolation: isolate;
+  min-height: 150px;
+  padding: 34px 22px 16px;
+}
+[data-theme='magic'] .rack .note.is-open {
+  animation: tarot-flip 0.62s ease-in-out;
+}
+[data-theme='magic'] .rack .note:not(.is-open) {
+  cursor: pointer;
+}
+@keyframes tarot-flip {
+  0% {
+    transform: scaleX(1);
+  }
   50% {
-    opacity: 0.15;
+    transform: scaleX(0.02) translateY(-6px);
+  }
+  100% {
+    transform: scaleX(1);
   }
 }
+[data-theme='magic'] .rack .note::before {
+  content: counter(tarot, upper-roman);
+  inset: 0;
+  z-index: 1;
+  translate: 0 0;
+  display: grid;
+  place-items: start center;
+  padding-top: 10px;
+  border-radius: 12px;
+  background: none;
+  font-family: var(--f-latin);
+  font-style: italic;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--cobalt);
+  pointer-events: none;
+}
+[data-theme='magic'] .rack .note::after {
+  content: '';
+  inset: 0;
+  z-index: 3;
+  rotate: 0deg;
+  border: 1.5px solid var(--ink);
+  border-radius: 12px;
+  background:
+    radial-gradient(circle at 50% 50%, var(--marigold) 0 9px, transparent 9.5px),
+    radial-gradient(circle at 50% 50%, transparent 0 30px, rgba(242, 185, 64, 0.8) 30.5px 31.5px, transparent 32px),
+    radial-gradient(circle at 50% 50%, transparent 0 44px, rgba(242, 185, 64, 0.45) 44.5px 45.2px, transparent 45.6px),
+    radial-gradient(circle, rgba(255, 253, 248, 0.45) 0 0.8px, transparent 1.2px) 0 0 / 12px 14px,
+    #2b4f8a;
+  outline: 1.5px solid var(--marigold);
+  outline-offset: -7px;
+  pointer-events: none;
+}
+[data-theme='magic'] .rack .note.is-open::after {
+  opacity: 0;
+  animation: tarot-back 0.62s ease-in-out;
+}
+@keyframes tarot-back {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  51%,
+  100% {
+    opacity: 0;
+  }
+}
+[data-theme='magic'] .rack .note__paper {
+  rotate: 0deg;
+  border-radius: 12px;
+  background:
+    radial-gradient(circle, rgba(58, 104, 173, 0.09) 0 0.8px, transparent 1.2px) 0 0 / 12px 14px,
+    var(--paper-hi);
+  outline: 1.5px solid var(--cobalt);
+  outline-offset: -7px;
+}
+[data-theme='magic'] .rack .note__hang {
+  top: auto;
+  bottom: 12px;
+  right: 16px;
+  width: 22px;
+  height: 22px;
+}
+[data-theme='magic'] .rack .note__shop {
+  text-align: center;
+}
+[data-theme='magic'] .rack .note__text {
+  text-align: center;
+  text-wrap: balance;
+}
+[data-theme='magic'] .rack .note__foot {
+  justify-content: center;
+  padding-right: 22px;
+  border-top: 1px dashed rgba(58, 104, 173, 0.35);
+  padding-top: 8px;
+}
+[data-theme='magic'] .rack .note__by {
+  flex: none;
+}
+[data-theme='magic'] .rack .note.is-open:hover {
+  translate: 0 -4px;
+  rotate: -0.6deg;
+}
+[data-theme='magic'] .rack .note {
+  transition:
+    translate 0.3s var(--ease-spring),
+    rotate 0.3s var(--ease-spring);
+}
 @media (prefers-reduced-motion: reduce) {
-  .honor,
-  .honor__silk,
-  .honor__silk::after,
-  .honor__fringe,
-  [data-theme='magic'] .rack::after {
-    animation: none !important;
+  [data-theme='temple'] .rack .note,
+  [data-theme='temple'] .rack .note:hover {
+    animation: none;
+  }
+  [data-theme='magic'] .rack .note.is-open,
+  [data-theme='magic'] .rack .note.is-open::after {
+    animation: none;
   }
 }
 
@@ -905,8 +1342,10 @@
     grid-column: 2;
     grid-row: 1 / span 2;
   }
-  .rack ul {
-    grid-template-columns: 1fr 1fr;
+  .latest {
+    position: sticky;
+    top: calc(var(--bar-h, 60px) + 20px);
+    align-self: start;
   }
 }
 @media (max-width: 520px) {
@@ -918,5 +1357,602 @@
   }
   .ranklist__cat {
     display: none;
+  }
+}
+
+/* 魔法：夜色書房海報。深靛夜空、金色直書、懸浮的魔法書與發光符文 */
+[data-theme='magic'] .cold--poster {
+  border: 1px solid #0d0e24;
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 14% 12%, #fff 0 0.8px, transparent 1.4px),
+    radial-gradient(circle at 36% 30%, rgba(255, 255, 255, 0.7) 0 0.6px, transparent 1.2px),
+    radial-gradient(circle at 62% 8%, #f2d98a 0 0.9px, transparent 1.5px),
+    radial-gradient(circle at 8% 58%, rgba(201, 184, 255, 0.8) 0 0.7px, transparent 1.3px),
+    radial-gradient(circle at 48% 72%, rgba(255, 255, 255, 0.5) 0 0.6px, transparent 1.2px),
+    radial-gradient(circle at 26% 88%, #f2d98a 0 0.7px, transparent 1.3px),
+    radial-gradient(ellipse 70% 45% at 82% 6%, rgba(155, 123, 255, 0.3), transparent 70%),
+    radial-gradient(ellipse 60% 40% at 6% 96%, rgba(58, 104, 173, 0.28), transparent 70%),
+    linear-gradient(170deg, #15172f, #1f2247 55%, #2a2250);
+}
+[data-theme='magic'] .cold--poster::after {
+  opacity: 0.3;
+  mix-blend-mode: screen;
+}
+[data-theme='magic'] .poster__archive {
+  color: #bfae7c;
+}
+[data-theme='magic'] .ranks__more .poster__title h2 {
+  color: #f3e3b5;
+  text-shadow:
+    0 0 14px rgba(242, 185, 64, 0.35),
+    0 0 2px rgba(242, 185, 64, 0.6);
+}
+[data-theme='magic'] .poster__title p {
+  color: #b8aee0;
+}
+[data-theme='magic'] .poster__en {
+  color: #d9c690;
+}
+[data-theme='magic'] .cold--poster .pager__btn {
+  border-color: #d9c690;
+  color: #efe4c6;
+  border-radius: 0;
+}
+[data-theme='magic'] .cold--poster .pager__btn[aria-disabled='true'] {
+  border-color: transparent;
+}
+[data-theme='magic'] .cold--poster .pager__dots button {
+  border: 0;
+  background-color: rgba(201, 184, 255, 0.35);
+}
+[data-theme='magic'] .cold--poster .pager__dots button.is-on {
+  background-color: var(--marigold);
+}
+.arcane-sky {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 1;
+  width: 48%;
+  max-width: 220px;
+  height: auto;
+  pointer-events: none;
+}
+.arcane-sky__star {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: sky-twinkle 2.8s ease-in-out infinite;
+}
+@keyframes sky-twinkle {
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: scale(0.7);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2) rotate(30deg);
+  }
+}
+[data-theme='magic'] .shelf {
+  grid-area: scene;
+  align-self: end;
+  overflow: visible;
+  margin-top: 120px;
+  padding: 22px 14px 0;
+}
+[data-theme='magic'] .shelf > .particles {
+  overflow: hidden;
+}
+[data-theme='magic'] .shelf__row {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  min-height: 176px;
+  padding-right: 0;
+}
+[data-theme='magic'] .shelf__row li:nth-child(4n + 1) {
+  --w: 44px;
+}
+[data-theme='magic'] .shelf__row li:nth-child(4n + 2) {
+  --w: 38px;
+}
+[data-theme='magic'] .shelf__row li:nth-child(4n + 3) {
+  --w: 46px;
+}
+[data-theme='magic'] .shelf__row li:nth-child(4n + 4) {
+  --w: 40px;
+}
+[data-theme='magic'] .shelf__row li {
+  position: relative;
+}
+[data-theme='magic'] .shelf__row li::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -4px;
+  width: 40px;
+  height: 8px;
+  margin-left: -20px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(185, 166, 255, 0.55), transparent);
+  pointer-events: none;
+  animation: book-glow 3.6s ease-in-out infinite;
+  animation-delay: calc(var(--i, 0) * -0.7s);
+}
+[data-theme='magic'] .shelf__item {
+  translate: 0 0;
+  animation: book-float 3.6s ease-in-out infinite;
+  animation-delay: calc(var(--i, 0) * -0.7s);
+}
+@keyframes book-float {
+  50% {
+    translate: 0 -5px;
+  }
+}
+@keyframes book-glow {
+  50% {
+    opacity: 0.45;
+    transform: scaleX(0.8);
+  }
+}
+.shelf__rune {
+  position: relative;
+  z-index: 1;
+  font-size: 0.8rem;
+  line-height: 1;
+  color: #f2d98a;
+  text-shadow: 0 0 6px rgba(242, 185, 64, 0.6);
+  transition:
+    color 0.4s,
+    text-shadow 0.4s,
+    transform 0.4s var(--ease-spring);
+}
+[data-theme='magic'] .shelf__item:hover .shelf__rune,
+[data-theme='magic'] .shelf__item:focus-visible .shelf__rune {
+  transform: scale(1.5) rotate(20deg);
+  color: #fff6d6;
+  text-shadow:
+    0 0 6px #f2d98a,
+    0 0 16px rgba(242, 185, 64, 0.9);
+}
+[data-theme='magic'] .shelf.is-dark .shelf__rune {
+  color: #efe6ff;
+  text-shadow:
+    0 0 6px #b9a6ff,
+    0 0 16px #8b6dff,
+    0 0 26px rgba(139, 109, 255, 0.7);
+}
+[data-theme='magic'] .shelf.is-dark .shelf__item {
+  filter: none;
+}
+[data-theme='magic'] .shelf__row li:last-child:not(:first-child) .shelf__item {
+  rotate: 0deg;
+}
+[data-theme='magic'] .candle {
+  right: 12px;
+  bottom: calc(100% + 10px);
+  width: 28px;
+  height: 64px;
+}
+[data-theme='magic'] .shelf__plank {
+  margin: 0 -14px;
+}
+
+.critter--comet {
+  z-index: 8;
+  width: 70px;
+  height: 2px;
+}
+.critter--comet i {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #fff6d6, rgba(242, 217, 138, 0));
+  box-shadow: 0 0 8px #f2d98a;
+  transform: rotate(-22deg);
+}
+@media (min-width: 900px) {
+  [data-theme='magic'] .shelf {
+    margin-top: 140px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .arcane-sky__star,
+  [data-theme='magic'] .shelf__item,
+  [data-theme='magic'] .shelf__row li::after,
+  .arcane__spin,
+  .arcane__glow,
+  [data-theme='magic'] .shelf__row li::before {
+    animation: none;
+  }
+}
+
+/* 魔法：塵封書架。象牙紙海報裡一座石板藍的拱頂書櫃，和施法頁同一套顏色；書立在層板上，蠟燭在正中間 */
+[data-theme='magic'] .cold--poster {
+  border: 1px solid #26211d;
+  border-radius: 16px;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .16 0 0 0 0 .13 0 0 0 0 .1 0 0 0 .1 0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E"),
+    linear-gradient(180deg, #f6f0e2, #efe6d2);
+}
+[data-theme='magic'] .cold--poster::after {
+  opacity: 0.7;
+  mix-blend-mode: multiply;
+}
+[data-theme='magic'] .ranks__more .poster__title h2 {
+  color: #2b3550;
+  text-shadow: none;
+}
+[data-theme='magic'] .poster__title p {
+  color: #6b6a7e;
+}
+[data-theme='magic'] .poster__archive {
+  color: #8a7c68;
+}
+.arcane-sky path {
+  stroke: #56688a;
+  stroke-opacity: 0.5;
+}
+.arcane-sky__star {
+  fill: #b39b63;
+}
+[data-theme='magic'] .cold--poster .pager__btn {
+  border-color: #26211d;
+  color: #26211d;
+}
+[data-theme='magic'] .cold--poster .pager__btn[aria-disabled='true'] {
+  border-color: transparent;
+}
+[data-theme='magic'] .cold--poster .pager__dots button {
+  background-color: rgba(86, 104, 138, 0.35);
+}
+[data-theme='magic'] .cold--poster .pager__dots button.is-on {
+  background-color: var(--cobalt);
+}
+[data-theme='magic'] .cold--poster .shelf {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  margin-top: 64px;
+  padding: 58px 16px 0;
+  border: 2px solid #26211d;
+  border-bottom: 0;
+  border-radius: 999px 999px 0 0 / 74px 74px 0 0;
+  background:
+    radial-gradient(circle at 50% 70%, rgba(255, 214, 140, 0.32), transparent 46%),
+    radial-gradient(circle, rgba(238, 229, 207, 0.55) 0 0.8px, transparent 1.2px) 0 0 / 18px 22px,
+    linear-gradient(180deg, #3f4f6f, #4f6185);
+  box-shadow:
+    inset 0 0 0 9px #6a7da0,
+    inset 0 0 0 10.5px #26211d,
+    inset 0 18px 26px -10px rgba(16, 20, 38, 0.6);
+}
+[data-theme='magic'] .cold--poster .shelf::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  border-radius: inherit;
+  background: rgba(14, 17, 32, 0.62);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.9s ease;
+}
+[data-theme='magic'] .cold--poster .shelf.is-dark::before {
+  opacity: 1;
+}
+[data-theme='magic'] .cold--poster .shelf::after {
+  content: '☾';
+  position: absolute;
+  left: 50%;
+  top: 12px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  margin-left: -15px;
+  border: 1.5px solid #26211d;
+  border-radius: 50%;
+  background: #c8b07a;
+  color: #2b3550;
+  font-size: 15px;
+  line-height: 1;
+  animation: none;
+}
+[data-theme='magic'] .cold--poster .shelf__row {
+  z-index: 2;
+  grid-template-columns: repeat(auto-fit, minmax(0, 46px));
+  justify-content: center;
+  align-items: end;
+  gap: 8px;
+  min-height: 0;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+[data-theme='magic'] .cold--poster .shelf__row li {
+  padding-bottom: 0;
+}
+[data-theme='magic'] .cold--poster .shelf__row li::before,
+[data-theme='magic'] .cold--poster .shelf__row li::after {
+  display: none;
+}
+[data-theme='magic'] .cold--poster .shelf__item {
+  --c: #3a68ad;
+  --ink-on: #f6f0e2;
+  width: 44px;
+  max-width: none;
+  padding-top: 34px;
+  border: 1.5px solid #26211d;
+  border-bottom: 0;
+  border-radius: 3px 3px 0 0;
+  background:
+    linear-gradient(#c8b07a, #c8b07a) 0 9px / 100% 2px no-repeat,
+    linear-gradient(#c8b07a, #c8b07a) 0 calc(100% - 24px) / 100% 2px no-repeat,
+    linear-gradient(90deg, rgba(255, 255, 255, 0.16), transparent 32%, transparent 72%, rgba(0, 0, 0, 0.16)),
+    var(--c);
+  box-shadow: none;
+  color: var(--ink-on);
+  text-shadow: none;
+  animation: none;
+  translate: 0 0;
+  rotate: 0deg;
+}
+[data-theme='magic'] .cold--poster .shelf__row li:nth-child(5n + 2) .shelf__item {
+  --c: #efe4c9;
+  --ink-on: #2b3550;
+}
+[data-theme='magic'] .cold--poster .shelf__row li:nth-child(5n + 4) .shelf__item {
+  --c: #c8b07a;
+  --ink-on: #2b3550;
+}
+[data-theme='magic'] .cold--poster .shelf__row li:nth-child(5n + 5) .shelf__item {
+  --c: #6b7a96;
+}
+[data-theme='magic'] .cold--poster .shelf__row li:last-child:not(.shelf__candle-slot) .shelf__item {
+  rotate: 6deg;
+  transform-origin: 100% 100%;
+}
+[data-theme='magic'] .cold--poster .shelf__item::after {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 40%;
+  border-radius: 3px 3px 0 0;
+  background: linear-gradient(rgba(232, 222, 200, 0.7), rgba(232, 222, 200, 0));
+  opacity: 1;
+  pointer-events: none;
+  transition: opacity 0.45s;
+}
+[data-theme='magic'] .cold--poster .shelf__item:hover::after,
+[data-theme='magic'] .cold--poster .shelf__item.is-unsealed::after {
+  opacity: 0;
+}
+[data-theme='magic'] .cold--poster .shelf__name {
+  padding: 4px 2px;
+  border: 1px solid currentColor;
+  border-color: color-mix(in srgb, currentColor 40%, transparent);
+  background: none;
+  font-weight: 500;
+}
+[data-theme='magic'] .cold--poster .shelf__cat {
+  color: inherit;
+  opacity: 0.75;
+}
+[data-theme='magic'] .cold--poster .shelf__rune {
+  color: #c8b07a;
+  text-shadow: none;
+}
+[data-theme='magic'] .cold--poster .shelf__row li:nth-child(5n + 2) .shelf__rune,
+[data-theme='magic'] .cold--poster .shelf__row li:nth-child(5n + 4) .shelf__rune {
+  color: #3a68ad;
+}
+[data-theme='magic'] .cold--poster .shelf.is-dark .shelf__rune {
+  color: #fff6d6;
+  text-shadow: 0 0 6px rgba(255, 220, 150, 0.9);
+}
+.shelf__chain {
+  top: 20px;
+}
+.shelf__chain-l,
+.shelf__chain-r {
+  background: radial-gradient(ellipse 4px 3px at 50% 50%, transparent 55%, #c8b07a 60% 85%, transparent 90%) 0 0 / 8px
+    9px repeat-x;
+  filter: none;
+}
+.shelf__lock {
+  border-color: #c8b07a;
+  background: #2b3550;
+  box-shadow: none;
+}
+.shelf__lock::before {
+  border-color: #c8b07a;
+}
+.shelf__item.is-unsealed {
+  transform: translateY(-14px);
+  filter: brightness(1.08);
+}
+.shelf__candle-slot {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-self: end;
+  width: 46px;
+}
+.shelf__candle-slot::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 30px;
+  z-index: -1;
+  width: 220px;
+  height: 220px;
+  margin-left: -110px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(255, 214, 140, 0.45), transparent);
+  transition: opacity 0.9s;
+  pointer-events: none;
+}
+.shelf.is-dark .shelf__candle-slot::before {
+  opacity: 0;
+}
+[data-theme='magic'] .cold--poster .candle {
+  position: relative;
+  right: auto;
+  bottom: auto;
+  z-index: 4;
+  width: 30px;
+  height: 68px;
+}
+[data-theme='magic'] .cold--poster .shelf__plank {
+  position: relative;
+  z-index: 4;
+  display: block;
+  height: 16px;
+  margin: 0 -16px;
+  border: 0;
+  border-top: 2px solid #26211d;
+  background: linear-gradient(180deg, #8a7563, #6e5c4d);
+  box-shadow: none;
+}
+[data-theme='magic'] .cold--poster .cobweb {
+  left: 10px;
+  top: 10px;
+  z-index: 3;
+}
+@media (min-width: 900px) {
+  [data-theme='magic'] .cold--poster .shelf {
+    margin-top: 80px;
+  }
+  [data-theme='magic'] .cold--poster .shelf__row {
+    gap: 12px;
+  }
+}
+
+/* 魔法：藏書閣角落。插畫滿版，下面的翻頁列像地板延伸 */
+[data-theme='magic'] .cold--study {
+  overflow: hidden;
+  padding: 0;
+  border: 1px solid var(--ink);
+  border-radius: 16px;
+  background: #c7b594;
+}
+.cold--study .poster__foot {
+  display: flex;
+  justify-content: center;
+  margin: 0;
+  padding: 16px 18px 20px;
+}
+.cold--study .pager {
+  width: 100%;
+  margin: 0;
+  gap: 10px;
+}
+.cold--study .pager__btn {
+  min-height: 42px;
+  padding: 0 16px;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  background: var(--paper-hi);
+  box-shadow: 3px 3px 0 var(--ink);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: var(--ink);
+}
+.cold--study .pager__btn--next {
+  background: var(--cobalt);
+  color: var(--paper-hi);
+}
+.cold--study .pager__btn:active:not([aria-disabled='true']) {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--ink);
+}
+.cold--study .pager__btn[aria-disabled='true'] {
+  opacity: 0.35;
+  box-shadow: none;
+}
+.cold--study .pager__dots button {
+  width: 9px;
+  height: 9px;
+  background-color: rgba(38, 33, 29, 0.25);
+}
+.cold--study .pager__dots button.is-on {
+  background-color: var(--cobalt);
+  filter: none;
+}
+
+/* 星點不排整齊：兩張大小不同、隨機散布的星空圖疊在一起 */
+.starchart--nebula .ledger {
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='340' height='290'%3E%3Ccircle cx='217.4' cy='7.3' r='0.7' fill='%23ffffff' fill-opacity='0.45'/%3E%3Ccircle cx='75.9' cy='213.6' r='1.2' fill='%23ffffff' fill-opacity='0.75'/%3E%3Ccircle cx='200.8' cy='9.2' r='0.5' fill='%23ffffff' fill-opacity='0.45'/%3E%3Ccircle cx='79.1' cy='174.6' r='1.0' fill='%23ffffff' fill-opacity='0.45'/%3E%3Ccircle cx='243.4' cy='203.4' r='0.8' fill='%23ffffff' fill-opacity='0.45'/%3E%3Ccircle cx='152.7' cy='80.7' r='1.5' fill='%23ffffff' fill-opacity='0.75'/%3E%3Ccircle cx='258.0' cy='46.3' r='0.8' fill='%23f2d98a' fill-opacity='0.7'/%3E%3Ccircle cx='94.5' cy='62.4' r='1.5' fill='%23f2d98a' fill-opacity='0.7'/%3E%3Ccircle cx='34.8' cy='110.2' r='0.7' fill='%23f2d98a' fill-opacity='0.7'/%3E%3Ccircle cx='205.3' cy='234.1' r='1.2' fill='%23c9b8ff' fill-opacity='0.6'/%3E%3Ccircle cx='182.3' cy='282.2' r='0.8' fill='%23ffffff' fill-opacity='0.75'/%3E%3Ccircle cx='187.7' cy='240.5' r='1.0' fill='%23f2d98a' fill-opacity='0.7'/%3E%3Ccircle cx='196.3' cy='204.3' r='0.5' fill='%23ffffff' fill-opacity='0.45'/%3E%3Ccircle cx='262.8' cy='285.7' r='1.5' fill='%23ffffff' fill-opacity='0.45'/%3E%3Ccircle cx='294.6' cy='110.2' r='0.8' fill='%23f2d98a' fill-opacity='0.7'/%3E%3Ccircle cx='55.3' cy='103.0' r='1.2' fill='%23f2d98a' fill-opacity='0.7'/%3E%3Ccircle cx='238.6' cy='198.2' r='0.5' fill='%23ffffff' fill-opacity='0.45'/%3E%3Ccircle cx='181.6' cy='71.0' r='0.8' fill='%23c9b8ff' fill-opacity='0.6'/%3E%3Ccircle cx='91.8' cy='268.4' r='1.2' fill='%23ffffff' fill-opacity='0.45'/%3E%3Ccircle cx='232.8' cy='244.4' r='1.5' fill='%23ffffff' fill-opacity='0.75'/%3E%3Ccircle cx='77.9' cy='9.3' r='0.7' fill='%23c9b8ff' fill-opacity='0.6'/%3E%3Ccircle cx='91.0' cy='61.2' r='1.0' fill='%23f2d98a' fill-opacity='0.7'/%3E%3Ccircle cx='72.3' cy='144.8' r='1.2' fill='%23c9b8ff' fill-opacity='0.6'/%3E%3Ccircle cx='48.6' cy='40.5' r='1.2' fill='%23f2d98a' fill-opacity='0.7'/%3E%3Ccircle cx='254.0' cy='124.2' r='1.0' fill='%23c9b8ff' fill-opacity='0.6'/%3E%3Ccircle cx='123.1' cy='289.2' r='0.6' fill='%23c9b8ff' fill-opacity='0.6'/%3E%3Ccircle cx='30.9' cy='13.7' r='0.5' fill='%23ffffff' fill-opacity='0.45'/%3E%3Ccircle cx='213.3' cy='229.7' r='0.8' fill='%23ffffff' fill-opacity='0.75'/%3E%3Ccircle cx='130.8' cy='172.8' r='0.8' fill='%23f2d98a' fill-opacity='0.7'/%3E%3Ccircle cx='330.2' cy='249.6' r='0.5' fill='%23ffffff' fill-opacity='0.75'/%3E%3Ccircle cx='231.8' cy='155.7' r='0.7' fill='%23f2d98a' fill-opacity='0.7'/%3E%3Ccircle cx='37.9' cy='126.1' r='0.8' fill='%23ffffff' fill-opacity='0.75'/%3E%3Ccircle cx='324.3' cy='254.0' r='0.7' fill='%23ffffff' fill-opacity='0.45'/%3E%3Ccircle cx='172.6' cy='30.9' r='1.2' fill='%23f2d98a' fill-opacity='0.7'/%3E%3Ccircle cx='286.2' cy='147.2' r='0.6' fill='%23ffffff' fill-opacity='0.45'/%3E%3Ccircle cx='127.1' cy='46.8' r='1.5' fill='%23ffffff' fill-opacity='0.75'/%3E%3Ccircle cx='203.6' cy='141.7' r='0.5' fill='%23f2d98a' fill-opacity='0.7'/%3E%3Ccircle cx='298.8' cy='241.2' r='0.7' fill='%23ffffff' fill-opacity='0.45'/%3E%3Ccircle cx='19.7' cy='254.6' r='0.5' fill='%23ffffff' fill-opacity='0.75'/%3E%3Ccircle cx='248.8' cy='236.6' r='1.5' fill='%23ffffff' fill-opacity='0.45'/%3E%3Ccircle cx='43.7' cy='137.8' r='1.0' fill='%23ffffff' fill-opacity='0.45'/%3E%3Ccircle cx='90.1' cy='253.0' r='0.8' fill='%23ffffff' fill-opacity='0.45'/%3E%3Ccircle cx='315.8' cy='219.0' r='1.2' fill='%23ffffff' fill-opacity='0.45'/%3E%3Ccircle cx='242.4' cy='115.7' r='1.2' fill='%23f2d98a' fill-opacity='0.7'/%3E%3Ccircle cx='149.0' cy='150.1' r='0.5' fill='%23ffffff' fill-opacity='0.45'/%3E%3Ccircle cx='76.4' cy='98.0' r='1.0' fill='%23ffffff' fill-opacity='0.45'/%3E%3Cpath d='M198.3 8.9L199.2 11.0L201.4 11.9L199.2 12.9L198.3 15.0L197.4 12.9L195.3 11.9L197.4 11.0Z' fill='%23f2d98a' fill-opacity='0.8'/%3E%3Cpath d='M28.8 26.0L29.5 27.5L31.1 28.2L29.5 28.9L28.8 30.4L28.2 28.9L26.6 28.2L28.2 27.5Z' fill='%23f2d98a' fill-opacity='0.8'/%3E%3Cpath d='M115.7 146.3L116.5 148.1L118.3 148.8L116.5 149.6L115.7 151.4L115.0 149.6L113.2 148.8L115.0 148.1Z' fill='%23f2d98a' fill-opacity='0.8'/%3E%3C/svg%3E")
+      0 0 / 340px 290px,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='230' height='210'%3E%3Ccircle cx='111.6' cy='113.2' r='1.2' fill='%23f2d98a' fill-opacity='0.5'/%3E%3Ccircle cx='55.9' cy='99.3' r='0.8' fill='%23ffffff' fill-opacity='0.5'/%3E%3Ccircle cx='21.7' cy='138.4' r='0.7' fill='%23f2d98a' fill-opacity='0.5'/%3E%3Ccircle cx='94.6' cy='181.4' r='0.5' fill='%23ffffff' fill-opacity='0.5'/%3E%3Ccircle cx='13.9' cy='152.9' r='1.5' fill='%23ffffff' fill-opacity='0.5'/%3E%3Ccircle cx='57.2' cy='39.9' r='0.8' fill='%23ffffff' fill-opacity='0.5'/%3E%3Ccircle cx='97.0' cy='58.5' r='0.6' fill='%23ffffff' fill-opacity='0.5'/%3E%3Ccircle cx='101.9' cy='180.9' r='1.0' fill='%23ffffff' fill-opacity='0.5'/%3E%3Ccircle cx='11.6' cy='209.8' r='1.5' fill='%23ffffff' fill-opacity='0.5'/%3E%3Ccircle cx='222.9' cy='194.5' r='1.5' fill='%23ffffff' fill-opacity='0.5'/%3E%3Ccircle cx='38.3' cy='102.0' r='0.6' fill='%23f2d98a' fill-opacity='0.5'/%3E%3Ccircle cx='207.6' cy='34.6' r='0.5' fill='%23f2d98a' fill-opacity='0.5'/%3E%3Ccircle cx='61.0' cy='164.7' r='0.8' fill='%23f2d98a' fill-opacity='0.5'/%3E%3Ccircle cx='97.3' cy='201.0' r='1.5' fill='%23f2d98a' fill-opacity='0.5'/%3E%3Ccircle cx='35.6' cy='62.3' r='0.5' fill='%23ffffff' fill-opacity='0.5'/%3E%3Ccircle cx='172.0' cy='12.0' r='1.0' fill='%23f2d98a' fill-opacity='0.5'/%3E%3Ccircle cx='115.7' cy='179.1' r='0.6' fill='%23ffffff' fill-opacity='0.5'/%3E%3Ccircle cx='221.0' cy='16.8' r='0.6' fill='%23ffffff' fill-opacity='0.5'/%3E%3Ccircle cx='136.9' cy='141.8' r='0.6' fill='%23f2d98a' fill-opacity='0.5'/%3E%3Ccircle cx='27.6' cy='187.0' r='0.6' fill='%23ffffff' fill-opacity='0.5'/%3E%3Ccircle cx='142.5' cy='88.0' r='1.0' fill='%23f2d98a' fill-opacity='0.5'/%3E%3Ccircle cx='215.0' cy='42.9' r='1.2' fill='%23f2d98a' fill-opacity='0.5'/%3E%3Cpath d='M60.1 82.2L61.0 84.3L63.1 85.2L61.0 86.1L60.1 88.2L59.2 86.1L57.1 85.2L59.2 84.3Z' fill='%23f2d98a' fill-opacity='0.8'/%3E%3Cpath d='M73.0 67.0L73.9 69.1L76.1 70.1L73.9 71.0L73.0 73.2L72.1 71.0L69.9 70.1L72.1 69.1Z' fill='%23f2d98a' fill-opacity='0.8'/%3E%3Cpath d='M25.2 93.7L26.3 96.1L28.6 97.1L26.3 98.1L25.2 100.5L24.2 98.1L21.8 97.1L24.2 96.1Z' fill='%23f2d98a' fill-opacity='0.8'/%3E%3C/svg%3E")
+      120px 60px / 230px 210px,
+    linear-gradient(180deg, #1d2050, #241f5c);
+}
+[data-theme='magic'] .rack {
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='340' height='290'%3E%3Ccircle cx='217.4' cy='7.3' r='0.7' fill='%23ffffff' fill-opacity='0.45'/%3E%3Ccircle cx='75.9' cy='213.6' r='1.2' fill='%23ffffff' fill-opacity='0.75'/%3E%3Ccircle cx='200.8' cy='9.2' r='0.5' fill='%23ffffff' fill-opacity='0.45'/%3E%3Ccircle cx='79.1' cy='174.6' r='1.0' fill='%23ffffff' fill-opacity='0.45'/%3E%3Ccircle cx='243.4' cy='203.4' r='0.8' fill='%23ffffff' fill-opacity='0.45'/%3E%3Ccircle cx='152.7' cy='80.7' r='1.5' fill='%23ffffff' fill-opacity='0.75'/%3E%3Ccircle cx='258.0' cy='46.3' r='0.8' fill='%23f2d98a' fill-opacity='0.7'/%3E%3Ccircle cx='94.5' cy='62.4' r='1.5' fill='%23f2d98a' fill-opacity='0.7'/%3E%3Ccircle cx='34.8' cy='110.2' r='0.7' fill='%23f2d98a' fill-opacity='0.7'/%3E%3Ccircle cx='205.3' cy='234.1' r='1.2' fill='%23c9b8ff' fill-opacity='0.6'/%3E%3Ccircle cx='182.3' cy='282.2' r='0.8' fill='%23ffffff' fill-opacity='0.75'/%3E%3Ccircle cx='187.7' cy='240.5' r='1.0' fill='%23f2d98a' fill-opacity='0.7'/%3E%3Ccircle cx='196.3' cy='204.3' r='0.5' fill='%23ffffff' fill-opacity='0.45'/%3E%3Ccircle cx='262.8' cy='285.7' r='1.5' fill='%23ffffff' fill-opacity='0.45'/%3E%3Ccircle cx='294.6' cy='110.2' r='0.8' fill='%23f2d98a' fill-opacity='0.7'/%3E%3Ccircle cx='55.3' cy='103.0' r='1.2' fill='%23f2d98a' fill-opacity='0.7'/%3E%3Ccircle cx='238.6' cy='198.2' r='0.5' fill='%23ffffff' fill-opacity='0.45'/%3E%3Ccircle cx='181.6' cy='71.0' r='0.8' fill='%23c9b8ff' fill-opacity='0.6'/%3E%3Ccircle cx='91.8' cy='268.4' r='1.2' fill='%23ffffff' fill-opacity='0.45'/%3E%3Ccircle cx='232.8' cy='244.4' r='1.5' fill='%23ffffff' fill-opacity='0.75'/%3E%3Ccircle cx='77.9' cy='9.3' r='0.7' fill='%23c9b8ff' fill-opacity='0.6'/%3E%3Ccircle cx='91.0' cy='61.2' r='1.0' fill='%23f2d98a' fill-opacity='0.7'/%3E%3Ccircle cx='72.3' cy='144.8' r='1.2' fill='%23c9b8ff' fill-opacity='0.6'/%3E%3Ccircle cx='48.6' cy='40.5' r='1.2' fill='%23f2d98a' fill-opacity='0.7'/%3E%3Ccircle cx='254.0' cy='124.2' r='1.0' fill='%23c9b8ff' fill-opacity='0.6'/%3E%3Ccircle cx='123.1' cy='289.2' r='0.6' fill='%23c9b8ff' fill-opacity='0.6'/%3E%3Ccircle cx='30.9' cy='13.7' r='0.5' fill='%23ffffff' fill-opacity='0.45'/%3E%3Ccircle cx='213.3' cy='229.7' r='0.8' fill='%23ffffff' fill-opacity='0.75'/%3E%3Ccircle cx='130.8' cy='172.8' r='0.8' fill='%23f2d98a' fill-opacity='0.7'/%3E%3Ccircle cx='330.2' cy='249.6' r='0.5' fill='%23ffffff' fill-opacity='0.75'/%3E%3Ccircle cx='231.8' cy='155.7' r='0.7' fill='%23f2d98a' fill-opacity='0.7'/%3E%3Ccircle cx='37.9' cy='126.1' r='0.8' fill='%23ffffff' fill-opacity='0.75'/%3E%3Ccircle cx='324.3' cy='254.0' r='0.7' fill='%23ffffff' fill-opacity='0.45'/%3E%3Ccircle cx='172.6' cy='30.9' r='1.2' fill='%23f2d98a' fill-opacity='0.7'/%3E%3Ccircle cx='286.2' cy='147.2' r='0.6' fill='%23ffffff' fill-opacity='0.45'/%3E%3Ccircle cx='127.1' cy='46.8' r='1.5' fill='%23ffffff' fill-opacity='0.75'/%3E%3Ccircle cx='203.6' cy='141.7' r='0.5' fill='%23f2d98a' fill-opacity='0.7'/%3E%3Ccircle cx='298.8' cy='241.2' r='0.7' fill='%23ffffff' fill-opacity='0.45'/%3E%3Ccircle cx='19.7' cy='254.6' r='0.5' fill='%23ffffff' fill-opacity='0.75'/%3E%3Ccircle cx='248.8' cy='236.6' r='1.5' fill='%23ffffff' fill-opacity='0.45'/%3E%3Ccircle cx='43.7' cy='137.8' r='1.0' fill='%23ffffff' fill-opacity='0.45'/%3E%3Ccircle cx='90.1' cy='253.0' r='0.8' fill='%23ffffff' fill-opacity='0.45'/%3E%3Ccircle cx='315.8' cy='219.0' r='1.2' fill='%23ffffff' fill-opacity='0.45'/%3E%3Ccircle cx='242.4' cy='115.7' r='1.2' fill='%23f2d98a' fill-opacity='0.7'/%3E%3Ccircle cx='149.0' cy='150.1' r='0.5' fill='%23ffffff' fill-opacity='0.45'/%3E%3Ccircle cx='76.4' cy='98.0' r='1.0' fill='%23ffffff' fill-opacity='0.45'/%3E%3Cpath d='M198.3 8.9L199.2 11.0L201.4 11.9L199.2 12.9L198.3 15.0L197.4 12.9L195.3 11.9L197.4 11.0Z' fill='%23f2d98a' fill-opacity='0.8'/%3E%3Cpath d='M28.8 26.0L29.5 27.5L31.1 28.2L29.5 28.9L28.8 30.4L28.2 28.9L26.6 28.2L28.2 27.5Z' fill='%23f2d98a' fill-opacity='0.8'/%3E%3Cpath d='M115.7 146.3L116.5 148.1L118.3 148.8L116.5 149.6L115.7 151.4L115.0 149.6L113.2 148.8L115.0 148.1Z' fill='%23f2d98a' fill-opacity='0.8'/%3E%3C/svg%3E")
+      0 0 / 340px 290px,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='230' height='210'%3E%3Ccircle cx='111.6' cy='113.2' r='1.2' fill='%23f2d98a' fill-opacity='0.5'/%3E%3Ccircle cx='55.9' cy='99.3' r='0.8' fill='%23ffffff' fill-opacity='0.5'/%3E%3Ccircle cx='21.7' cy='138.4' r='0.7' fill='%23f2d98a' fill-opacity='0.5'/%3E%3Ccircle cx='94.6' cy='181.4' r='0.5' fill='%23ffffff' fill-opacity='0.5'/%3E%3Ccircle cx='13.9' cy='152.9' r='1.5' fill='%23ffffff' fill-opacity='0.5'/%3E%3Ccircle cx='57.2' cy='39.9' r='0.8' fill='%23ffffff' fill-opacity='0.5'/%3E%3Ccircle cx='97.0' cy='58.5' r='0.6' fill='%23ffffff' fill-opacity='0.5'/%3E%3Ccircle cx='101.9' cy='180.9' r='1.0' fill='%23ffffff' fill-opacity='0.5'/%3E%3Ccircle cx='11.6' cy='209.8' r='1.5' fill='%23ffffff' fill-opacity='0.5'/%3E%3Ccircle cx='222.9' cy='194.5' r='1.5' fill='%23ffffff' fill-opacity='0.5'/%3E%3Ccircle cx='38.3' cy='102.0' r='0.6' fill='%23f2d98a' fill-opacity='0.5'/%3E%3Ccircle cx='207.6' cy='34.6' r='0.5' fill='%23f2d98a' fill-opacity='0.5'/%3E%3Ccircle cx='61.0' cy='164.7' r='0.8' fill='%23f2d98a' fill-opacity='0.5'/%3E%3Ccircle cx='97.3' cy='201.0' r='1.5' fill='%23f2d98a' fill-opacity='0.5'/%3E%3Ccircle cx='35.6' cy='62.3' r='0.5' fill='%23ffffff' fill-opacity='0.5'/%3E%3Ccircle cx='172.0' cy='12.0' r='1.0' fill='%23f2d98a' fill-opacity='0.5'/%3E%3Ccircle cx='115.7' cy='179.1' r='0.6' fill='%23ffffff' fill-opacity='0.5'/%3E%3Ccircle cx='221.0' cy='16.8' r='0.6' fill='%23ffffff' fill-opacity='0.5'/%3E%3Ccircle cx='136.9' cy='141.8' r='0.6' fill='%23f2d98a' fill-opacity='0.5'/%3E%3Ccircle cx='27.6' cy='187.0' r='0.6' fill='%23ffffff' fill-opacity='0.5'/%3E%3Ccircle cx='142.5' cy='88.0' r='1.0' fill='%23f2d98a' fill-opacity='0.5'/%3E%3Ccircle cx='215.0' cy='42.9' r='1.2' fill='%23f2d98a' fill-opacity='0.5'/%3E%3Cpath d='M60.1 82.2L61.0 84.3L63.1 85.2L61.0 86.1L60.1 88.2L59.2 86.1L57.1 85.2L59.2 84.3Z' fill='%23f2d98a' fill-opacity='0.8'/%3E%3Cpath d='M73.0 67.0L73.9 69.1L76.1 70.1L73.9 71.0L73.0 73.2L72.1 71.0L69.9 70.1L72.1 69.1Z' fill='%23f2d98a' fill-opacity='0.8'/%3E%3Cpath d='M25.2 93.7L26.3 96.1L28.6 97.1L26.3 98.1L25.2 100.5L24.2 98.1L21.8 97.1L24.2 96.1Z' fill='%23f2d98a' fill-opacity='0.8'/%3E%3C/svg%3E")
+      90px 40px / 230px 210px,
+    var(--cobalt);
+}
+[data-theme='magic'] .rack .note::after {
+  background:
+    radial-gradient(circle at 50% 50%, var(--marigold) 0 9px, transparent 9.5px),
+    radial-gradient(circle at 50% 50%, transparent 0 30px, rgba(242, 185, 64, 0.8) 30.5px 31.5px, transparent 32px),
+    radial-gradient(circle at 50% 50%, transparent 0 44px, rgba(242, 185, 64, 0.45) 44.5px 45.2px, transparent 45.6px),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='340' height='290'%3E%3Ccircle cx='217.4' cy='7.3' r='0.7' fill='%23ffffff' fill-opacity='0.45'/%3E%3Ccircle cx='75.9' cy='213.6' r='1.2' fill='%23ffffff' fill-opacity='0.75'/%3E%3Ccircle cx='200.8' cy='9.2' r='0.5' fill='%23ffffff' fill-opacity='0.45'/%3E%3Ccircle cx='79.1' cy='174.6' r='1.0' fill='%23ffffff' fill-opacity='0.45'/%3E%3Ccircle cx='243.4' cy='203.4' r='0.8' fill='%23ffffff' fill-opacity='0.45'/%3E%3Ccircle cx='152.7' cy='80.7' r='1.5' fill='%23ffffff' fill-opacity='0.75'/%3E%3Ccircle cx='258.0' cy='46.3' r='0.8' fill='%23f2d98a' fill-opacity='0.7'/%3E%3Ccircle cx='94.5' cy='62.4' r='1.5' fill='%23f2d98a' fill-opacity='0.7'/%3E%3Ccircle cx='34.8' cy='110.2' r='0.7' fill='%23f2d98a' fill-opacity='0.7'/%3E%3Ccircle cx='205.3' cy='234.1' r='1.2' fill='%23c9b8ff' fill-opacity='0.6'/%3E%3Ccircle cx='182.3' cy='282.2' r='0.8' fill='%23ffffff' fill-opacity='0.75'/%3E%3Ccircle cx='187.7' cy='240.5' r='1.0' fill='%23f2d98a' fill-opacity='0.7'/%3E%3Ccircle cx='196.3' cy='204.3' r='0.5' fill='%23ffffff' fill-opacity='0.45'/%3E%3Ccircle cx='262.8' cy='285.7' r='1.5' fill='%23ffffff' fill-opacity='0.45'/%3E%3Ccircle cx='294.6' cy='110.2' r='0.8' fill='%23f2d98a' fill-opacity='0.7'/%3E%3Ccircle cx='55.3' cy='103.0' r='1.2' fill='%23f2d98a' fill-opacity='0.7'/%3E%3Ccircle cx='238.6' cy='198.2' r='0.5' fill='%23ffffff' fill-opacity='0.45'/%3E%3Ccircle cx='181.6' cy='71.0' r='0.8' fill='%23c9b8ff' fill-opacity='0.6'/%3E%3Ccircle cx='91.8' cy='268.4' r='1.2' fill='%23ffffff' fill-opacity='0.45'/%3E%3Ccircle cx='232.8' cy='244.4' r='1.5' fill='%23ffffff' fill-opacity='0.75'/%3E%3Ccircle cx='77.9' cy='9.3' r='0.7' fill='%23c9b8ff' fill-opacity='0.6'/%3E%3Ccircle cx='91.0' cy='61.2' r='1.0' fill='%23f2d98a' fill-opacity='0.7'/%3E%3Ccircle cx='72.3' cy='144.8' r='1.2' fill='%23c9b8ff' fill-opacity='0.6'/%3E%3Ccircle cx='48.6' cy='40.5' r='1.2' fill='%23f2d98a' fill-opacity='0.7'/%3E%3Ccircle cx='254.0' cy='124.2' r='1.0' fill='%23c9b8ff' fill-opacity='0.6'/%3E%3Ccircle cx='123.1' cy='289.2' r='0.6' fill='%23c9b8ff' fill-opacity='0.6'/%3E%3Ccircle cx='30.9' cy='13.7' r='0.5' fill='%23ffffff' fill-opacity='0.45'/%3E%3Ccircle cx='213.3' cy='229.7' r='0.8' fill='%23ffffff' fill-opacity='0.75'/%3E%3Ccircle cx='130.8' cy='172.8' r='0.8' fill='%23f2d98a' fill-opacity='0.7'/%3E%3Ccircle cx='330.2' cy='249.6' r='0.5' fill='%23ffffff' fill-opacity='0.75'/%3E%3Ccircle cx='231.8' cy='155.7' r='0.7' fill='%23f2d98a' fill-opacity='0.7'/%3E%3Ccircle cx='37.9' cy='126.1' r='0.8' fill='%23ffffff' fill-opacity='0.75'/%3E%3Ccircle cx='324.3' cy='254.0' r='0.7' fill='%23ffffff' fill-opacity='0.45'/%3E%3Ccircle cx='172.6' cy='30.9' r='1.2' fill='%23f2d98a' fill-opacity='0.7'/%3E%3Ccircle cx='286.2' cy='147.2' r='0.6' fill='%23ffffff' fill-opacity='0.45'/%3E%3Ccircle cx='127.1' cy='46.8' r='1.5' fill='%23ffffff' fill-opacity='0.75'/%3E%3Ccircle cx='203.6' cy='141.7' r='0.5' fill='%23f2d98a' fill-opacity='0.7'/%3E%3Ccircle cx='298.8' cy='241.2' r='0.7' fill='%23ffffff' fill-opacity='0.45'/%3E%3Ccircle cx='19.7' cy='254.6' r='0.5' fill='%23ffffff' fill-opacity='0.75'/%3E%3Ccircle cx='248.8' cy='236.6' r='1.5' fill='%23ffffff' fill-opacity='0.45'/%3E%3Ccircle cx='43.7' cy='137.8' r='1.0' fill='%23ffffff' fill-opacity='0.45'/%3E%3Ccircle cx='90.1' cy='253.0' r='0.8' fill='%23ffffff' fill-opacity='0.45'/%3E%3Ccircle cx='315.8' cy='219.0' r='1.2' fill='%23ffffff' fill-opacity='0.45'/%3E%3Ccircle cx='242.4' cy='115.7' r='1.2' fill='%23f2d98a' fill-opacity='0.7'/%3E%3Ccircle cx='149.0' cy='150.1' r='0.5' fill='%23ffffff' fill-opacity='0.45'/%3E%3Ccircle cx='76.4' cy='98.0' r='1.0' fill='%23ffffff' fill-opacity='0.45'/%3E%3Cpath d='M198.3 8.9L199.2 11.0L201.4 11.9L199.2 12.9L198.3 15.0L197.4 12.9L195.3 11.9L197.4 11.0Z' fill='%23f2d98a' fill-opacity='0.8'/%3E%3Cpath d='M28.8 26.0L29.5 27.5L31.1 28.2L29.5 28.9L28.8 30.4L28.2 28.9L26.6 28.2L28.2 27.5Z' fill='%23f2d98a' fill-opacity='0.8'/%3E%3Cpath d='M115.7 146.3L116.5 148.1L118.3 148.8L116.5 149.6L115.7 151.4L115.0 149.6L113.2 148.8L115.0 148.1Z' fill='%23f2d98a' fill-opacity='0.8'/%3E%3C/svg%3E")
+      0 0 / 340px 290px,
+    #2b4f8a;
+}
+
+/* 最新紙條：每頁三張、一欄三排，字大一點 */
+.rack .note__text {
+  font-size: 1.2rem;
+}
+@media (min-width: 900px) {
+  .rack .note {
+    min-height: 168px;
+  }
+}
+@media (min-width: 900px) {
+  [data-theme='magic'] .rack .note {
+    display: grid;
+    align-content: center;
+  }
+}
+
+/* 菜牌那一排不擋住後面的宮門，只有菜牌本身接手點擊 */
+.cold--poster .shelf__row {
+  pointer-events: none;
+}
+.cold--poster .shelf__row > li {
+  pointer-events: auto;
+}
+/* 點「打入冷宮」：字冷得發抖 */
+.poster__title h2 {
+  cursor: pointer;
+}
+.poster__title h2 span {
+  display: inline-block;
+}
+.poster__title h2.is-shiver span {
+  animation: shiver 0.09s linear 9 alternate;
+}
+.poster__title h2.is-shiver span:nth-child(2n) {
+  animation-delay: 0.04s;
+}
+@keyframes shiver {
+  from {
+    translate: -1.5px 0;
+  }
+  to {
+    translate: 1.5px 0.5px;
   }
 }

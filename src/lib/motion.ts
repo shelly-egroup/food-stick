@@ -17,3 +17,14 @@ export function fadeOff(el: Element | null | undefined, ms = 450) {
   el.classList.add('is-off');
   setTimeout(() => el.classList.remove('is-on', 'is-off'), ms);
 }
+
+/** 登入／載入畫面（.gate）還蓋著時先不播：等它收掉再開始，回傳取消函式 */
+export function playAfterGate(tl: { play: () => unknown }) {
+  let raf = 0;
+  const go = () => {
+    if (document.querySelector('.gate')) raf = requestAnimationFrame(go);
+    else tl.play();
+  };
+  go();
+  return () => cancelAnimationFrame(raf);
+}

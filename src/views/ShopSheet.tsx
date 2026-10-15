@@ -4,7 +4,8 @@ import { useLayoutEffect, useRef, useState, type FormEvent } from 'react';
 import gsap from 'gsap';
 import { Sheet } from '@/components/Sheet';
 import { Avatar } from '@/components/Avatar';
-import { CategoryIcon } from '@/components/CategoryIcon';
+import { HatAvatar } from '@/components/HatAvatar';
+import { CategoryIcon, WalkIcon } from '@/components/CategoryIcon';
 import { Icon } from '@/components/Icon';
 import { Loading } from '@/components/Loading';
 import { LoveButton } from '@/components/LoveButton';
@@ -15,7 +16,7 @@ import { useTheme } from '@/themes';
 import { addNote, deleteNote, setPref, useNotes, type Pref } from '@/lib/store';
 import { paper, stamp } from '@/lib/sound';
 import { reducedMotion, sleep } from '@/lib/motion';
-import { ago } from '@/lib/format';
+import { ago, toChineseNumber } from '@/lib/format';
 import { categoryOf, priceOf, walkOf, type Restaurant } from '@/lib/types';
 import './ShopSheet.css';
 
@@ -65,6 +66,13 @@ function EditAside({ r, onEdit }: { r: Restaurant; onEdit: () => void }) {
   return <p className="shop__locked">{theme.copy.shops.locked(memberMap.get(r.createdBy)?.name ?? '建立的人')}</p>;
 }
 
+/** 張貼日期：廟宇用中文數字（九月十日），魔法用阿拉伯數字（9 月 10 日）；不是今年才加年份 */
+function postedOn(d: Date, temple: boolean) {
+  const y = d.getFullYear() === new Date().getFullYear() ? '' : `${d.getFullYear()} 年 `;
+  const m = d.getMonth() + 1;
+  return temple ? `${y}${toChineseNumber(m)}月${toChineseNumber(d.getDate())}日` : `${y}${m} 月 ${d.getDate()} 日`;
+}
+
 function Detail({ r, onRemove }: { r: Restaurant; onRemove: (id: string) => void }) {
   const { me, members, memberMap } = useAppData();
   const { theme } = useTheme();
@@ -78,6 +86,8 @@ function Detail({ r, onRemove }: { r: Restaurant; onRemove: (id: string) => void
 
   const liked = me.likes.includes(r.id);
   const blocked = me.blocks.includes(r.id);
+  // 是誰張貼（放上來）的：頭像戴一頂小帽子
+  const poster = memberMap.get(r.createdBy) ?? { id: r.createdBy, name: '同事', photoURL: '' };
   const fans = members.filter((m) => m.likes.includes(r.id));
   // 只有建立者能拆（修改的按鈕在標題右上角）
   const canRemove = r.createdBy === me.id;
@@ -185,28 +195,44 @@ function Detail({ r, onRemove }: { r: Restaurant; onRemove: (id: string) => void
             </li>
             <li>
               <b>步行</b>
-              {walkOf(r.walk).label}
+              <span className="shop__walk">
+                <WalkIcon v={r.walk} size={16} />
+                {walkOf(r.walk).label}
+              </span>
             </li>
             <li>
               <b>揪團</b>
               {r.group ? '適合多人' : '比較適合一兩個人'}
             </li>
+            <li className="shop__by">
+              <b>張貼</b>
+              <span className="shop__poster">
+                <HatAvatar member={poster} size={28} />
+                <span className="shop__poster-name">{poster.name}</span>
+              </span>
+              {r.createdAt && (
+                <time className="shop__posted" dateTime={r.createdAt.toISOString()}>
+                  {postedOn(r.createdAt, theme.id === 'temple')}
+                </time>
+              )}
+            </li>
           </ul>
-          <div className="shop__prefs">
-            <LoveButton liked={liked} onToggle={() => choose('like')} />
-            <div className="shop__block">
-              <button
-                type="button"
-                className={`btn ${blocked ? 'is-on' : 'btn--line'}`}
-                aria-pressed={blocked}
-                onClick={() => choose('block')}
-              >
-                <Icon name="ban" size={17} />
-                {blocked ? theme.copy.blockedLabel : theme.copy.blockCta}
-              </button>
-              {blocked && <span className="shop__block-hint">{theme.copy.blockedHint}</span>}
-            </div>
+        </div>
+        {/* 動作區：愛店和不吃並排一樣高，地圖連結整條 */}
+        <div className="shop__acts">
+          <LoveButton liked={liked} onToggle={() => choose('like')} />
+          <div className="shop__block">
+            <button
+              type="button"
+              className={`btn ${blocked ? 'is-on' : 'btn--line'}`}
+              aria-pressed={blocked}
+              onClick={() => choose('block')}
+            >
+              <Icon name="ban" size={20} />
+              {blocked ? theme.copy.blockedLabel : theme.copy.blockCta}
+            </button>
           </div>
+          {blocked && <p className="shop__block-hint">{theme.copy.blockedHint}</p>}
           {r.mapUrl && (
             <a className="shop__map" href={r.mapUrl} target="_blank" rel="noopener noreferrer">
               <span className="shop__map-pin" aria-hidden="true">
@@ -227,7 +253,7 @@ function Detail({ r, onRemove }: { r: Restaurant; onRemove: (id: string) => void
       <section className="shop__fans" aria-label="誰愛這家">
         <h3>誰愛這家</h3>
         {fans.length === 0 ? (
-          <p className="hint">還沒有人蓋愛店章，你可以當第一個。</p>
+          <theme.Vignette kind="fans-empty" />
         ) : (
           <ul>
             {fans.map((m) => (

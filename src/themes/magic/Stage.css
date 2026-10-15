@@ -54,3 +54,12 @@
     animation: none !important;
   }
 }
+
+/* 貓頭鷹那一層在舞台最上面，只有貓頭鷹本身接手點擊 */
+.stage__floor.stage__owl {
+  z-index: 6;
+  pointer-events: none;
+}
+.stage__owl .owl {
+  pointer-events: auto;
+}

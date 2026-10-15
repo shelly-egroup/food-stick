@@ -1,8 +1,10 @@
-import type { CategoryId, Member, Price, Restaurant } from './types';
+import type { CategoryId, Member, Price, Restaurant, Walk } from './types';
 
 export interface DrawFilters {
   categories: CategoryId[];
   prices: Price[];
+  /** 之前存在手機裡的篩選沒有這一項，當成不限 */
+  walks?: Walk[];
 }
 
 /**
@@ -54,6 +56,7 @@ export function candidates({
     .filter((r) => !blocked.has(r.id))
     .filter((r) => filters.categories.length === 0 || filters.categories.includes(r.category))
     .filter((r) => filters.prices.length === 0 || filters.prices.includes(r.price))
+    .filter((r) => !filters.walks?.length || filters.walks.includes(r.walk))
     .filter((r) => !big || r.group)
     .filter((r) => !excluded.has(r.id))
     .map((restaurant) => {

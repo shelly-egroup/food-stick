@@ -108,6 +108,20 @@ describe('candidates', () => {
       ['a'],
     );
   });
+
+  it('依步行時間篩選；沒選步行就不限', () => {
+    const restaurants = [shop('a', { walk: 5 }), shop('b', { walk: 15 }), shop('c', { walk: 20 })];
+    const pick = (walks?: (5 | 10 | 15 | 20)[]) =>
+      candidates({
+        restaurants,
+        party: [person('me')],
+        filters: { categories: [], prices: [], walks },
+        recent: [],
+      }).map((c) => c.restaurant.id);
+    assert.deepEqual(pick([5, 15]), ['a', 'b']);
+    assert.deepEqual(pick([]), ['a', 'b', 'c']);
+    assert.deepEqual(pick(undefined), ['a', 'b', 'c']);
+  });
 });
 
 describe('pickWeighted / drawOne', () => {

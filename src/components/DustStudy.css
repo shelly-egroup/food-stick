@@ -1,0 +1,386 @@
+.study {
+  --u: calc(100cqw / 390);
+  position: relative;
+  container-type: inline-size;
+  width: 100%;
+  aspect-ratio: 390 / 430;
+  user-select: none;
+}
+.study__art {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+.study__top {
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+.study:not(.is-in) .study__top {
+  visibility: hidden;
+}
+.study__sky-lines {
+  stroke-dashoffset: 0;
+  opacity: 0;
+  transition: opacity 1s ease;
+}
+.study.is-dark .study__sky-lines {
+  opacity: 1;
+  animation: sky-draw 6s linear infinite;
+}
+@keyframes sky-draw {
+  to {
+    stroke-dashoffset: -80;
+  }
+}
+.study__case,
+.study__tall,
+.study__ladder,
+.study__pile,
+.study__lamp {
+  transition: filter 0.9s ease;
+}
+.study.is-dark .study__case,
+.study.is-dark .study__tall,
+.study.is-dark .study__ladder,
+.study.is-dark .study__pile,
+.study.is-dark .study__lamp {
+  filter: brightness(0.55) saturate(0.8);
+}
+.study__beam {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  background: linear-gradient(180deg, rgba(255, 250, 230, 0.55), rgba(255, 250, 230, 0.12) 70%, rgba(255, 250, 230, 0));
+  clip-path: polygon(40% 34.4%, 60% 34.4%, 86% 82%, 15% 82%);
+  mix-blend-mode: soft-light;
+  pointer-events: none;
+  transition: opacity 0.9s ease;
+  animation: beam-breathe 7s ease-in-out infinite alternate;
+}
+.study:not(.is-in) .study__beam {
+  visibility: hidden;
+}
+.study.is-dark .study__beam {
+  background: linear-gradient(180deg, rgba(220, 230, 255, 0.7), rgba(220, 230, 255, 0.18) 70%, rgba(220, 230, 255, 0));
+  mix-blend-mode: screen;
+  opacity: 0.55;
+  animation: none;
+}
+@keyframes beam-breathe {
+  to {
+    opacity: 0.6;
+  }
+}
+.study.is-dark .study__window-star .tw {
+  filter: drop-shadow(0 0 3px #fff3c4);
+}
+.study:not(.is-in) .study__art > *,
+.study:not(.is-in) .study__title,
+.study:not(.is-in) .study__phrase,
+.study:not(.is-in) .study__row {
+  visibility: hidden;
+}
+.study__lamp,
+.study__web {
+  cursor: pointer;
+}
+
+.study__title {
+  position: absolute;
+  left: 50%;
+  z-index: 3;
+  margin: 0;
+  translate: -50% -50%;
+  font-family: var(--f-display);
+  font-weight: 900;
+  font-size: calc(15 * var(--u));
+  letter-spacing: 0.5em;
+  text-indent: 0.5em;
+  line-height: 1;
+  color: var(--paper-hi);
+  white-space: nowrap;
+  pointer-events: none;
+}
+.ranks__more .study__title {
+  display: block;
+  margin: 0;
+  font-size: calc(15 * var(--u));
+  letter-spacing: 0.5em;
+}
+.ranks__more .study__title::before,
+.ranks__more .study__title::after {
+  display: none;
+}
+.study__phrase {
+  position: absolute;
+  left: 50%;
+  z-index: 3;
+  margin: 0;
+  translate: -50% -50%;
+  font-family: var(--f-classic);
+  font-size: calc(12.5 * var(--u));
+  letter-spacing: 0.32em;
+  text-indent: 0.32em;
+  line-height: 1;
+  color: var(--paper-hi);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.study__cavity {
+  position: absolute;
+  z-index: 2;
+  overflow: hidden;
+}
+.study__cavity .particles {
+  z-index: 3;
+}
+.study__dark {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: rgba(10, 16, 32, 0.6);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.9s ease;
+}
+.study.is-dark .study__dark {
+  opacity: 1;
+}
+.study__row {
+  position: absolute;
+  inset: auto 0 0;
+  z-index: 1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: calc(7 * var(--u));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.study__row > li {
+  display: flex;
+  align-items: flex-end;
+}
+.study__book {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  width: calc(36 * var(--u));
+  padding: calc(9 * var(--u)) 0 calc(7 * var(--u));
+  border: 1.5px solid var(--ink);
+  border-bottom: 0;
+  border-radius: calc(3 * var(--u)) calc(3 * var(--u)) 0 0;
+  background:
+    linear-gradient(var(--em), var(--em)) 0 calc(26 * var(--u)) / 100% 1.5px no-repeat,
+    linear-gradient(var(--em), var(--em)) 0 calc(100% - 22 * var(--u)) / 100% 1.5px no-repeat,
+    linear-gradient(90deg, rgba(255, 255, 255, 0.16), transparent 30%, transparent 74%, rgba(0, 0, 0, 0.14)),
+    var(--bg);
+  color: var(--fg);
+  cursor: pointer;
+  transform-origin: 50% 100%;
+  transition: translate 0.35s var(--ease-spring);
+}
+.study__row > li:nth-child(2n) .study__book {
+  width: calc(32 * var(--u));
+}
+.study__book::after {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 34%;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.5) 0 0.6px, transparent 1px) 0 0 / 5px 6px,
+    linear-gradient(rgba(241, 233, 220, 0.75), rgba(241, 233, 220, 0));
+  pointer-events: none;
+  transition: opacity 0.45s;
+}
+.study__book:hover::after,
+.study__book:focus-visible::after {
+  opacity: 0;
+}
+.study__book:hover,
+.study__book:focus-visible {
+  translate: 0 calc(-8 * var(--u));
+}
+.study__sigil {
+  position: relative;
+  z-index: 1;
+  font-size: calc(10 * var(--u));
+  line-height: 1;
+  color: var(--em);
+}
+.study__name {
+  position: relative;
+  z-index: 1;
+  writing-mode: vertical-rl;
+  white-space: nowrap;
+  font-family: var(--f-display);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1;
+}
+.study__cat {
+  position: relative;
+  z-index: 1;
+  font-size: calc(8 * var(--u));
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  opacity: 0.85;
+}
+.study__candle {
+  position: absolute;
+  left: 50%;
+  z-index: 6;
+  translate: -50% 0;
+}
+.study__candle::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: calc(30 * var(--u));
+  width: calc(240 * var(--u));
+  height: calc(240 * var(--u));
+  margin-left: calc(-120 * var(--u));
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(242, 185, 64, 0.38), rgba(242, 185, 64, 0));
+  pointer-events: none;
+  transition: opacity 0.9s;
+  animation: candle-breathe 2.6s ease-in-out infinite alternate;
+}
+.study.is-dark .study__candle::before {
+  opacity: 0;
+}
+@keyframes candle-breathe {
+  to {
+    transform: scale(0.88);
+    opacity: 0.75;
+  }
+}
+.study .candle {
+  position: relative;
+  right: auto;
+  bottom: auto;
+  z-index: 4;
+  width: calc(26 * var(--u));
+  height: calc(60 * var(--u));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .study__beam,
+  .study__candle::before,
+  .study.is-dark .study__sky-lines {
+    animation: none;
+  }
+}
+
+.study__tall {
+  transition: translate 0.6s var(--ease-out);
+  translate: calc(var(--px, 0) * -10px) calc(var(--py, 0) * -6px);
+}
+.study__window {
+  transition: translate 0.6s var(--ease-out);
+  translate: calc(var(--px, 0) * -4px) calc(var(--py, 0) * -3px);
+}
+
+.study__shade {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  background: radial-gradient(ellipse 60% 50% at 50% 22%, rgba(12, 18, 36, 0.25), rgba(12, 18, 36, 0.55));
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.9s ease;
+}
+.study.is-dark .study__shade {
+  opacity: 1;
+}
+.study:not(.is-in) .study__candle {
+  visibility: hidden;
+}
+
+.study__orb {
+  cursor: pointer;
+}
+.study__orb .crystal {
+  transition: filter 3s ease;
+}
+.study__orb-glow {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: opacity 3s ease;
+  animation: orb-breathe 3.4s ease-in-out infinite alternate;
+}
+@keyframes orb-breathe {
+  to {
+    transform: scale(0.82);
+    opacity: 0.6;
+  }
+}
+.study.is-orb-dim .study__orb .crystal {
+  filter: brightness(0.5) saturate(0.25);
+}
+.study.is-orb-dim .study__orb-glow {
+  opacity: 0;
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .study__orb-glow {
+    animation: none;
+  }
+}
+
+.study__owl .owl {
+  cursor: pointer;
+}
+
+/* 貓頭鷹站在書櫃頂上，跟施法頁同一隻；熄燈時眼睛會亮 */
+.study.is-dark .study__owl .owl__eyes {
+  filter: drop-shadow(0 0 3px rgba(255, 214, 110, 0.95));
+}
+
+/* 熄燈時點水晶球：球光放大、放出一把星星，最後聚到一本書上 */
+.study.is-vision .study__orb .crystal {
+  filter: brightness(1.35) drop-shadow(0 0 8px rgba(201, 184, 255, 0.9));
+}
+.study__mote {
+  filter: drop-shadow(0 0 2px rgba(255, 243, 196, 0.9));
+}
+.study.has-chosen .study__row {
+  z-index: 3;
+}
+.study.has-chosen .study__book:not(.is-chosen) {
+  filter: brightness(0.42) saturate(0.6);
+}
+.study__book.is-chosen {
+  translate: 0 calc(-12 * var(--u));
+  box-shadow:
+    0 0 0 2px var(--marigold),
+    0 0 calc(24 * var(--u)) calc(6 * var(--u)) rgba(242, 185, 64, 0.75);
+  animation: chosen-glow 0.9s ease-in-out infinite alternate;
+}
+@keyframes chosen-glow {
+  to {
+    box-shadow:
+      0 0 0 2px #fff3c4,
+      0 0 calc(34 * var(--u)) calc(10 * var(--u)) rgba(242, 185, 64, 0.95);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .study__book.is-chosen {
+    animation: none;
+  }
+}

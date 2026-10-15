@@ -495,6 +495,33 @@ function IdlePerch() {
   );
 }
 
+function DimHeartCircle() {
+  return (
+    <>
+      <ellipse cx="100" cy="119" rx="60" ry="4" fill={INK} opacity="0.12" />
+      <ellipse cx="100" cy="98" rx="62" ry="16" fill="none" stroke="#9b7bff" strokeWidth="1.4" strokeDasharray="5 4" />
+      <ellipse cx="100" cy="98" rx="44" ry="10" fill="none" stroke="var(--marigold)" strokeWidth="1" opacity="0.6" />
+      <g className="vg-dim">
+        <path
+          d="M100 84 C 86 72, 70 60, 78 46 C 84 36, 96 38, 100 48 C 104 38, 116 36, 122 46 C 130 60, 114 72, 100 84 Z"
+          fill="#f4c6d6"
+          stroke={INK}
+          strokeWidth="1.6"
+          strokeLinejoin="round"
+        />
+      </g>
+      <g className="vg-quill">
+        <path d="M150 104 L170 56" stroke="#8b5b36" strokeWidth="4" strokeLinecap="round" />
+        <path d={SPARK(171, 52, 6)} fill="var(--marigold)" stroke={INK} strokeWidth="0.8" />
+      </g>
+      <g className="vg-twinkle" fill="var(--marigold)" stroke={INK} strokeWidth="0.8">
+        <path d={SPARK(44, 40, 4.4)} />
+        <path d={SPARK(60, 92, 3)} style={{ animationDelay: '1.1s' }} />
+      </g>
+    </>
+  );
+}
+
 function SleepingBall() {
   return (
     <>
@@ -537,6 +564,7 @@ export function Vignette({ kind, title, hint }: VignetteProps) {
     'herald-sent': [<IdlePerch key="a" />, copy.herald.none.sent.title, copy.herald.none.sent.hint],
     'herald-solo': [<SleepingBall key="a" />, copy.herald.none.solo.title, copy.herald.none.solo.hint],
     'titles-empty': [<FaceDownTarot key="a" />, copy.ranks.titlesEmpty.title, copy.ranks.titlesEmpty.hint],
+    'fans-empty': [<DimHeartCircle key="a" />, copy.shops.fansEmpty.title, copy.shops.fansEmpty.hint],
   };
   const [art, t, h] = scenes[kind];
   return (

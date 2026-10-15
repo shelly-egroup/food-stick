@@ -7,7 +7,7 @@ import { UnsealCard } from '@/components/UnsealCard';
 import { Charges } from '@/components/Charges';
 import { Seal } from '@/components/Seal';
 import { Icon } from '@/components/Icon';
-import { CategoryFilter } from '@/components/CategoryFilter';
+import { CategoryFilter, WalkFilter } from '@/components/CategoryFilter';
 import { CrewPicker } from '@/components/CrewPicker';
 import { useHerald } from '@/components/Herald';
 import { MateMarks, tallyOf } from '@/components/MateMarks';
@@ -33,7 +33,16 @@ import { newSeed, seeded } from '@/lib/random';
 import { saveSoloPick, soloReading } from '@/lib/soloPicks';
 import { askVerse } from '@/lib/verse';
 import { markDeparted } from '@/lib/depart';
-import { CATEGORIES, PRICES, type CategoryId, type DrawMode, type Price, type Restaurant } from '@/lib/types';
+import {
+  CATEGORIES,
+  PRICES,
+  WALKS,
+  type CategoryId,
+  type DrawMode,
+  type Price,
+  type Restaurant,
+  type Walk,
+} from '@/lib/types';
 import { reducedMotion, sleep } from '@/lib/motion';
 import { usePersisted } from '@/lib/usePersisted';
 import { useNow } from '@/lib/useBrowser';
@@ -44,7 +53,7 @@ const RECENT_MS = 3 * 86400_000;
 /** 儀式動畫結束後，最多再等 AI 寫籤詩多久；來不及就用原本的籤詩 */
 const VERSE_WAIT_MS = 1600;
 const NO_CREW: string[] = [];
-const NO_FILTERS: DrawFilters = { categories: [], prices: [] };
+const NO_FILTERS: DrawFilters = { categories: [], prices: [], walks: [] };
 
 type Phase = 'idle' | 'drawing' | 'revealed' | 'leaving';
 
@@ -221,7 +230,12 @@ export function Home() {
     }));
   const togglePrice = (v: Price) =>
     setFilters((f) => ({ ...f, prices: f.prices.includes(v) ? f.prices.filter((p) => p !== v) : [...f.prices, v] }));
-  const clearFilters = () => setFilters({ categories: [], prices: [] });
+  const toggleWalk = (v: Walk) =>
+    setFilters((f) => {
+      const walks = f.walks ?? [];
+      return { ...f, walks: walks.includes(v) ? walks.filter((w) => w !== v) : [...walks, v] };
+    });
+  const clearFilters = () => setFilters(NO_FILTERS);
   const toggleCrew = (id: string) => setCrew((c) => (c.includes(id) ? c.filter((x) => x !== id) : [...c, id]));
 
   /**
@@ -447,7 +461,8 @@ export function Home() {
     router.push('/shops/');
   };
 
-  const filtered = filters.categories.length + filters.prices.length > 0;
+  const walks = filters.walks ?? [];
+  const filtered = filters.categories.length + filters.prices.length + walks.length > 0;
   const [filtersOpen, setFiltersOpen] = useState(false);
   // 搖手機被 iOS 拒絕了：點首頁的封印小標籤，攤開解封籤教怎麼重新允許
   const [unsealOpen, setUnsealOpen] = useState(false);
@@ -462,6 +477,13 @@ export function Home() {
           .map((p) => p.label)
           .join('、')
       : '不限價位',
+    ...(walks.length
+      ? [
+          `步行 ${WALKS.filter((w) => walks.includes(w.v))
+            .map((w) => w.label)
+            .join('、')}`,
+        ]
+      : []),
   ].join('・');
   const big = party.length >= 3;
   const busy = phase !== 'idle';
@@ -606,6 +628,7 @@ export function Home() {
                 </button>
               ))}
             </div>
+            <WalkFilter selected={walks} onToggle={toggleWalk} />
           </div>
         </Sheet>
 

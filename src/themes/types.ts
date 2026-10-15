@@ -199,6 +199,7 @@ export interface ThemeCopy {
   };
   /** 店家頁 */
   shops: {
+    fansEmpty: { title: string; hint: string };
     eyebrow: string;
     /** 一張店家卡片叫什麼：菜牌、魔法書 */
     item: string;
@@ -249,6 +250,8 @@ export interface ThemeCopy {
     >;
     cold: string;
     coldNote: (n: number) => string;
+    coldPhrase: (n: number) => string;
+    archive: (n: number) => string;
     titlesEmpty: { title: string; hint: string };
     pager: { shelfPrev: string; shelfNext: string; notesPrev: string; notesNext: string };
     /** 還沒有店可以上榜：插畫底下的兩行字與去店家頁的按鈕 */
@@ -267,6 +270,8 @@ export interface PodiumEntry {
 export interface PodiumProps {
   /** 依名次排好，最多三個；不足三個時主題自己畫空位 */
   top: PodiumEntry[];
+  /** 第四名以後（最多七個），主題自己排在前三名後面 */
+  rest?: PodiumEntry[];
   /** 數字後面的單位：人愛、次命定 */
   unit: string;
   /** 換排序時重新揭曉 */
@@ -324,7 +329,8 @@ export type VignetteKind =
   | 'herald-inbox'
   | 'herald-sent'
   | 'herald-solo'
-  | 'titles-empty';
+  | 'titles-empty'
+  | 'fans-empty';
 
 export interface VignetteProps {
   kind: VignetteKind;

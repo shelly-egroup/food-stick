@@ -169,6 +169,7 @@ export const copy: ThemeCopy = {
     mine: '我掛的',
     mineNone: '你還沒掛過菜牌',
     mineNoneHint: '按「新增店家」掛上第一塊；自己掛的菜牌，會直接蓋上你的愛店章。',
+    fansEmpty: { title: '愛店章還懸在半空', hint: '還沒有人蓋愛店章，你可以當第一個。' },
     clear: '撤下條件',
   },
   ranks: {
@@ -186,6 +187,8 @@ export const copy: ThemeCopy = {
     },
     cold: '打入冷宮',
     coldNote: (n) => `這個月還沒被抽中的 ${n} 家，在冷宮裡排排站`,
+    coldPhrase: (n) => `這個月，無人問起的${toChineseNumber(n)}家`,
+    archive: (n) => `COLD ARCHIVE · NO. ${String(n).padStart(3, '0')}`,
     titlesEmpty: { title: '錦旗還空著', hint: '貼封條、蓋愛店章、掛上新菜牌，錦旗就會寫上你的名字。' },
     pager: { shelfPrev: '上一排', shelfNext: '下一排', notesPrev: '上一面', notesNext: '下一面' },
     emptyTitle: '金榜還空著',

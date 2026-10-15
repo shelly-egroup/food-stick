@@ -1,4 +1,4 @@
-import { toRoman } from '@/lib/format';
+import { toChineseNumber, toRoman } from '@/lib/format';
 import type { ThemeCopy } from '../types';
 
 /** 魔法版的用語（原創，不使用任何既有作品的名稱） */
@@ -169,6 +169,7 @@ export const copy: ThemeCopy = {
     mine: '我放的',
     mineNone: '你還沒放過魔法書',
     mineNoneHint: '按「新增店家」放上第一本；自己放的魔法書，會直接施上你的愛心咒。',
+    fansEmpty: { title: '愛心法陣還沒亮起', hint: '還沒有人施愛心咒，你可以當第一個。' },
     clear: '解除篩選咒',
   },
   ranks: {
@@ -186,6 +187,8 @@ export const copy: ThemeCopy = {
     },
     cold: '塵封書架',
     coldNote: (n) => `這個月還沒被選中的 ${n} 本，在架上排排站積灰塵`,
+    coldPhrase: (n) => `這個月，無人翻開的${toChineseNumber(n)}本`,
+    archive: (n) => `DUST ARCHIVE · NO. ${String(n).padStart(3, '0')}`,
     titlesEmpty: { title: '塔羅牌還蓋著', hint: '貶麻瓜、施愛心咒、放上新魔法書，牌就會翻開寫上你的名字。' },
     pager: { shelfPrev: '上一層', shelfNext: '下一層', notesPrev: '上一頁', notesNext: '下一頁' },
     emptyTitle: '星盤上還沒有星星',

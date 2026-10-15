@@ -363,6 +363,9 @@ textarea.input {
   height: auto;
   overflow: visible;
 }
+.vignette--fans-empty svg {
+  width: min(170px, 56%);
+}
 .vignette figcaption {
   display: grid;
   gap: 4px;

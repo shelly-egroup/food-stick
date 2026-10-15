@@ -373,6 +373,40 @@ function UnsentCards() {
   );
 }
 
+function HoveringStamp() {
+  return (
+    <>
+      <ellipse cx="100" cy="119" rx="58" ry="4" fill={INK} opacity="0.12" />
+      <path
+        d="M52 112 l8 -26 h80 l8 26 Z"
+        fill="var(--paper-hi)"
+        stroke={INK}
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+      <rect
+        x="78"
+        y="92"
+        width="44"
+        height="16"
+        fill="none"
+        stroke="var(--vermilion)"
+        strokeWidth="1.4"
+        strokeDasharray="4 3"
+      />
+      <g className="vg-bob">
+        <rect x="88" y="22" width="24" height="12" rx="3" fill="var(--jade)" stroke={INK} strokeWidth="1.4" />
+        <rect x="92" y="34" width="16" height="22" fill="var(--wood)" stroke={INK} strokeWidth="1.4" />
+        <rect x="84" y="56" width="32" height="12" rx="2" fill="var(--vermilion)" stroke={INK} strokeWidth="1.5" />
+      </g>
+      <g className="vg-zz" fill="var(--vermilion)">
+        <path d="M150 50 c0 -6 8 -6 8 0 c0 -6 8 -6 8 0 c0 6 -8 10 -8 12 c0 -2 -8 -6 -8 -12 Z" />
+        <path d="M36 62 c0 -4 6 -4 6 0 c0 -4 6 -4 6 0 c0 4 -6 7 -6 9 c0 -2 -6 -5 -6 -9 Z" />
+      </g>
+    </>
+  );
+}
+
 function ColdCenser() {
   return (
     <>
@@ -415,6 +449,7 @@ export function Vignette({ kind, title, hint }: VignetteProps) {
     'herald-sent': [<UnsentCards key="a" />, copy.herald.none.sent.title, copy.herald.none.sent.hint],
     'herald-solo': [<ColdCenser key="a" />, copy.herald.none.solo.title, copy.herald.none.solo.hint],
     'titles-empty': [<BlankBanners key="a" />, copy.ranks.titlesEmpty.title, copy.ranks.titlesEmpty.hint],
+    'fans-empty': [<HoveringStamp key="a" />, copy.shops.fansEmpty.title, copy.shops.fansEmpty.hint],
   };
   const scene = scenes[kind];
   if (scene) {
