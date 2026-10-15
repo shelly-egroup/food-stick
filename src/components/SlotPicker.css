@@ -1,0 +1,130 @@
+/* 哪一餐：一排六塊牌子（五個餐別＋自己寫），跟類型、步行一樣大 */
+.meal-slots {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 6px;
+}
+.meal-slot {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-width: 0;
+  min-height: 58px;
+  padding: 6px 2px 5px;
+  font-family: var(--f-serif);
+  font-weight: 700;
+  font-size: 0.84rem;
+  line-height: 1.15;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  color: var(--ink-2);
+  background: var(--paper-hi);
+  border: 1.4px solid var(--rule-strong);
+  cursor: pointer;
+  transition:
+    transform 0.25s var(--ease-spring),
+    background 0.2s,
+    color 0.2s,
+    box-shadow 0.2s;
+}
+.meal-slot span {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+@container filters (max-width: 300px) {
+  .meal-slots {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+.meal-slot svg {
+  color: var(--accent);
+}
+.meal-slot:hover {
+  transform: translateY(-2px);
+}
+.meal-slot.is-on {
+  color: var(--accent-ink);
+  background: var(--accent);
+  border-color: var(--ink);
+  box-shadow: 3px 3px 0 var(--ink);
+  transform: translateY(-2px);
+}
+.meal-slot.is-on svg {
+  color: currentColor;
+}
+.meal-slots.is-locked .meal-slot:not(.is-on) {
+  opacity: 0.38;
+  cursor: not-allowed;
+  transform: none;
+}
+.meal-slot--add {
+  border-style: dashed;
+}
+.meal-slot--write {
+  grid-column: 1 / -1;
+  flex-direction: row;
+  gap: 8px;
+  padding: 0 12px;
+  border-color: var(--ink);
+}
+.meal-slot--write input {
+  flex: 1;
+  width: auto;
+  min-height: 30px;
+  font: inherit;
+  color: var(--ink);
+  background: transparent;
+  border: 0;
+  border-bottom: 1.4px dashed var(--accent);
+  outline: none;
+}
+
+/* 廟宇：時辰木牌，上緣兩個小釘孔，選中的那塊染成朱紅 */
+[data-theme='temple'] .meal-slot {
+  border-radius: 4px;
+  background:
+    radial-gradient(circle at 10px 6px, var(--wood-lo) 1.4px, transparent 1.8px),
+    radial-gradient(circle at calc(100% - 10px) 6px, var(--wood-lo) 1.4px, transparent 1.8px), var(--paper-hi);
+}
+[data-theme='temple'] .meal-slot.is-on {
+  background:
+    radial-gradient(circle at 10px 6px, var(--marigold) 1.4px, transparent 1.8px),
+    radial-gradient(circle at calc(100% - 10px) 6px, var(--marigold) 1.4px, transparent 1.8px), var(--accent);
+}
+
+/* 魔法：圓圓的星辰徽章，選中的那顆發光 */
+[data-theme='magic'] .meal-slot {
+  border-radius: 14px;
+}
+[data-theme='magic'] .meal-slot.is-on {
+  box-shadow:
+    3px 3px 0 var(--ink),
+    0 0 18px rgba(155, 123, 255, 0.45);
+}
+[data-theme='magic'] .meal-slot.is-on svg {
+  color: var(--marigold);
+}
+
+/* 重抽次數：大大的數字、底下一個單位 */
+.meal-stock b {
+  font-family: var(--f-display);
+  font-weight: 900;
+  font-size: 1.35rem;
+  line-height: 1;
+}
+.meal-stock span {
+  font-size: 0.78rem;
+}
+.meal-stock .meal-stock__none {
+  font-size: 0.86rem;
+  letter-spacing: 0.06em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .meal-slot {
+    transition: none;
+  }
+}

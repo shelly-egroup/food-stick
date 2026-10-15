@@ -2,14 +2,15 @@
 
 import { useRef, useState, type CSSProperties } from 'react';
 import { useTheme } from '@/themes';
-import { answerOuting, endOuting, startGathering } from '@/lib/store';
+import { answerMeal, cancelMeal, inviteMeal } from '@/lib/store';
 import { useAppData } from '@/lib/appData';
+import { modeOf, type Meal } from '@/lib/meal';
 import { reducedMotion } from '@/lib/motion';
 import type { Member } from '@/lib/types';
 import { Avatar } from './Avatar';
 import { CrewSheet } from './CrewSheet';
-import { useHerald } from './Herald';
-import { MateMarks, tallyOf } from './MateMarks';
+import { MateMarks } from './MateMarks';
+import { Tally } from './Tags';
 import { useToast } from './Toast';
 import './CrewPicker.css';
 
@@ -48,9 +49,11 @@ function flyInvites(from: HTMLElement | null, targets: Element[], art: HTMLEleme
 }
 
 /**
- * 揪團：挑今天跟誰一起吃。常一起吃的人排前面（由外面排好）。
+ * 揪團：挑這一餐跟誰一起吃。常一起吃的人排前面（由外面排好）。
  * 存好的進香團（魔法：冒險小隊）是一面面小團旗（徽章），點了打開彈窗：就揪這團、改團、解散都在裡面；
  * 旁邊一面虛線的空旗子是「組成進香團」。被選到的人會蓋上一顆章（魔法：亮起一顆星）。
+ * 這一餐已經開了：揪了人的話看大家即時的回覆（發起人可以再遞紅帖、收回），
+ * 還只有自己的話，挑好人直接把紅帖遞過去，這一餐就變成揪團。
  * 還沒有其他同事的時候，換成主題的小插畫和「傳網址給同事」。
  */
 export function CrewPicker({
@@ -59,6 +62,8 @@ export function CrewPicker({
   selected,
   onToggle,
   onSet,
+  meal,
+  onSend,
 }: {
   me: Member;
   /** 已經依常一起吃的次數、名字排好 */
@@ -66,16 +71,19 @@ export function CrewPicker({
   selected: string[];
   onToggle: (id: string) => void;
   onSet: (ids: string[]) => void;
+  /** 這一餐已經開了（我要去的那一張） */
+  meal: Meal | null;
+  /** 還沒開：發紅帖揪人（開一張還沒抽的單） */
+  onSend: (ids: string[]) => Promise<void>;
 }) {
   const { theme } = useTheme();
   const { copy } = theme;
   const toast = useToast();
-  const { team } = useHerald();
   const { memberMap } = useAppData();
   const [invited, setInvited] = useState(false);
-  // 抽到之後要不要大家回覆：每次發邀請前選，預設不用
-  const [confirm, setConfirm] = useState(false);
   const [sending, setSending] = useState(false);
+  // 發起人再遞紅帖：打開名單挑還沒被揪的人
+  const [adding, setAdding] = useState(false);
   const sendRef = useRef<HTMLButtonElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
   const artRef = useRef<HTMLSpanElement>(null);
@@ -110,32 +118,36 @@ export function CrewPicker({
   // 存的名單裡可能有已經不在的人，只算還在的
   const crews = me.crews.map((c) => ({ ...c, ids: c.ids.filter((id) => byId.has(id)) }));
   const active = crews.findIndex((c) => c.ids.length > 0 && sameSet(c.ids, selected));
+  const oops = () => toast('沒有成功，等一下再試', '咦');
+  // 已經開好的一餐：只能再揪還沒在名單上的人
+  const fresh = meal ? selected.filter((id) => !meal.party.includes(id)) : selected;
 
-  /** 發組隊邀請：紅帖飛出去（貓頭鷹出發），被揪的人即時收到 */
+  /** 發紅帖：紅帖飛出去（貓頭鷹出發），被揪的人即時收到 */
   const send = async () => {
-    if (!selected.length || sending) return;
+    if (!fresh.length || sending) return;
     setSending(true);
     theme.heraldSound();
     flyInvites(
       sendRef.current,
-      [...(gridRef.current?.querySelectorAll('.crew__pick.is-on:not(.is-me) .crew__face') ?? [])],
+      [...(gridRef.current?.querySelectorAll('.crew__pick.is-on:not(.is-me):not(.is-in) .crew__face') ?? [])],
       artRef.current,
     );
     try {
-      await startGathering(me.id, selected, confirm);
+      if (meal) {
+        await inviteMeal(meal.id, fresh);
+        setAdding(false);
+      } else await onSend(selected);
     } catch {
-      toast('邀請沒有送出去，等一下再試', '咦');
+      toast('紅帖沒有送出去，等一下再試', '咦');
     } finally {
       setSending(false);
     }
   };
 
-  // 已經在一團裡（自己發的、或加入別人的）：名單固定，看大家即時的回覆。
-  // 發起人可以收回紅帖；加入的人可以說這次不跟了
-  if (team) {
-    const mine = team.host === me.id;
-    const t = tallyOf(team, me.id);
-    const host = memberMap.get(team.host)?.name ?? '同事';
+  // 這一餐已經揪了人：名單即時更新。發起人可以再遞紅帖、收回；被揪的人可以說這次不跟了
+  if (meal && modeOf(meal) === 'group' && !adding) {
+    const mine = meal.host === me.id;
+    const host = memberMap.get(meal.host)?.name ?? '同事';
     return (
       <div className={`crew crew--gather${mine ? '' : ' crew--member'}`} role="group" aria-label={copy.crew.title}>
         <div className="crew__gather-head">
@@ -144,22 +156,35 @@ export function CrewPicker({
           </span>
           <p>
             <b>{mine ? copy.crew.sent : copy.crew.member(host)}</b>
-            <span aria-live="polite">{copy.crew.tally(t.go, t.wait, t.pass)}</span>
+            <span aria-live="polite">
+              <Tally meal={meal} skip={me.id} />
+            </span>
           </p>
-          <button
-            type="button"
-            className="crew__recall"
-            onClick={() =>
-              (mine ? endOuting(team.id, 'closed') : answerOuting(team.id, me.id, 'pass')).catch(() =>
-                toast('沒有成功，等一下再試', '咦'),
-              )
-            }
-          >
-            <theme.Glyph name={mine ? 'recall' : 'disband'} size={20} />
-            {mine ? copy.crew.recall : copy.crew.leave}
-          </button>
+          <span className="crew__gather-acts">
+            {mine && (
+              <button
+                type="button"
+                className="crew__recall"
+                onClick={() => {
+                  onSet([]);
+                  setAdding(true);
+                }}
+              >
+                <theme.Glyph name="invite" size={20} />
+                {copy.crew.add}
+              </button>
+            )}
+            <button
+              type="button"
+              className="crew__recall"
+              onClick={() => (mine ? cancelMeal(meal.id) : answerMeal(meal.id, me.id, 'out')).catch(oops)}
+            >
+              <theme.Glyph name={mine ? 'recall' : 'disband'} size={20} />
+              {mine ? copy.crew.recall : copy.crew.leave}
+            </button>
+          </span>
         </div>
-        <MateMarks outing={team} skip={me.id} size={42} />
+        <MateMarks meal={meal} skip={me.id} size={42} />
       </div>
     );
   }
@@ -220,14 +245,17 @@ export function CrewPicker({
           <span className="crew__name">我</span>
         </span>
         {others.map((m) => {
-          const on = selected.includes(m.id);
+          // 已經在這一餐的名單上：蓋著章、不能再點
+          const inMeal = !!meal?.party.includes(m.id);
+          const on = inMeal || selected.includes(m.id);
           return (
             <button
               key={m.id}
               type="button"
-              className={`crew__pick${on ? ' is-on' : ''}`}
+              className={`crew__pick${on ? ' is-on' : ''}${inMeal ? ' is-in' : ''}`}
               aria-pressed={on}
-              onClick={() => onToggle(m.id)}
+              aria-disabled={inMeal}
+              onClick={() => !inMeal && onToggle(m.id)}
             >
               <span className="crew__face">
                 <Avatar member={m} size={42} />
@@ -239,32 +267,28 @@ export function CrewPicker({
         })}
       </div>
 
-      {/* 發組隊邀請；抽到之後要不要大家回覆，預設不用 */}
+      {/* 發紅帖（放出貓頭鷹）；這一餐已經開了就是把紅帖遞給剛挑的人 */}
       <div className="crew__send">
-        <button
-          type="button"
-          role="switch"
-          aria-checked={confirm}
-          className="crew__confirm"
-          onClick={() => setConfirm((v) => !v)}
-        >
-          {copy.crew.confirm}
-        </button>
+        {adding && (
+          <button type="button" className="crew__recall" onClick={() => setAdding(false)}>
+            <theme.Glyph name="skip" size={20} />
+            先不揪了
+          </button>
+        )}
         <button
           ref={sendRef}
           type="button"
           className="btn btn--zhu crew__send-btn"
           onClick={send}
-          aria-disabled={!selected.length || sending}
+          aria-disabled={!fresh.length || sending}
         >
           <theme.Glyph name="invite" size={24} />
-          {copy.crew.send}
+          {meal ? copy.crew.addCta(fresh.length) : copy.crew.send}
         </button>
         <span ref={artRef} hidden>
           <theme.Glyph name="invite" size={30} />
         </span>
       </div>
-      <p className="crew__send-hint">{copy.crew.confirmHint}</p>
 
       <CrewSheet
         open={sheet.open}

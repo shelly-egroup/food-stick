@@ -76,14 +76,6 @@ beforeEach(async () => {
       updatedAt: now,
     });
     await setDoc(doc(db, 'restaurants/r1/comments/c1'), { uid: 'bob', text: '湯頭讚', createdAt: now });
-    await setDoc(doc(db, 'draws/d1'), {
-      rid: 'r1',
-      uid: 'amy',
-      mode: 'solo',
-      party: ['amy'],
-      createdAt: now,
-      rerolled: false,
-    });
   });
 });
 
@@ -215,20 +207,6 @@ describe('留言', () => {
   });
 });
 
-describe('抽籤紀錄', () => {
-  it('可以記錄自己的抽籤，不能幫別人記', async () => {
-    const d = { rid: 'r1', mode: 'group', party: ['amy', 'bob'], createdAt: serverTimestamp(), rerolled: false };
-    await assertSucceeds(addDoc(collection(as('amy'), 'draws'), { ...d, uid: 'amy' }));
-    await assertFails(addDoc(collection(as('amy'), 'draws'), { ...d, uid: 'bob' }));
-  });
-
-  it('只有本人能標記重抽，而且不能改回來', async () => {
-    await assertFails(updateDoc(doc(as('bob'), 'draws/d1'), { rerolled: true }));
-    await assertSucceeds(updateDoc(doc(as('amy'), 'draws/d1'), { rerolled: true }));
-    await assertFails(updateDoc(doc(as('amy'), 'draws/d1'), { rerolled: false }));
-  });
-});
-
 describe('自己新增的店', () => {
   it('新增店家時，同一批寫入順便變成自己的愛店', async () => {
     const db = as('bob');
@@ -255,138 +233,302 @@ describe('進香團（存好的揪團名單）', () => {
   });
 });
 
-describe('自己抽的額度', () => {
-  it('可以把今天的重抽次數寫回自己的資料，不能改別人的，也不能亂填', async () => {
-    await assertSucceeds(updateDoc(doc(as('amy'), 'members/amy'), { today: { day: '2026-10-15', left: 2 } }));
-    await assertFails(updateDoc(doc(as('amy'), 'members/bob'), { today: { day: '2026-10-15', left: 3 } }));
-    await assertFails(updateDoc(doc(as('amy'), 'members/amy'), { today: { day: '2026-10-15', left: 99 } }));
-    await assertFails(updateDoc(doc(as('amy'), 'members/amy'), { today: { day: '2026-10-15', left: 1, x: 1 } }));
+describe('舊的資料不能再寫', () => {
+  it('抽籤紀錄、揪團單、每日次數都已經停用', async () => {
+    await assertFails(
+      addDoc(collection(as('amy'), 'draws'), {
+        rid: 'r1',
+        uid: 'amy',
+        mode: 'solo',
+        party: ['amy'],
+        createdAt: serverTimestamp(),
+        rerolled: false,
+      }),
+    );
+    await assertFails(addDoc(collection(as('amy'), 'outings'), { host: 'amy', party: ['amy', 'bob'] }));
+    await assertFails(updateDoc(doc(as('amy'), 'members/amy'), { today: { day: '2026-10-15', left: 2 } }));
   });
 });
 
-describe('即時揪團', () => {
-  const outing = (over: Record<string, unknown> = {}) => ({
-    host: 'amy',
-    party: ['amy', 'bob', 'carl'],
-    answers: { amy: 'go' },
-    confirm: false,
-    rid: '',
-    seed: 0,
-    variant: '',
-    replies: {},
-    by: '',
-    rerolls: 3,
-    lines: [],
-    verdict: '',
-    status: 'gathering',
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-    expireAt: Timestamp.fromMillis(Date.now() + 7 * 86_400_000),
-    ...over,
-  });
-  const seedOuting = (over: Record<string, unknown> = {}) =>
-    env.withSecurityRulesDisabled(async (ctx) => {
-      await setDoc(doc(ctx.firestore(), 'outings/o1'), {
-        ...outing(),
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now(),
-        ...over,
-      });
-    });
-  const verse = {
-    lines: ['巷口騰騰牛肉香', '四人同席福氣長', '銀錢適度口袋滿', '下箸盡歡胃口張'],
-    verdict: '快去吧。',
-  };
-  const draw = (by: string, rerolls: number, over: Record<string, unknown> = {}) => ({
-    rid: 'r1',
+describe('餐單', () => {
+  const DATE = '2026-09-10';
+  const ID = `${DATE}_lunch_amy`;
+  const HOUR = 3_600_000;
+  const filters = { categories: [], prices: [], walks: [], prefer: 'favorites' };
+  const pickOf = (by: string, rid = 'r1', over: Record<string, unknown> = {}) => ({
+    rid,
+    name: rid === 'r1' ? '巷口牛肉麵' : `店${rid}`,
+    by,
+    at: Timestamp.now(),
     seed: 7,
     variant: '',
-    ...verse,
-    by,
-    rerolls,
-    replies: { [by]: 'go' },
-    status: 'drawn',
-    updatedAt: serverTimestamp(),
+    theme: 'temple',
+    lines: [],
+    verdict: '',
     ...over,
   });
+  const meal = (over: Record<string, unknown> = {}) => ({
+    v: 1,
+    date: DATE,
+    slot: { key: 'lunch', label: '午餐' },
+    host: 'amy',
+    party: ['amy', 'bob', 'carl'],
+    answers: {},
+    going: ['amy'],
+    rerolls: 3,
+    rerollsLeft: 3,
+    filters,
+    picks: [],
+    cands: [],
+    skips: [],
+    decision: null,
+    status: 'open',
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+    endsAt: Timestamp.fromMillis(Date.now() + 3 * HOUR),
+    ...over,
+  });
+  /** 直接放一張餐單進去（略過規則），預設 bob 已經說要去 */
+  const seed = (over: Record<string, unknown> = {}, id = ID) =>
+    env.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(
+        doc(ctx.firestore(), 'meals', id),
+        meal({
+          answers: { bob: 'in' },
+          going: ['amy', 'bob'],
+          createdAt: Timestamp.now(),
+          updatedAt: Timestamp.now(),
+          ...over,
+        }),
+      );
+    });
+  const ref = (uid: string, id = ID) => doc(as(uid), 'meals', id);
+  /** 畫面的寫法：整個陣列重寫，前面的原封不動 */
+  const stored = async () => {
+    let data: Record<string, unknown> = {};
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      data = (await getDoc(doc(ctx.firestore(), 'meals', ID))).data() ?? {};
+    });
+    return data as { picks: unknown[]; cands: string[]; skips: unknown[] };
+  };
 
-  it('發起人可以發組隊邀請，但不能冒名、不能替別人答應、不能只有自己、不能一開始就抽好或多給重抽', async () => {
-    await assertSucceeds(addDoc(collection(as('amy'), 'outings'), outing()));
-    await assertSucceeds(addDoc(collection(as('amy'), 'outings'), outing({ confirm: true })));
-    await assertFails(addDoc(collection(as('bob'), 'outings'), outing()));
-    await assertFails(addDoc(collection(as('amy'), 'outings'), outing({ answers: { amy: 'go', bob: 'go' } })));
-    await assertFails(addDoc(collection(as('amy'), 'outings'), outing({ party: ['amy'] })));
-    await assertFails(addDoc(collection(as('amy'), 'outings'), outing({ status: 'go' })));
-    await assertFails(addDoc(collection(as('amy'), 'outings'), outing({ rid: 'r1', seed: 7 })));
-    await assertFails(addDoc(collection(as('amy'), 'outings'), outing({ rerolls: 99 })));
+  it('開一餐：單號一定是「日期_餐別_自己」，不能冒名、不能多給次數、不能一開始就起駕', async () => {
+    await assertSucceeds(setDoc(ref('amy'), meal()));
+    await assertFails(setDoc(ref('bob', `${DATE}_lunch_bob`), meal()));
+    await assertFails(setDoc(ref('amy', `${DATE}_tea_amy`), meal()));
+    await assertFails(setDoc(ref('amy', `${DATE}_lunch_amy2`), meal()));
     await assertFails(
-      addDoc(
-        collection(as('amy'), 'outings'),
-        outing({ expireAt: Timestamp.fromMillis(Date.now() + 400 * 86_400_000) }),
+      setDoc(
+        ref('amy', `${DATE}_dinner_amy`),
+        meal({ slot: { key: 'dinner', label: '晚餐' }, rerolls: 9, rerollsLeft: 9 }),
+      ),
+    );
+    await assertFails(
+      setDoc(ref('amy', `${DATE}_dinner_amy`), meal({ slot: { key: 'dinner', label: '晚餐' }, status: 'decided' })),
+    );
+    await assertFails(
+      setDoc(ref('amy', `${DATE}_dinner_amy`), meal({ slot: { key: 'dinner', label: '晚餐' }, going: ['amy', 'bob'] })),
+    );
+  });
+
+  it('自己寫的餐別：單號是 c-名字；不能帶單號用不了的符號', async () => {
+    const custom = { key: 'custom', label: '加班餐' };
+    await assertSucceeds(setDoc(ref('amy', `${DATE}_c-加班餐_amy`), meal({ slot: custom })));
+    await assertFails(setDoc(ref('amy', `${DATE}_c-加_班_amy`), meal({ slot: { key: 'custom', label: '加_班' } })));
+  });
+
+  it('同一個人同一天同一餐別只有一張：已經有了就不能再開', async () => {
+    await seed();
+    await assertFails(setDoc(ref('amy'), meal()));
+  });
+
+  it('開單可以順便帶第一支，但不能冒名抽', async () => {
+    await assertSucceeds(setDoc(ref('amy'), meal({ picks: [pickOf('amy')], cands: ['r1'] })));
+    await assertFails(
+      setDoc(
+        ref('amy', `${DATE}_tea_amy`),
+        meal({ slot: { key: 'tea', label: '下午茶' }, picks: [pickOf('bob')], cands: ['r1'] }),
       ),
     );
   });
 
-  it('只有被揪的人看得到', async () => {
-    await seedOuting();
-    await assertSucceeds(getDoc(doc(as('bob'), 'outings/o1')));
-    await assertFails(getDoc(doc(as('stranger'), 'outings/o1')));
+  it('要去的人都能抽：第一支不扣，之後每支扣一次，扣到 0 就不能抽', async () => {
+    await seed({ rerollsLeft: 1 });
+    const draw = async (uid: string, rid: string, left: number) => {
+      const d = await stored();
+      return updateDoc(ref(uid), {
+        picks: [...d.picks, pickOf(uid, rid)],
+        cands: [...d.cands.filter((x) => x !== rid), rid],
+        rerollsLeft: left,
+        updatedAt: serverTimestamp(),
+      });
+    };
+    await assertFails(draw('carl', 'r1', 1)); // 還沒回的人不能抽
+    await assertFails(draw('bob', 'r1', 0)); // 第一支不能扣
+    await assertSucceeds(draw('bob', 'r1', 1));
+    await assertFails(draw('amy', 'r2', 1)); // 之後一定要扣
+    await assertSucceeds(draw('amy', 'r2', 0));
+    await assertFails(draw('amy', 'r3', -1)); // 扣到 0 就不能抽
   });
 
-  it('被揪的人只能回覆自己要不要加入', async () => {
-    await seedOuting();
-    await assertSucceeds(updateDoc(doc(as('bob'), 'outings/o1'), { 'answers.bob': 'go' }));
-    await assertSucceeds(updateDoc(doc(as('bob'), 'outings/o1'), { 'answers.bob': 'pass' }));
-    await assertFails(updateDoc(doc(as('bob'), 'outings/o1'), { 'answers.bob': 'maybe' }));
-    await assertFails(updateDoc(doc(as('bob'), 'outings/o1'), { 'answers.amy': 'pass' }));
-    await assertFails(updateDoc(doc(as('bob'), 'outings/o1'), { status: 'go', updatedAt: serverTimestamp() }));
-  });
-
-  it('加入的人都可以抽：第一次不扣，之後全隊共用重抽次數，扣到零就不能再抽', async () => {
-    await seedOuting({ answers: { amy: 'go', bob: 'go' } });
-    // 沒加入的 carl 不能抽
-    await assertFails(updateDoc(doc(as('carl'), 'outings/o1'), draw('carl', 3)));
-    // bob 抽第一支：不扣
-    await assertFails(updateDoc(doc(as('bob'), 'outings/o1'), draw('bob', 2)));
-    await assertSucceeds(updateDoc(doc(as('bob'), 'outings/o1'), draw('bob', 3)));
-    // amy 重抽：扣一次（不能不扣，也不能冒名）
-    await assertFails(updateDoc(doc(as('amy'), 'outings/o1'), draw('amy', 3, { seed: 8 })));
-    await assertFails(updateDoc(doc(as('amy'), 'outings/o1'), draw('bob', 2, { seed: 8 })));
-    await assertSucceeds(updateDoc(doc(as('amy'), 'outings/o1'), draw('amy', 2, { seed: 8 })));
-    await seedOuting({ answers: { amy: 'go', bob: 'go' }, ...draw('amy', 0), updatedAt: Timestamp.now() });
-    await assertFails(updateDoc(doc(as('bob'), 'outings/o1'), draw('bob', -1, { seed: 9 })));
-  });
-
-  it('抽到之後，加入的人可以決定出發；發起人可以收回；名單不能改、不能刪', async () => {
-    await seedOuting({ answers: { amy: 'go', bob: 'go' } });
-    await assertFails(updateDoc(doc(as('bob'), 'outings/o1'), { status: 'go', updatedAt: serverTimestamp() }));
-    await seedOuting({ answers: { amy: 'go', bob: 'go' }, ...draw('bob', 3), updatedAt: Timestamp.now() });
-    await assertFails(updateDoc(doc(as('carl'), 'outings/o1'), { status: 'go', updatedAt: serverTimestamp() }));
-    await assertFails(updateDoc(doc(as('bob'), 'outings/o1'), { status: 'closed', updatedAt: serverTimestamp() }));
+  it('抽的時候不能改掉前面抽過的', async () => {
+    await seed({ picks: [pickOf('amy')], cands: ['r1'] });
     await assertFails(
-      updateDoc(doc(as('amy'), 'outings/o1'), { party: ['amy', 'stranger'], updatedAt: serverTimestamp() }),
+      updateDoc(ref('amy'), {
+        picks: [pickOf('amy', 'r9'), pickOf('amy', 'r2')],
+        cands: ['r9', 'r2'],
+        rerollsLeft: 2,
+        updatedAt: serverTimestamp(),
+      }),
     );
-    await assertSucceeds(updateDoc(doc(as('bob'), 'outings/o1'), { status: 'go', updatedAt: serverTimestamp() }));
-    await assertFails(deleteDoc(doc(as('amy'), 'outings/o1')));
-    await seedOuting({ answers: { amy: 'go', bob: 'go' } });
-    await assertSucceeds(updateDoc(doc(as('amy'), 'outings/o1'), { status: 'closed', updatedAt: serverTimestamp() }));
   });
 
-  it('抽到之後，發起人有要求才需要回覆要不要去', async () => {
-    await seedOuting({ answers: { amy: 'go', bob: 'go' }, ...draw('amy', 3), updatedAt: Timestamp.now() });
-    await assertFails(updateDoc(doc(as('bob'), 'outings/o1'), { 'replies.bob': 'go' }));
-    await seedOuting({
-      answers: { amy: 'go', bob: 'go' },
-      ...draw('amy', 3),
-      updatedAt: Timestamp.now(),
-      confirm: true,
+  it('起駕：要去的人從候選選一家，選不在候選裡的不行', async () => {
+    await seed({ picks: [pickOf('amy'), pickOf('amy', 'r2')], cands: ['r1', 'r2'] });
+    const decide = (uid: string, rid: string) =>
+      updateDoc(ref(uid), {
+        decision: { rid, by: uid, at: serverTimestamp() },
+        status: 'decided',
+        updatedAt: serverTimestamp(),
+      });
+    await assertFails(decide('carl', 'r1'));
+    await assertFails(decide('bob', 'r9'));
+    await assertSucceeds(decide('bob', 'r1'));
+    // 起駕之後就不能再抽
+    const d = await stored();
+    await assertFails(
+      updateDoc(ref('amy'), {
+        picks: [...d.picks, pickOf('amy', 'r3')],
+        cands: [...d.cands, 'r3'],
+        rerollsLeft: 2,
+        updatedAt: serverTimestamp(),
+      }),
+    );
+  });
+
+  it('這家去不了：起駕後也能按，補抽一家，重抽次數回到原本的數字', async () => {
+    await seed({
+      picks: [pickOf('amy'), pickOf('amy', 'r2')],
+      cands: ['r1', 'r2'],
+      rerollsLeft: 0,
+      status: 'decided',
+      decision: { rid: 'r2', by: 'amy', at: Timestamp.now() },
     });
-    await assertSucceeds(updateDoc(doc(as('bob'), 'outings/o1'), { 'replies.bob': 'go' }));
-    await assertFails(updateDoc(doc(as('bob'), 'outings/o1'), { 'replies.amy': 'pass' }));
+    const d = await stored();
+    const skip = (uid: string, over: Record<string, unknown> = {}) =>
+      updateDoc(ref(uid), {
+        skips: [{ rid: 'r2', by: uid, at: Timestamp.now() }],
+        picks: [...d.picks, pickOf(uid, 'r3')],
+        cands: ['r1', 'r3'],
+        rerollsLeft: 3,
+        decision: null,
+        status: 'open',
+        updatedAt: serverTimestamp(),
+        ...over,
+      });
+    await assertFails(skip('carl'));
+    await assertFails(skip('bob', { rerollsLeft: 5 }));
+    await assertFails(skip('bob', { cands: ['r1', 'r2', 'r3'] }));
+    await assertSucceeds(skip('bob'));
   });
 
-  it('出發或收回之後就不能再回覆', async () => {
-    await seedOuting({ ...draw('amy', 3), status: 'go', updatedAt: Timestamp.now() });
-    await assertFails(updateDoc(doc(as('bob'), 'outings/o1'), { 'answers.bob': 'go' }));
+  it('這家去不了：沒有店可以補的時候只拿掉那一家', async () => {
+    await seed({ picks: [pickOf('amy')], cands: ['r1'], rerollsLeft: 0 });
+    const d = await stored();
+    await assertSucceeds(
+      updateDoc(ref('bob'), {
+        skips: [{ rid: 'r1', by: 'bob', at: Timestamp.now() }],
+        picks: d.picks,
+        cands: [],
+        rerollsLeft: 3,
+        decision: null,
+        status: 'open',
+        updatedAt: serverTimestamp(),
+      }),
+    );
+  });
+
+  it('被揪的人只能回覆自己，要去的名單跟著改；不在名單上的不能回', async () => {
+    await seed();
+    const answer = (uid: string, a: string, going: string[]) =>
+      updateDoc(ref(uid), { [`answers.${uid}`]: a, going, updatedAt: serverTimestamp() });
+    await assertSucceeds(answer('carl', 'in', ['amy', 'bob', 'carl']));
+    await assertSucceeds(answer('carl', 'out', ['amy', 'bob']));
+    await assertFails(answer('carl', 'in', ['amy', 'bob'])); // 名單沒跟著改
+    await assertFails(answer('carl', 'maybe', ['amy', 'bob']));
+    await assertFails(answer('boss', 'in', ['amy', 'bob', 'boss']));
+    await assertFails(updateDoc(ref('carl'), { 'answers.bob': 'out', going: ['amy'], updatedAt: serverTimestamp() }));
+  });
+
+  it('時間到了（開單三小時後）就不能再動，發起人可以重新開張', async () => {
+    await seed({ endsAt: Timestamp.fromMillis(Date.now() - 1000), picks: [pickOf('amy')], cands: ['r1'] });
+    await assertFails(
+      updateDoc(ref('bob'), {
+        decision: { rid: 'r1', by: 'bob', at: serverTimestamp() },
+        status: 'decided',
+        updatedAt: serverTimestamp(),
+      }),
+    );
+    const reopen = (uid: string) =>
+      updateDoc(ref(uid), {
+        party: [uid],
+        answers: {},
+        going: [uid],
+        filters,
+        status: 'open',
+        decision: null,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        endsAt: Timestamp.fromMillis(Date.now() + 3 * HOUR),
+      });
+    await assertFails(reopen('bob'));
+    await assertSucceeds(reopen('amy'));
+  });
+
+  it('起駕過的、還沒到時間的，都不能重新開張', async () => {
+    await seed({
+      endsAt: Timestamp.fromMillis(Date.now() - 1000),
+      picks: [pickOf('amy')],
+      cands: ['r1'],
+      status: 'decided',
+      decision: { rid: 'r1', by: 'amy', at: Timestamp.now() },
+    });
+    await assertFails(
+      updateDoc(ref('amy'), {
+        party: ['amy'],
+        answers: {},
+        going: ['amy'],
+        filters,
+        status: 'open',
+        decision: null,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        endsAt: Timestamp.fromMillis(Date.now() + 3 * HOUR),
+      }),
+    );
+  });
+
+  it('只有發起人能取消、加人、改篩選；加人只能加不能踢；不能刪', async () => {
+    await seed();
+    await assertFails(updateDoc(ref('bob'), { status: 'cancelled', updatedAt: serverTimestamp() }));
+    await assertFails(updateDoc(ref('bob'), { party: ['amy', 'bob', 'carl', 'boss'], updatedAt: serverTimestamp() }));
+    await assertFails(updateDoc(ref('amy'), { party: ['amy', 'bob'], updatedAt: serverTimestamp() }));
+    await assertSucceeds(
+      updateDoc(ref('amy'), { party: ['amy', 'bob', 'carl', 'boss'], updatedAt: serverTimestamp() }),
+    );
+    await assertFails(
+      updateDoc(ref('bob'), { filters: { ...filters, prefer: 'explore' }, updatedAt: serverTimestamp() }),
+    );
+    await assertSucceeds(
+      updateDoc(ref('amy'), { filters: { ...filters, prefer: 'explore' }, updatedAt: serverTimestamp() }),
+    );
+    await assertFails(deleteDoc(ref('amy')));
+    await assertSucceeds(updateDoc(ref('amy'), { status: 'cancelled', updatedAt: serverTimestamp() }));
+  });
+
+  it('成員都讀得到（排行榜要算），外人讀不到', async () => {
+    await seed();
+    await assertSucceeds(getDoc(ref('carl')));
+    await assertFails(getDoc(ref('stranger')));
   });
 });

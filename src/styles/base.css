@@ -446,3 +446,47 @@ textarea.input {
     scroll-behavior: auto !important;
   }
 }
+
+/* 方形日期章（店家的張貼日期、食籤簿每一天的頁首）：蓋下去的那一下 */
+.date-stamp {
+  flex: none;
+  display: block;
+  overflow: visible;
+  filter: drop-shadow(2px 2px 0 rgba(38, 33, 29, 0.18));
+}
+.date-stamp.is-pressed {
+  animation: date-stamp-press 0.5s var(--ease-spring) both;
+}
+@keyframes date-stamp-press {
+  from {
+    opacity: 0;
+    transform: scale(1.7) rotate(-14deg);
+  }
+  55% {
+    opacity: 1;
+    transform: scale(0.94) rotate(2deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .date-stamp.is-pressed {
+    animation: none;
+  }
+}
+
+/* 副標裡的分隔：一顆朱紅小菱形（魔法是一顆小星），取代「・」 */
+.sub-sep {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin: 0 0.6em 0.18em;
+  vertical-align: middle;
+  background: var(--accent);
+  rotate: 45deg;
+}
+[data-theme='magic'] .sub-sep {
+  width: 10px;
+  height: 10px;
+  rotate: 0deg;
+  background: var(--marigold);
+  clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
+}

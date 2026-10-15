@@ -108,7 +108,7 @@
   bottom: 0;
   z-index: 40;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   height: calc(var(--tab-h) + var(--safe-b));
   padding-bottom: var(--safe-b);
   background: var(--paper);

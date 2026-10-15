@@ -1,6 +1,7 @@
-export type CategoryId = 'rice' | 'noodle' | 'bento' | 'snack' | 'world' | 'light' | 'brunch' | 'other';
-export type Price = 1 | 2 | 3;
-export type Walk = 5 | 10 | 15 | 20;
+/** 類型、價位、步行可以填的值都從下面的表推出來，改選項只要改表（firestore.rules 也要跟著改，types.test.ts 會檢查） */
+export type CategoryId = (typeof CATEGORIES)[number]['id'];
+export type Price = (typeof PRICES)[number]['v'];
+export type Walk = (typeof WALKS)[number]['v'];
 export type DrawMode = 'solo' | 'group';
 
 export interface Restaurant {
@@ -31,19 +32,7 @@ export interface Member {
   blocks: string[];
   /** 自己存的揪團名單（最多 8 個） */
   crews: Crew[];
-  /** 自己抽的額度：哪一天、今天還能重抽幾次（寫在資料庫裡，重新整理也不會重來） */
-  today: { day: string; left: number } | null;
   role?: string;
-}
-
-export interface DrawRecord {
-  id: string;
-  rid: string;
-  uid: string;
-  mode: DrawMode;
-  party: string[];
-  createdAt: Date | null;
-  rerolled: boolean;
 }
 
 export interface Note {
@@ -56,9 +45,9 @@ export interface Note {
 
 /**
  * 店的類型、價位、步行：名字和小圖都只寫在這裡，施法頁的篩選、店家頁的篩選、新增店家的表單都讀這幾張表。
- * icon 是 24×24、線條粗 1.7 的 SVG path（碗飯、麵、便當盒、咖啡、地球、葉子、餃子、刀叉）。
+ * icon 是 24×24、線條粗 1.7 的 SVG path（碗飯、麵、便當盒、咖啡、地球、葉子、餃子、手搖杯、蛋糕、刀叉）。
  */
-export const CATEGORIES: { id: CategoryId; label: string; seal: string; icon: string }[] = [
+export const CATEGORIES = [
   {
     id: 'rice',
     label: '飯',
@@ -102,18 +91,30 @@ export const CATEGORIES: { id: CategoryId; label: string; seal: string; icon: st
     icon: 'M3.5 15.5c0-5 3.9-8.5 8.5-8.5s8.5 3.5 8.5 8.5c-2.4 1.4-5.2 2-8.5 2s-6.1-.6-8.5-2ZM8 10.5l1.2 2M12 9v2.6M16 10.5l-1.2 2',
   },
   {
+    id: 'drink',
+    label: '飲料',
+    seal: '飲',
+    icon: 'M6.4 8.2h11.2l-1.5 12.4a1.6 1.6 0 0 1-1.6 1.4H9.5a1.6 1.6 0 0 1-1.6-1.4ZM5.2 8.2h13.6M12.6 8.2 15.4 2.4M9.7 17.2h.01M12 18.4h.01M14.3 17.2h.01',
+  },
+  {
+    id: 'dessert',
+    label: '甜點',
+    seal: '甜',
+    icon: 'M3.5 13 20.5 8.4v11.1h-17ZM3.5 15.8l17-1.6M20.5 8.4 13 5.6M15.6 3.6a1.6 1.6 0 1 1 0 .01',
+  },
+  {
     id: 'other',
     label: '其他',
     seal: '雜',
     icon: 'M7 3.5v7M5 3.5v4a2 2 0 0 0 4 0v-4M7 10.5v10M17.5 3.5c-2.2 2-2.2 7 0 8.5v8.5',
   },
-];
+] as const satisfies readonly { id: string; label: string; seal: string; icon: string }[];
 
-export const PRICES: { v: Price; label: string; coins: string }[] = [
+export const PRICES = [
   { v: 1, label: '百元內', coins: '$' },
   { v: 2, label: '100–200', coins: '$$' },
   { v: 3, label: '200 以上', coins: '$$$' },
-];
+] as const satisfies readonly { v: number; label: string; coins: string }[];
 
 /** 一個腳印（鞋底＋腳跟）：cx、cy 是鞋底中心，k 是大小 */
 const foot = (cx: number, cy: number, k = 1) => {
@@ -123,7 +124,7 @@ const foot = (cx: number, cy: number, k = 1) => {
 };
 
 /** 走過去要多久：腳印越多走越遠，20 分以上是一個大步走的人 */
-export const WALKS: { v: Walk; label: string; icon: string }[] = [
+export const WALKS = [
   { v: 5, label: '5 分內', icon: foot(8.5, 12, 1.25) + foot(15.5, 5.5, 1.25) },
   { v: 10, label: '10 分', icon: foot(5.5, 13.5, 1.05) + foot(12, 9, 1.05) + foot(18.5, 4.5, 1.05) },
   {
@@ -136,8 +137,15 @@ export const WALKS: { v: Walk; label: string; icon: string }[] = [
     label: '20 分以上',
     icon: 'M13.5 3a1.8 1.8 0 1 1 0 3.6 1.8 1.8 0 0 1 0-3.6ZM12.5 8.5l-2.5 5 3 2.5v5M12.5 8.5l2.5 3.5 3.5 1M10 13.5l-2 7M12.5 8.5l-3.5 1.5-1.5 3.5M3 21h4M17 21h4',
   },
-];
+] as const satisfies readonly { v: number; label: string; icon: string }[];
 
-export const categoryOf = (id: CategoryId) => CATEGORIES.find((c) => c.id === id) ?? CATEGORIES[7];
+/** 找不到的類型一律當「其他」（用 id 找，表的順序改了也不會錯） */
+export const categoryOf = (id: CategoryId): (typeof CATEGORIES)[number] =>
+  CATEGORIES.find((c) => c.id === id) ?? categoryOf('other');
 export const priceOf = (v: Price) => PRICES.find((p) => p.v === v) ?? PRICES[0];
 export const walkOf = (v: Walk) => WALKS.find((w) => w.v === v) ?? WALKS[0];
+
+/** 表裡有沒有這個值（手機裡存的資料可能是舊版的選項） */
+export const isCategoryId = (v: unknown): v is CategoryId => CATEGORIES.some((c) => c.id === v);
+export const isPrice = (v: unknown): v is Price => PRICES.some((p) => p.v === v);
+export const isWalk = (v: unknown): v is Walk => WALKS.some((w) => w.v === v);

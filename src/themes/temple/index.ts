@@ -8,6 +8,7 @@ import { StageFloor, StageTop } from './Stage';
 import { Incense } from './Incense';
 import { Emblem } from './Emblem';
 import { CardSeal } from './CardSeal';
+import { DateStamp } from './DateStamp';
 import { LoveStamp } from './LoveStamp';
 import { LoveSlot } from './LoveSlot';
 import { Podium } from './Podium';
@@ -27,13 +28,14 @@ export const temple: Theme = {
   id: 'temple',
   copy,
   tabIcon: 'stick',
-  tabIcons: { shops: 'hang', ranks: 'board' },
+  tabIcons: { shops: 'hang', history: 'ledger', ranks: 'board' },
   sound: chime,
   departFx,
   heraldSound: gong,
   heraldTap: (news) => (news ? gong() : gongTap()),
   Emblem,
   LoveStamp,
+  DateStamp,
   LoveSlot,
   Podium,
   CrewBanner,

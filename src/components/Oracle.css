@@ -284,3 +284,112 @@
   letter-spacing: 0.16em;
   color: var(--accent);
 }
+
+/* 次數用完、還沒起駕：籤筒小圖＋一句話，提醒從候選挑一支 */
+.oracle__taunt--spent {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  border-style: dashed;
+  background: var(--paper-hi);
+}
+[data-theme='magic'] .oracle__taunt--spent {
+  border-radius: 14px;
+}
+/* 這家去不了：安靜的一行，按一次問「真的去不了？」，按鈕變成要你確定的樣子 */
+/* 籤卡最下面一排：左邊是報馬仔通知了誰，右邊是「這家去不了」，兩個一樣高 */
+.oracle__extra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: calc(100% - var(--offset));
+}
+/* 揪團：大家的頭像和報馬仔自己一整排放最上面，下面一排左邊看供桌、右邊去不了 */
+.oracle__extra > .oracle__crew {
+  order: -1;
+  flex: 1 1 100%;
+  min-height: 42px;
+}
+.oracle__skip {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 42px;
+  padding: 0 14px 0 10px;
+  font-family: var(--f-serif);
+  font-weight: 700;
+  font-size: var(--t-xs);
+  letter-spacing: 0.06em;
+  color: var(--ink-2);
+  background: var(--paper-hi);
+  border: 1.5px dashed var(--rule-strong);
+  border-radius: 999px;
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    color 0.2s,
+    border-color 0.2s;
+}
+.oracle__skip.is-asking {
+  color: var(--paper-hi);
+  background: var(--ink);
+  border-style: solid;
+  border-color: var(--ink);
+  animation: skip-ask 0.4s var(--ease-spring);
+}
+[data-theme='magic'] .oracle__skip {
+  border-radius: 999px;
+}
+@keyframes skip-ask {
+  30% {
+    transform: translateX(-4px);
+  }
+  60% {
+    transform: translateX(3px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .oracle__skip.is-asking {
+    animation: none;
+  }
+}
+
+/* 看供桌上的籤（預言牌陣）：跟「這家去不了」同一種小圓牌，後面一顆數字章 */
+.oracle__cands {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 42px;
+  padding: 0 8px 0 10px;
+  font-family: var(--f-serif);
+  font-weight: 700;
+  font-size: var(--t-xs);
+  letter-spacing: 0.06em;
+  color: var(--ink);
+  background: var(--paper-hi);
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  box-shadow: 2px 2px 0 var(--accent);
+  cursor: pointer;
+}
+.oracle__cands b {
+  display: grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 5px;
+  font-family: var(--f-display);
+  font-size: 0.78rem;
+  color: var(--paper-hi);
+  background: var(--accent);
+  border: 1.2px solid var(--ink);
+  border-radius: 50%;
+}
+[data-theme='magic'] .oracle__cands b {
+  color: var(--ink);
+  background: var(--marigold);
+}

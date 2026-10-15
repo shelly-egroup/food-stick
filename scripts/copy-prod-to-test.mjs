@@ -8,7 +8,7 @@
 //
 // 會複製：
 // - 登入帳號（Google 登入的同事）：uid 保持一樣，在測試站用同一個 Google 帳號登入，就是同一個人、同一份愛店
-// - Firestore 全部集合（members、restaurants 與底下的 comments、draws、outings），文件 id 與時間都保持原樣
+// - Firestore 全部集合（members、restaurants 與底下的 comments、meals），文件 id 與時間都保持原樣
 // 測試專案裡同 id 的文件會被蓋掉；測試專案自己多出來的文件不會刪。
 import { existsSync, readFileSync } from 'node:fs';
 import { cert, initializeApp } from 'firebase-admin/app';

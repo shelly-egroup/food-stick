@@ -22,6 +22,8 @@ describe('籤詩共用工具', () => {
         noodle: one('麵'),
         bento: one('便當'),
         snack: one('小吃'),
+        drink: one('飲料'),
+        dessert: one('甜點'),
         world: one('異國'),
         light: one('輕食'),
         brunch: one('早午'),

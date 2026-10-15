@@ -50,20 +50,19 @@ service cloud.firestore {
         && request.resource.data.joinedAt == request.time;
       // crews：自己存的揪團名單（進香團／冒險小隊），最多 8 個
       allow update: if isEgroup() && request.auth.uid == uid
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'photoURL', 'likes', 'blocks', 'crews', 'today'])
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'photoURL', 'likes', 'blocks', 'crews'])
         && validText(request.resource.data.name, 1, 40)
         && validPhoto(request.resource.data.photoURL)
         && validIdList(request.resource.data.likes)
         && validIdList(request.resource.data.blocks)
         && request.resource.data.get('crews', []) is list
-        && request.resource.data.get('crews', []).size() <= 8
-        && validToday(request.resource.data.get('today', {'day': '', 'left': 0}));
+        && request.resource.data.get('crews', []).size() <= 8;
       allow delete: if false;
     }
 
     function validRestaurant(d) {
       return validText(d.name, 1, 40)
-        && d.category in ['rice', 'noodle', 'bento', 'snack', 'world', 'light', 'brunch', 'other']
+        && d.category in ['rice', 'noodle', 'bento', 'snack', 'drink', 'dessert', 'world', 'light', 'brunch', 'other']
         && d.price in [1, 2, 3]
         && d.walk in [5, 10, 15, 20]
         && d.group is bool
@@ -120,116 +119,226 @@ service cloud.firestore {
       allow read: if isMember();
     }
 
-    // 揪團：發起人抽完籤，被揪的人即時看到結果、回覆要不要一起去
-    // 自己抽的額度：哪一天、還能重抽幾次
-    function validToday(t) {
-      return t is map && t.keys().hasOnly(['day', 'left']) && validText(t.day, 0, 10)
-        && t.left is int && t.left >= 0 && t.left <= 3;
+    // ---------- 餐單：一餐一張（meals/{日期_餐別_發起人}），自己吃、揪團吃都是 ----------
+    // 規則只擋「不該發生的寫入」；抽到哪一家、籤詩怎麼寫由畫面決定（同事之間互相信任）
+
+    function mealSlotCode(d) {
+      return d.slot.key == 'custom' ? 'c-' + d.slot.label : d.slot.key;
     }
-    function validPick(d) {
-      return validText(d.rid, 0, 64) && d.seed is int && validText(d.variant, 0, 16);
+    function validSlot(s) {
+      return s is map && s.keys().hasOnly(['key', 'label']) && s.keys().hasAll(['key', 'label'])
+        && s.key in ['breakfast', 'lunch', 'tea', 'dinner', 'supper', 'custom']
+        && validText(s.label, 1, 8)
+        && !s.label.matches('.*[/_.#\\[\\]].*');
     }
-    // 揪團：先發組隊邀請（gathering），大家回覆要不要加入；發起人抽到一家（drawn），
-    // 要求的話大家再回覆要不要去；最後出發（go）或收回（closed）
-    // AI 寫的籤詩：四句（或沒有）、一句解籤
-    function validVerse(d) {
-      return d.lines is list && (d.lines.size() == 0 || d.lines.size() == 4)
-        && d.verdict is string && d.verdict.size() <= 60;
+    function validFilters(f) {
+      return f is map && f.keys().hasOnly(['categories', 'prices', 'walks', 'prefer'])
+        && f.categories is list && f.categories.size() <= 20
+        && f.prices is list && f.prices.size() <= 10
+        && f.walks is list && f.walks.size() <= 10
+        && f.prefer in ['favorites', 'explore'];
     }
-    // 加入的人（發起人一開始就算加入）
-    function joined(d) {
-      return request.auth.uid in d.party && d.answers.get(request.auth.uid, '') == 'go';
+    // 開單後三個小時結束（裝置時間可能有點誤差，前後放寬一小時）
+    function validEnds(t) {
+      return t is timestamp
+        && t > request.time + duration.value(2, 'h')
+        && t < request.time + duration.value(4, 'h');
     }
-    match /outings/{oid} {
-      allow read: if isMember() && request.auth.uid in resource.data.party;
-      allow create: if isMember()
-        && exactKeys(['host', 'party', 'answers', 'confirm', 'rid', 'seed', 'variant', 'replies', 'by', 'rerolls', 'lines', 'verdict', 'status', 'createdAt', 'updatedAt', 'expireAt'])
-        && request.resource.data.host == request.auth.uid
-        && request.resource.data.party is list
-        && request.resource.data.party.size() >= 2
-        && request.resource.data.party.size() <= 50
-        && request.auth.uid in request.resource.data.party
-        && request.resource.data.answers.keys().hasOnly([request.auth.uid])
-        && request.resource.data.answers[request.auth.uid] == 'go'
-        && request.resource.data.confirm is bool
-        && request.resource.data.rid == ''
-        && request.resource.data.seed == 0
-        && request.resource.data.variant == ''
-        && request.resource.data.replies.keys().size() == 0
-        && request.resource.data.by == ''
-        && request.resource.data.rerolls == 3
-        && request.resource.data.lines.size() == 0
-        && request.resource.data.verdict == ''
-        && request.resource.data.status == 'gathering'
-        && request.resource.data.createdAt == request.time
-        && request.resource.data.updatedAt == request.time
-        // 到期時間（TTL 自動清掉）：一天到三十天之內
-        && request.resource.data.expireAt is timestamp
-        && request.resource.data.expireAt > request.time + duration.value(1, 'd')
-        && request.resource.data.expireAt < request.time + duration.value(30, 'd');
-      // 加入的人：抽一支（第一次不扣，之後每次扣全隊共用的一次重抽，扣到零就不能再抽）
-      allow update: if isMember()
-        && joined(resource.data)
-        && resource.data.status in ['gathering', 'drawn']
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['rid', 'seed', 'variant', 'lines', 'verdict', 'by', 'rerolls', 'replies', 'status', 'updatedAt'])
-        && request.resource.data.status == 'drawn'
-        && validPick(request.resource.data)
-        && request.resource.data.rid.size() > 0
-        && validVerse(request.resource.data)
-        && request.resource.data.by == request.auth.uid
-        && request.resource.data.replies.keys().hasOnly([request.auth.uid])
-        && request.resource.data.rerolls == (resource.data.by == '' ? resource.data.rerolls : resource.data.rerolls - 1)
-        && request.resource.data.rerolls >= 0
-        && request.resource.data.updatedAt == request.time;
-      // 加入的人：抽到了就決定出發
-      allow update: if isMember()
-        && joined(resource.data)
-        && resource.data.status == 'drawn'
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt'])
-        && request.resource.data.status == 'go'
-        && request.resource.data.updatedAt == request.time;
-      // 發起人：收回邀請
-      allow update: if isMember()
-        && resource.data.host == request.auth.uid
-        && resource.data.status in ['gathering', 'drawn']
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt'])
-        && request.resource.data.status == 'closed'
-        && request.resource.data.updatedAt == request.time;
-      // 被揪的人：回覆組隊邀請（加入、這次不了），還沒出發前都可以改
-      allow update: if isMember()
-        && resource.data.host != request.auth.uid
-        && request.auth.uid in resource.data.party
-        && resource.data.status in ['gathering', 'drawn']
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['answers'])
-        && request.resource.data.answers.diff(resource.data.answers).affectedKeys().hasOnly([request.auth.uid])
-        && request.resource.data.answers[request.auth.uid] in ['go', 'pass'];
-      // 被揪的人：抽到之後回覆要不要去（發起人有要求才行）
-      allow update: if isMember()
-        && request.auth.uid in resource.data.party
-        && resource.data.confirm == true
-        && resource.data.status == 'drawn'
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['replies'])
-        && request.resource.data.replies.diff(resource.data.replies).affectedKeys().hasOnly([request.auth.uid])
-        && request.resource.data.replies[request.auth.uid] in ['go', 'pass'];
-      allow delete: if false;
+    // 抽到的一支：誰抽的一定是自己；時間是裝置的（陣列裡不能放伺服器時間），跟伺服器差十分鐘以內
+    function validPick(p) {
+      return p is map
+        && p.keys().hasOnly(['rid', 'name', 'by', 'at', 'seed', 'variant', 'theme', 'lines', 'verdict'])
+        && p.keys().hasAll(['rid', 'name', 'by', 'at', 'seed', 'variant', 'theme', 'lines', 'verdict'])
+        && validText(p.rid, 1, 64)
+        && validText(p.name, 1, 40)
+        && p.by == request.auth.uid
+        && p.at is timestamp
+        && p.at > request.time - duration.value(10, 'm')
+        && p.at < request.time + duration.value(10, 'm')
+        && p.seed is int
+        && validText(p.variant, 0, 16)
+        && p.theme in ['temple', 'magic']
+        && p.lines is list && (p.lines.size() == 0 || p.lines.size() == 4)
+        && validText(p.verdict, 0, 60);
+    }
+    function validSkip(s, cands) {
+      return s is map && s.keys().hasOnly(['rid', 'by', 'at']) && s.keys().hasAll(['rid', 'by', 'at'])
+        && s.rid in cands
+        && s.by == request.auth.uid
+        && s.at is timestamp
+        && s.at > request.time - duration.value(10, 'm')
+        && s.at < request.time + duration.value(10, 'm');
+    }
+    function mealLive(d) {
+      return d.status != 'cancelled' && request.time < d.endsAt;
+    }
+    function mealGoing(d) {
+      return request.auth.uid in d.going;
+    }
+    function onlyKeys(keys) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(keys);
+    }
+    // 只往後加了一筆（前面的不逐一比對：規則每次最多算 1000 個運算式）
+    function appendedOne(after, before) {
+      return after.size() == before.size() + 1;
+    }
+    // 新的那一支：放到候選最後面（同一家又抽到就移到最後）
+    function drewOne(after, before) {
+      return appendedOne(after.picks, before.picks)
+        && validPick(after.picks[before.picks.size()])
+        && after.cands == before.cands.removeAll([after.picks[before.picks.size()].rid])
+                           .concat([after.picks[before.picks.size()].rid]);
+    }
+    // 去不了：拿掉那一家；有補抽的話，補的那一支放到候選最後面
+    function skippedOne(after, before) {
+      return appendedOne(after.skips, before.skips)
+        && validSkip(after.skips[before.skips.size()], before.cands)
+        && ((after.picks.size() == before.picks.size()
+             && after.cands == before.cands.removeAll([after.skips[before.skips.size()].rid]))
+            || (appendedOne(after.picks, before.picks)
+                && validPick(after.picks[before.picks.size()])
+                && after.picks[before.picks.size()].rid != after.skips[before.skips.size()].rid
+                && after.cands == before.cands.removeAll([after.skips[before.skips.size()].rid,
+                                                          after.picks[before.picks.size()].rid])
+                                              .concat([after.picks[before.picks.size()].rid])));
+    }
+    // 回覆要去（in）或不去（out）：要去的名單跟著改
+    function answered(after, before) {
+      return after.answers.diff(before.answers).affectedKeys().hasOnly([request.auth.uid])
+        && ((after.answers[request.auth.uid] == 'in'
+             && after.going == before.going.removeAll([request.auth.uid]).concat([request.auth.uid]))
+            || (after.answers[request.auth.uid] == 'out'
+                && after.going == before.going.removeAll([request.auth.uid])));
     }
 
-    // 每次抽籤自動記錄；被重抽的那支會標記 rerolled，不用另外打卡
-    match /draws/{did} {
+    match /meals/{mid} {
       allow read: if isMember();
+
+      // 開一餐：單號一定是「日期_餐別_自己」，同一個人同一天同一餐別只有一張；可以順便帶第一支
       allow create: if isMember()
-        && exactKeys(['rid', 'uid', 'mode', 'party', 'createdAt', 'rerolled'])
-        && request.resource.data.uid == request.auth.uid
-        && validText(request.resource.data.rid, 1, 64)
-        && request.resource.data.mode in ['solo', 'group']
+        && exactKeys(['v', 'date', 'slot', 'host', 'party', 'answers', 'going', 'rerolls', 'rerollsLeft', 'filters', 'picks', 'cands', 'skips', 'decision', 'status', 'createdAt', 'updatedAt', 'endsAt'])
+        && request.resource.data.v == 1
+        && request.resource.data.host == request.auth.uid
+        && request.resource.data.date is string
+        && request.resource.data.date.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}')
+        && validSlot(request.resource.data.slot)
+        && mid == request.resource.data.date + '_' + mealSlotCode(request.resource.data) + '_' + request.auth.uid
         && request.resource.data.party is list
-        && request.resource.data.party.size() <= 100
+        && request.resource.data.party.size() >= 1
+        && request.resource.data.party.size() <= 50
+        && request.auth.uid in request.resource.data.party
+        && request.resource.data.answers == {}
+        && request.resource.data.going == [request.auth.uid]
+        && request.resource.data.rerolls is int
+        && request.resource.data.rerolls >= 0
+        && request.resource.data.rerolls <= 5
+        && request.resource.data.rerollsLeft == request.resource.data.rerolls
+        && validFilters(request.resource.data.filters)
+        && request.resource.data.skips == []
+        && request.resource.data.decision == null
+        && request.resource.data.status == 'open'
         && request.resource.data.createdAt == request.time
-        && request.resource.data.rerolled == false;
-      allow update: if isMember()
-        && resource.data.uid == request.auth.uid
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['rerolled'])
-        && request.resource.data.rerolled == true;
+        && request.resource.data.updatedAt == request.time
+        && validEnds(request.resource.data.endsAt)
+        && ((request.resource.data.picks == [] && request.resource.data.cands == [])
+            || (request.resource.data.picks.size() == 1
+                && validPick(request.resource.data.picks[0])
+                && request.resource.data.cands == [request.resource.data.picks[0].rid]));
+
+      // 發起人：取消了、或時間到了還沒起駕，可以重新開張（抽過的、重抽次數都接續原本的）
+      allow update: if onlyKeys(['party', 'answers', 'going', 'filters', 'status', 'decision', 'createdAt', 'updatedAt', 'endsAt'])
+        && isMember()
+        && resource.data.host == request.auth.uid
+        && (resource.data.status == 'cancelled'
+            || (resource.data.decision == null && request.time >= resource.data.endsAt))
+        && request.resource.data.party is list
+        && request.resource.data.party.size() >= 1
+        && request.resource.data.party.size() <= 50
+        && request.auth.uid in request.resource.data.party
+        && request.resource.data.answers == {}
+        && request.resource.data.going == [request.auth.uid]
+        && validFilters(request.resource.data.filters)
+        && request.resource.data.status == 'open'
+        && request.resource.data.decision == null
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && validEnds(request.resource.data.endsAt);
+
+      // 要去的人：抽一支。第一支不扣，之後每支扣一次，扣到 0 就不能再抽；起駕後不能抽
+      allow update: if onlyKeys(['picks', 'cands', 'rerollsLeft', 'updatedAt'])
+        && isMember()
+        && mealGoing(resource.data)
+        && mealLive(resource.data)
+        && resource.data.status == 'open'
+        && drewOne(request.resource.data, resource.data)
+        && ((resource.data.picks.size() == 0
+             && request.resource.data.rerollsLeft == resource.data.rerollsLeft)
+            || (resource.data.picks.size() > 0
+                && resource.data.rerollsLeft >= 1
+                && request.resource.data.rerollsLeft == resource.data.rerollsLeft - 1))
+        && request.resource.data.updatedAt == request.time;
+
+      // 要去的人：起駕（從候選選一家，就是定案）
+      allow update: if onlyKeys(['decision', 'status', 'updatedAt'])
+        && isMember()
+        && mealGoing(resource.data)
+        && mealLive(resource.data)
+        && resource.data.status == 'open'
+        && request.resource.data.status == 'decided'
+        && request.resource.data.decision is map
+        && request.resource.data.decision.keys().hasOnly(['rid', 'by', 'at'])
+        && request.resource.data.decision.keys().hasAll(['rid', 'by', 'at'])
+        && request.resource.data.decision.rid in resource.data.cands
+        && request.resource.data.decision.by == request.auth.uid
+        && request.resource.data.decision.at == request.time
+        && request.resource.data.updatedAt == request.time;
+
+      // 要去的人：這家去不了（起駕後也可以）。重抽次數回到原本的數字，回到還在抽的階段
+      allow update: if onlyKeys(['skips', 'picks', 'cands', 'rerollsLeft', 'decision', 'status', 'updatedAt'])
+        && isMember()
+        && mealGoing(resource.data)
+        && mealLive(resource.data)
+        && skippedOne(request.resource.data, resource.data)
+        && request.resource.data.rerollsLeft == resource.data.rerolls
+        && request.resource.data.decision == null
+        && request.resource.data.status == 'open'
+        && request.resource.data.updatedAt == request.time;
+
+      // 被揪的人：回覆要去或不去，這一餐結束前都可以改
+      allow update: if onlyKeys(['answers', 'going', 'updatedAt'])
+        && isMember()
+        && request.auth.uid in resource.data.party
+        && request.auth.uid != resource.data.host
+        && mealLive(resource.data)
+        && answered(request.resource.data, resource.data)
+        && request.resource.data.updatedAt == request.time;
+
+      // 發起人：取消
+      allow update: if onlyKeys(['status', 'updatedAt'])
+        && isMember()
+        && resource.data.host == request.auth.uid
+        && resource.data.status in ['open', 'decided']
+        && request.resource.data.status == 'cancelled'
+        && request.resource.data.updatedAt == request.time;
+
+      // 發起人：再揪幾個人（只能加、不能踢）
+      allow update: if onlyKeys(['party', 'updatedAt'])
+        && isMember()
+        && resource.data.host == request.auth.uid
+        && mealLive(resource.data)
+        && request.resource.data.party.hasAll(resource.data.party)
+        && request.resource.data.party.size() <= 50
+        && request.resource.data.updatedAt == request.time;
+
+      // 發起人：改篩選（起駕前）
+      allow update: if onlyKeys(['filters', 'updatedAt'])
+        && isMember()
+        && resource.data.host == request.auth.uid
+        && mealLive(resource.data)
+        && resource.data.status == 'open'
+        && validFilters(request.resource.data.filters)
+        && request.resource.data.updatedAt == request.time;
+
       allow delete: if false;
     }
   }

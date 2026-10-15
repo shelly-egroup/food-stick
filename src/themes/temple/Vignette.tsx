@@ -309,6 +309,40 @@ function BlankBanners() {
   );
 }
 
+function HoveringStamp() {
+  return (
+    <>
+      <ellipse cx="100" cy="119" rx="58" ry="4" fill={INK} opacity="0.12" />
+      <path
+        d="M52 112 l8 -26 h80 l8 26 Z"
+        fill="var(--paper-hi)"
+        stroke={INK}
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+      <rect
+        x="78"
+        y="92"
+        width="44"
+        height="16"
+        fill="none"
+        stroke="var(--vermilion)"
+        strokeWidth="1.4"
+        strokeDasharray="4 3"
+      />
+      <g className="vg-bob">
+        <rect x="88" y="22" width="24" height="12" rx="3" fill="var(--jade)" stroke={INK} strokeWidth="1.4" />
+        <rect x="92" y="34" width="16" height="22" fill="var(--wood)" stroke={INK} strokeWidth="1.4" />
+        <rect x="84" y="56" width="32" height="12" rx="2" fill="var(--vermilion)" stroke={INK} strokeWidth="1.5" />
+      </g>
+      <g className="vg-zz" fill="var(--vermilion)">
+        <path d="M150 50 c0 -6 8 -6 8 0 c0 -6 8 -6 8 0 c0 6 -8 10 -8 12 c0 -2 -8 -6 -8 -12 Z" />
+        <path d="M36 62 c0 -4 6 -4 6 0 c0 -4 6 -4 6 0 c0 4 -6 7 -6 9 c0 -2 -6 -5 -6 -9 Z" />
+      </g>
+    </>
+  );
+}
+
 function EmptyTray() {
   return (
     <>
@@ -373,40 +407,6 @@ function UnsentCards() {
   );
 }
 
-function HoveringStamp() {
-  return (
-    <>
-      <ellipse cx="100" cy="119" rx="58" ry="4" fill={INK} opacity="0.12" />
-      <path
-        d="M52 112 l8 -26 h80 l8 26 Z"
-        fill="var(--paper-hi)"
-        stroke={INK}
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-      />
-      <rect
-        x="78"
-        y="92"
-        width="44"
-        height="16"
-        fill="none"
-        stroke="var(--vermilion)"
-        strokeWidth="1.4"
-        strokeDasharray="4 3"
-      />
-      <g className="vg-bob">
-        <rect x="88" y="22" width="24" height="12" rx="3" fill="var(--jade)" stroke={INK} strokeWidth="1.4" />
-        <rect x="92" y="34" width="16" height="22" fill="var(--wood)" stroke={INK} strokeWidth="1.4" />
-        <rect x="84" y="56" width="32" height="12" rx="2" fill="var(--vermilion)" stroke={INK} strokeWidth="1.5" />
-      </g>
-      <g className="vg-zz" fill="var(--vermilion)">
-        <path d="M150 50 c0 -6 8 -6 8 0 c0 -6 8 -6 8 0 c0 6 -8 10 -8 12 c0 -2 -8 -6 -8 -12 Z" />
-        <path d="M36 62 c0 -4 6 -4 6 0 c0 -4 6 -4 6 0 c0 4 -6 7 -6 9 c0 -2 -6 -5 -6 -9 Z" />
-      </g>
-    </>
-  );
-}
-
 function ColdCenser() {
   return (
     <>
@@ -438,6 +438,75 @@ function ColdCenser() {
   );
 }
 
+/** 歷史還是空的：桌上攤開一本線裝食籤簿，左頁的日期章還空著，毛筆在硯台邊等著落筆，廟貓探頭來看 */
+function OpenLedger() {
+  return (
+    <>
+      <ellipse cx="100" cy="119" rx="84" ry="4" fill={INK} opacity="0.12" />
+      {/* 朱紅封面墊在下面 */}
+      <path
+        d="M20 100 L26 32 Q63 24 100 32 Q137 24 174 32 L180 100 Q137 92 100 100 Q63 92 20 100 Z"
+        fill="var(--vermilion)"
+        stroke={INK}
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+      />
+      {/* 兩頁 */}
+      <path
+        d="M27 96 L32 37 Q66 30 98 38 L98 96 Q64 89 27 96 Z"
+        fill="var(--paper-hi)"
+        stroke={INK}
+        strokeWidth="1.4"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M173 96 L168 37 Q134 30 102 38 L102 96 Q136 89 173 96 Z"
+        fill="var(--paper-hi)"
+        stroke={INK}
+        strokeWidth="1.4"
+        strokeLinejoin="round"
+      />
+      {/* 直行的朱絲欄 */}
+      <g stroke="var(--vermilion)" strokeWidth="0.8" opacity="0.4">
+        {[42, 52, 62].map((x) => (
+          <line key={x} x1={x} y1={41} x2={x - 1} y2={90} />
+        ))}
+        {[114, 124, 134, 144, 154].map((x) => (
+          <line key={x} x1={x} y1={40} x2={x + 1} y2={90} />
+        ))}
+      </g>
+      {/* 日期章的位置還空著 */}
+      <g className="vg-bob">
+        <rect
+          x="70"
+          y="44"
+          width="20"
+          height="20"
+          fill="none"
+          stroke="var(--vermilion)"
+          strokeWidth="1.4"
+          strokeDasharray="3 2.4"
+        />
+      </g>
+      {/* 中縫與穿線 */}
+      <path d="M100 36 V99" stroke={INK} strokeWidth="1.2" />
+      {/* 硯台 */}
+      <rect x="140" y="102" width="34" height="11" rx="3" fill={INK} />
+      <ellipse cx="157" cy="104.5" rx="12" ry="2.8" fill="#4a4038" />
+      {/* 毛筆：在右頁上方點一下、又抬起來 */}
+      <g className="vg-brush">
+        <g transform="rotate(-32 132 70)">
+          <rect x="129.5" y="32" width="5" height="40" rx="1" fill="var(--wood)" stroke={INK} strokeWidth="1.2" />
+          <path d="M129.5 72 h5 l-1 8 c-1 3 -2 3 -3 0 Z" fill={INK} />
+        </g>
+      </g>
+      <g transform="translate(34 110) scale(0.5)">
+        <Cat />
+      </g>
+    </>
+  );
+}
+
 export function Vignette({ kind, title, hint }: VignetteProps) {
   const scenes: Partial<Record<VignetteProps['kind'], [ReactNode, string, string]>> = {
     'crew-empty': [<Banquet key="a" />, copy.crew.emptyTitle, copy.crew.emptyHint],
@@ -445,9 +514,10 @@ export function Vignette({ kind, title, hint }: VignetteProps) {
     'shops-none': [<PuzzledCat key="a" />, '', ''],
     'ranks-empty': [<BlankBoard key="a" />, copy.ranks.emptyTitle, copy.ranks.emptyHint],
     'herald-empty': [<QuietGong key="a" />, copy.herald.emptyTitle, copy.herald.emptyHint],
-    'herald-inbox': [<EmptyTray key="a" />, copy.herald.none.inbox.title, copy.herald.none.inbox.hint],
-    'herald-sent': [<UnsentCards key="a" />, copy.herald.none.sent.title, copy.herald.none.sent.hint],
-    'herald-solo': [<ColdCenser key="a" />, copy.herald.none.solo.title, copy.herald.none.solo.hint],
+    'history-empty': [<OpenLedger key="a" />, copy.history.emptyTitle, copy.history.emptyHint],
+    'history-inbox': [<EmptyTray key="a" />, copy.history.none.inbox.title, copy.history.none.inbox.hint],
+    'history-sent': [<UnsentCards key="a" />, copy.history.none.sent.title, copy.history.none.sent.hint],
+    'history-solo': [<ColdCenser key="a" />, copy.history.none.solo.title, copy.history.none.solo.hint],
     'titles-empty': [<BlankBanners key="a" />, copy.ranks.titlesEmpty.title, copy.ranks.titlesEmpty.hint],
     'fans-empty': [<HoveringStamp key="a" />, copy.shops.fansEmpty.title, copy.shops.fansEmpty.hint],
   };

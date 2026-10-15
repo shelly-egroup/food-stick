@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { onAuthStateChanged, type User } from 'firebase/auth';
 import {
   Timestamp,
@@ -11,12 +11,15 @@ import {
   collectionGroup,
   doc,
   getDocs,
+  getDocsFromCache,
   limit,
   onSnapshot,
   orderBy,
   query,
+  runTransaction,
   serverTimestamp,
   setDoc,
+  startAfter,
   updateDoc,
   where,
   writeBatch,
@@ -26,7 +29,22 @@ import {
   type QueryDocumentSnapshot,
 } from 'firebase/firestore';
 import { fb } from './firebase';
-import type { Crew, DrawMode, DrawRecord, Member, Note, Restaurant } from './types';
+import {
+  MAX_PARTY,
+  MEAL_MS,
+  canDecide,
+  canDraw,
+  canReopen,
+  canSkip,
+  isLive,
+  toMeal,
+  type Answer,
+  type Meal,
+  type MealFilters,
+  type MealPick,
+  type Slot,
+} from './meal';
+import type { Crew, Member, Note, Restaurant } from './types';
 
 const toDate = (v: unknown): Date | null => (v instanceof Timestamp ? v.toDate() : null);
 const opts = { serverTimestamps: 'estimate' as const };
@@ -40,10 +58,6 @@ const asMember = (d: QueryDocumentSnapshot<DocumentData>): Member => {
     likes: x.likes ?? [],
     blocks: x.blocks ?? [],
     crews: Array.isArray(x.crews) ? x.crews : [],
-    today:
-      x.today && typeof x.today.day === 'string' && typeof x.today.left === 'number'
-        ? { day: x.today.day, left: x.today.left }
-        : null,
     role: x.role,
   };
 };
@@ -62,18 +76,7 @@ const asRestaurant = (d: QueryDocumentSnapshot<DocumentData>): Restaurant => {
     createdAt: toDate(x.createdAt),
   };
 };
-const asDraw = (d: QueryDocumentSnapshot<DocumentData>): DrawRecord => {
-  const x = d.data(opts);
-  return {
-    id: d.id,
-    rid: x.rid,
-    uid: x.uid,
-    mode: x.mode,
-    party: x.party ?? [],
-    createdAt: toDate(x.createdAt),
-    rerolled: !!x.rerolled,
-  };
-};
+const asMealDoc = (d: QueryDocumentSnapshot<DocumentData>): Meal => toMeal(d.id, d.data(opts), toDate);
 const asNote = (d: QueryDocumentSnapshot<DocumentData>): Note => {
   const x = d.data(opts);
   return { id: d.id, rid: d.ref.parent.parent?.id ?? '', uid: x.uid, text: x.text, createdAt: toDate(x.createdAt) };
@@ -101,6 +104,21 @@ export function useMembership(uid: string | undefined) {
   return uid && state.uid === uid ? state.member : undefined;
 }
 
+/**
+ * 監聽或查詢出錯後 Firestore 不會自己重試。這幾種是暫時的（索引還在建、網路斷了、伺服器忙），
+ * 過一下再試：2、4、8…秒，最久 30 秒一次；權限不足這類不會自己好的就不重試。
+ */
+const TRANSIENT = new Set([
+  'failed-precondition',
+  'unavailable',
+  'deadline-exceeded',
+  'resource-exhausted',
+  'internal',
+  'aborted',
+]);
+const isTransient = (err: unknown) => TRANSIENT.has((err as { code?: string } | null)?.code ?? '');
+const retryAfter = (tries: number) => Math.min(30_000, 2_000 * 2 ** tries);
+
 function useQuery<T>(make: (() => Query) | null, map: (d: QueryDocumentSnapshot<DocumentData>) => T, key: string) {
   const [state, setState] = useState<{ key: string; data: T[] | undefined; error: boolean }>({
     key,
@@ -109,12 +127,27 @@ function useQuery<T>(make: (() => Query) | null, map: (d: QueryDocumentSnapshot<
   });
   useEffect(() => {
     if (!make) return;
-    const q = make();
-    return onSnapshot(
-      q,
-      (snap) => setState({ key, data: snap.docs.map(map), error: false }),
-      () => setState((s) => ({ key, data: s.key === key ? s.data : undefined, error: true })),
-    );
+    let off = () => {};
+    let timer = 0;
+    let tries = 0;
+    const listen = () => {
+      off = onSnapshot(
+        make(),
+        (snap) => {
+          tries = 0;
+          setState({ key, data: snap.docs.map(map), error: false });
+        },
+        (err) => {
+          setState((s) => ({ key, data: s.key === key ? s.data : undefined, error: true }));
+          if (isTransient(err)) timer = window.setTimeout(listen, retryAfter(tries++));
+        },
+      );
+    };
+    listen();
+    return () => {
+      off();
+      clearTimeout(timer);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
   return state.key === key ? state : { key, data: undefined, error: false };
@@ -130,19 +163,90 @@ export const useRestaurants = (on: boolean) =>
     `restaurants:${on}`,
   );
 
-export const useDrawsSince = (since: Date, on: boolean) =>
-  useQuery(
-    on
-      ? () =>
-          query(
-            collection(fb().db, 'draws'),
-            where('createdAt', '>=', Timestamp.fromDate(since)),
-            orderBy('createdAt', 'desc'),
-          )
-      : null,
-    asDraw,
-    `draws:${since.toISOString()}:${on}`,
+/**
+ * 跟我有關、還沒結束的餐（我發起的、揪我的）：即時更新，揪團、抽籤、起駕大家同步看到。
+ * 只聽名單上有我、而且開始聽的時候還沒結束的幾張，平常只有 0 到 3 張，讀取很少。
+ */
+export function useLiveMeals(uid: string) {
+  const [since] = useState(() => Timestamp.now());
+  return useQuery(
+    () => query(collection(fb().db, 'meals'), where('party', 'array-contains', uid), where('endsAt', '>', since)),
+    asMealDoc,
+    `live:${uid}:${since.toMillis()}`,
   );
+}
+
+const SYNC_KEY = 'lunchstick:meals-sync';
+const DAY_MS = 86_400_000;
+
+/**
+ * 這一天以後起駕過的餐（排行榜、常一起吃的人、最近吃過的店都看這個），不用即時，省讀取：
+ * 每台裝置每天第一次完整讀一次；之後先拿瀏覽器裡 Firestore 的快取（不算讀取），
+ * 再只跟伺服器要上次同步之後有更新的那幾筆（起駕、去不了、取消都會更新 updatedAt）。
+ */
+export function useDecidedSince(date: string) {
+  const [state, setState] = useState<{ key: string; data: Meal[] | undefined; error: boolean }>({
+    key: date,
+    data: undefined,
+    error: false,
+  });
+  useEffect(() => {
+    let off = false;
+    const col = collection(fb().db, 'meals');
+    const base = query(col, where('status', '==', 'decided'), where('date', '>=', date));
+    const keep = (m: Meal) => m.status === 'decided' && !!m.decision && m.date >= date;
+    let timer = 0;
+    let tries = 0;
+    const run = async () => {
+      const started = Date.now();
+      let last = 0;
+      try {
+        const saved = JSON.parse(localStorage.getItem(SYNC_KEY) ?? 'null') as { since: string; at: number } | null;
+        // 同一個起始日、今天同步過，才只補差異；換月、隔天就完整讀一次（快取被清掉也不會漏）
+        if (
+          saved?.since === date &&
+          started - saved.at < DAY_MS &&
+          new Date(saved.at).getDate() === new Date().getDate()
+        )
+          last = saved.at;
+      } catch {
+        /* 讀不到就完整讀一次 */
+      }
+      let meals: Meal[];
+      if (last) {
+        const cached = await getDocsFromCache(base).then(
+          (s) => s.docs.map(asMealDoc),
+          () => null,
+        );
+        if (cached?.length) {
+          const byId = new Map(cached.map((m) => [m.id, m]));
+          // 往前多抓一分鐘，裝置時間有點誤差也不會漏
+          const delta = await getDocs(query(col, where('updatedAt', '>', Timestamp.fromMillis(last - 60_000))));
+          delta.docs.map(asMealDoc).forEach((m) => (keep(m) ? byId.set(m.id, m) : byId.delete(m.id)));
+          meals = [...byId.values()];
+        } else meals = (await getDocs(base)).docs.map(asMealDoc);
+      } else meals = (await getDocs(base)).docs.map(asMealDoc);
+      try {
+        localStorage.setItem(SYNC_KEY, JSON.stringify({ since: date, at: started }));
+      } catch {
+        /* 存不了下次就完整讀一次 */
+      }
+      if (!off) setState({ key: date, data: meals, error: false });
+    };
+    const attempt = () =>
+      run().catch((err) => {
+        if (off) return;
+        setState({ key: date, data: undefined, error: true });
+        if (isTransient(err)) timer = window.setTimeout(attempt, retryAfter(tries++));
+      });
+    void attempt();
+    return () => {
+      off = true;
+      clearTimeout(timer);
+    };
+  }, [date]);
+  return state.key === date ? state : { key: date, data: undefined, error: false };
+}
 
 export const useLatestNotes = (on: boolean) =>
   useQuery(
@@ -150,187 +254,6 @@ export const useLatestNotes = (on: boolean) =>
     asNote,
     `latest:${on}`,
   );
-
-/* ---------- 揪團（即時） ---------- */
-
-export type Answer = 'go' | 'pass';
-/**
- * 一次揪團走到哪：gathering 發出組隊邀請、等大家回覆要不要加入；drawn 發起人抽到了一家；
- * go 出發了；closed 收回邀請
- */
-export type OutingStatus = 'gathering' | 'drawn' | 'go' | 'closed';
-
-/** 一次揪團：揪了誰、誰要加入、抽到哪一家（籤詩種子，大家看到同一支籤）、抽到之後要不要去 */
-export interface Outing {
-  id: string;
-  host: string;
-  party: string[];
-  /** 組隊邀請的回覆：加入（go）、這次不了（pass）；發起人一開始就是 go */
-  answers: Record<string, Answer>;
-  /** 抽到之後要不要大家再回覆要不要去（發邀請時決定，預設不用） */
-  confirm: boolean;
-  /** 還沒抽是空字串 */
-  rid: string;
-  seed: number;
-  variant: string;
-  /** 抽到之後的回覆（confirm 才會用到） */
-  replies: Record<string, Answer>;
-  /** 誰抽的（加入的人都可以抽）；還沒抽是空字串 */
-  by: string;
-  /** 全隊共用、還能重抽幾次 */
-  rerolls: number;
-  /** AI 寫的籤詩與解籤（大家看到同一首）；沒有就用網站原本的籤詩 */
-  lines: string[];
-  verdict: string;
-  status: OutingStatus;
-  createdAt: Date | null;
-  updatedAt: Date | null;
-}
-
-const STATUSES: OutingStatus[] = ['gathering', 'drawn', 'go', 'closed'];
-
-const asOuting = (d: QueryDocumentSnapshot<DocumentData>): Outing => {
-  const x = d.data(opts);
-  return {
-    id: d.id,
-    host: x.host,
-    party: x.party ?? [],
-    answers: x.answers ?? {},
-    confirm: x.confirm === true,
-    rid: x.rid ?? '',
-    seed: x.seed ?? 0,
-    variant: x.variant ?? '',
-    replies: x.replies ?? {},
-    by: x.by ?? '',
-    rerolls: typeof x.rerolls === 'number' ? x.rerolls : 0,
-    lines: Array.isArray(x.lines) ? x.lines : [],
-    verdict: x.verdict ?? '',
-    status: STATUSES.includes(x.status) ? x.status : 'closed',
-    createdAt: toDate(x.createdAt),
-    updatedAt: toDate(x.updatedAt),
-  };
-};
-
-const newestFirst = (a: Outing, b: Outing) =>
-  (b.createdAt?.getTime() ?? Infinity) - (a.createdAt?.getTime() ?? Infinity);
-
-/**
- * 跟我有關的揪團（我揪的、揪我的），since 之後建立的，即時更新。
- * 平常用「party 包含我＋建立時間」的複合索引；索引還沒建好時（例如還沒部署），
- * 改用只查 party 的寫法、在這裡篩時間與排序：一樣是即時的，只是多讀幾筆舊的。
- */
-export function useOutings(uid: string, since: Date) {
-  const key = `${uid}:${since.getTime()}`;
-  const [state, setState] = useState<{ key: string; data: Outing[] | undefined; error: boolean }>({
-    key,
-    data: undefined,
-    error: false,
-  });
-  useEffect(() => {
-    const col = collection(fb().db, 'outings');
-    const cut = since.getTime();
-    const fail = () => setState((s) => ({ key, data: s.key === key ? s.data : undefined, error: true }));
-    let off = onSnapshot(
-      query(
-        col,
-        where('party', 'array-contains', uid),
-        where('createdAt', '>=', Timestamp.fromDate(since)),
-        orderBy('createdAt', 'desc'),
-        limit(12),
-      ),
-      (snap) => setState({ key, data: snap.docs.map(asOuting), error: false }),
-      (err) => {
-        if (err.code !== 'failed-precondition') return fail();
-        off = onSnapshot(
-          query(col, where('party', 'array-contains', uid)),
-          (snap) =>
-            setState({
-              key,
-              data: snap.docs
-                .map(asOuting)
-                .filter((o) => (o.createdAt?.getTime() ?? Date.now()) >= cut)
-                .sort(newestFirst)
-                .slice(0, 12),
-              error: false,
-            }),
-          fail,
-        );
-      },
-    );
-    return () => off();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key]);
-  return state.key === key ? state : { key, data: undefined, error: false };
-}
-
-/** 每一輪（自己一天、或一團）可以重抽幾次 */
-export const REROLLS = 3;
-/** 揪團單留幾天：到期後由 Firestore 的 TTL 自動清掉（要在 Firestore 開啟 outings.expireAt 的 TTL） */
-const OUTING_DAYS = 7;
-
-type OutingPick = { rid: string; seed: number; variant: string; lines: string[]; verdict: string };
-
-/** 發出組隊邀請：被揪的人會即時收到，回覆要不要加入；confirm 是抽到之後要不要大家再回覆 */
-export async function startGathering(host: string, party: string[], confirm: boolean) {
-  const ref = await addDoc(collection(fb().db, 'outings'), {
-    host,
-    party: [...new Set([host, ...party])].slice(0, 50),
-    answers: { [host]: 'go' },
-    confirm,
-    rid: '',
-    seed: 0,
-    variant: '',
-    replies: {},
-    by: '',
-    rerolls: REROLLS,
-    lines: [],
-    verdict: '',
-    status: 'gathering',
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-    expireAt: Timestamp.fromMillis(Date.now() + OUTING_DAYS * 86_400_000),
-  });
-  return ref.id;
-}
-
-/**
- * 團裡加入的人（含發起人）抽一支：大家即時看到同一支籤（同一首籤詩）。
- * 第一次抽不扣，之後每抽一次扣全隊共用的一次重抽；要回覆的話大家重新回覆。
- */
-export const drawOuting = (id: string, uid: string, rerolls: number, pick: OutingPick) =>
-  updateDoc(doc(fb().db, 'outings', id), {
-    ...pick,
-    by: uid,
-    rerolls,
-    replies: { [uid]: 'go' },
-    status: 'drawn',
-    updatedAt: serverTimestamp(),
-  });
-
-/** 加入的人決定出發（go）；發起人可以收回邀請（closed） */
-export const endOuting = (id: string, status: 'go' | 'closed') =>
-  updateDoc(doc(fb().db, 'outings', id), { status, updatedAt: serverTimestamp() });
-
-/** 被揪的人回覆組隊邀請：加入（go）或這次不了（pass） */
-export const answerOuting = (id: string, uid: string, answer: Answer) =>
-  updateDoc(doc(fb().db, 'outings', id), { [`answers.${uid}`]: answer });
-
-/** 抽到之後回覆要不要去（發起人有要求才需要） */
-/**
- * 在不在這一團：發起人、說要加入的人。
- * 發起人沒開「要大家回覆」時，被揪的人預設就加入，不用回覆（直接能抽、出發；不想去就按「這次不了」）
- */
-export const inTeam = (o: Outing, uid: string) =>
-  o.host === uid ||
-  o.answers[uid] === 'go' ||
-  (!o.confirm && !o.answers[uid] && (o.status === 'gathering' || o.status === 'drawn'));
-
-/** 幫大家抽、出發之前：還沒回邀請的人先記成加入（權限上要加入的人才能做這些事） */
-export const ensureJoined = (o: Outing, uid: string) =>
-  o.host === uid || o.answers[uid] === 'go' ? Promise.resolve() : answerOuting(o.id, uid, 'go');
-
-export const replyOuting = (id: string, uid: string, answer: Answer) =>
-  updateDoc(doc(fb().db, 'outings', id), { [`replies.${uid}`]: answer });
 
 export const useNotes = (rid: string | null) =>
   useQuery(
@@ -373,10 +296,6 @@ export const renameMe = (uid: string, name: string) =>
   updateDoc(doc(fb().db, 'members', uid), { name: name.trim().slice(0, 40) });
 
 /** 存自己的揪團名單（進香團／冒險小隊），最多 8 個 */
-/** 自己抽的額度寫回資料庫：今天是哪一天、還能重抽幾次 */
-export const saveToday = (uid: string, today: { day: string; left: number }) =>
-  updateDoc(doc(fb().db, 'members', uid), { today });
-
 export const saveCrews = (uid: string, crews: Crew[]) =>
   updateDoc(doc(fb().db, 'members', uid), {
     crews: crews.slice(0, 8).map((c) => ({ name: c.name.trim().slice(0, 20), ids: c.ids.slice(0, 50) })),
@@ -425,16 +344,289 @@ export const addNote = (uid: string, rid: string, text: string) =>
 
 export const deleteNote = (rid: string, nid: string) => deleteDoc(doc(fb().db, 'restaurants', rid, 'comments', nid));
 
-export async function recordDraw(uid: string, rid: string, mode: DrawMode, party: string[]) {
-  const ref = await addDoc(collection(fb().db, 'draws'), {
-    rid,
-    uid,
-    mode,
-    party: party.slice(0, 100),
-    createdAt: serverTimestamp(),
-    rerolled: false,
-  });
-  return ref.id;
+/* ---------- 餐單 ---------- */
+
+/** 抽到的一支要寫進餐單的內容（誰抽的、什麼時候由這裡補上） */
+export type PickInput = Omit<MealPick, 'by' | 'at'>;
+
+/** 為什麼沒寫成：有人先抽了（或先起駕了）、這一餐已經結束、這一餐不能再開、單子不見了 */
+export class MealError extends Error {
+  constructor(public reason: 'raced' | 'closed' | 'exists' | 'missing') {
+    super(reason);
+  }
 }
 
-export const markRerolled = (did: string) => updateDoc(doc(fb().db, 'draws', did), { rerolled: true });
+const mealRef = (id: string) => doc(fb().db, 'meals', id);
+const pickDoc = (p: PickInput, uid: string) => ({
+  rid: p.rid,
+  name: p.name.slice(0, 40),
+  by: uid,
+  // 陣列裡不能放伺服器時間，用這台裝置的時間（規則只要求跟伺服器差不到十分鐘）
+  at: Timestamp.now(),
+  seed: Math.trunc(p.seed),
+  variant: p.variant.slice(0, 16),
+  theme: p.theme,
+  lines: p.lines.length === 4 ? [...p.lines] : [],
+  verdict: p.lines.length === 4 ? p.verdict.slice(0, 60) : '',
+});
+const endsAt = () => Timestamp.fromMillis(Date.now() + MEAL_MS);
+const raw = (x: DocumentData, key: string): unknown[] => (Array.isArray(x[key]) ? x[key] : []);
+
+/**
+ * 開一餐（或把取消了、過了時間還沒起駕的那張重新開張）。
+ * 新開的可以順便帶第一支；重新開張的回傳 reopened，第一支另外用 drawMeal 抽（次數接續原本的）。
+ */
+export async function openMeal(input: {
+  id: string;
+  host: string;
+  date: string;
+  slot: Slot;
+  party: string[];
+  rerolls: number;
+  filters: MealFilters;
+  first?: PickInput;
+}): Promise<'created' | 'reopened'> {
+  const { db } = fb();
+  const ref = mealRef(input.id);
+  const party = [...new Set([input.host, ...input.party])].slice(0, MAX_PARTY);
+  return runTransaction(db, async (tx) => {
+    const snap = await tx.get(ref);
+    if (snap.exists()) {
+      const m = toMeal(snap.id, snap.data(), toDate);
+      if (!canReopen(m, Date.now())) throw new MealError('exists');
+      tx.update(ref, {
+        party,
+        answers: {},
+        going: [input.host],
+        filters: input.filters,
+        status: 'open',
+        decision: null,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        endsAt: endsAt(),
+      });
+      return 'reopened' as const;
+    }
+    const first = input.first ? [pickDoc(input.first, input.host)] : [];
+    tx.set(ref, {
+      v: 1,
+      date: input.date,
+      slot: input.slot,
+      host: input.host,
+      party,
+      answers: {},
+      going: [input.host],
+      rerolls: input.rerolls,
+      rerollsLeft: input.rerolls,
+      filters: input.filters,
+      picks: first,
+      cands: first.map((p) => p.rid),
+      skips: [],
+      decision: null,
+      status: 'open',
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+      endsAt: endsAt(),
+    });
+    return 'created' as const;
+  });
+}
+
+/**
+ * 抽一支（第一支不扣，之後每支扣一次）。expect 是抽之前看到的支數：
+ * 有人在這段時間先抽了，就不寫，丟出 raced（畫面改翻開別人抽的那一支）。
+ */
+export async function drawMeal(id: string, uid: string, expect: number, pick: PickInput) {
+  const { db } = fb();
+  const ref = mealRef(id);
+  await runTransaction(db, async (tx) => {
+    const snap = await tx.get(ref);
+    if (!snap.exists()) throw new MealError('missing');
+    const x = snap.data();
+    const m = toMeal(snap.id, x, toDate);
+    if (m.picks.length !== expect) throw new MealError('raced');
+    if (!canDraw(m, uid, Date.now())) throw new MealError('closed');
+    tx.update(ref, {
+      picks: [...raw(x, 'picks'), pickDoc(pick, uid)],
+      cands: [...m.cands.filter((r) => r !== pick.rid), pick.rid],
+      rerollsLeft: expect === 0 ? m.rerollsLeft : m.rerollsLeft - 1,
+      updatedAt: serverTimestamp(),
+    });
+  });
+}
+
+/** 起駕：從候選選一家（就是定案），大家同時收到 */
+export async function decideMeal(id: string, uid: string, rid: string) {
+  const { db } = fb();
+  const ref = mealRef(id);
+  await runTransaction(db, async (tx) => {
+    const snap = await tx.get(ref);
+    if (!snap.exists()) throw new MealError('missing');
+    const m = toMeal(snap.id, snap.data(), toDate);
+    if (m.status === 'decided') throw new MealError('raced');
+    if (!canDecide(m, uid, Date.now()) || !m.cands.includes(rid)) throw new MealError('closed');
+    tx.update(ref, {
+      decision: { rid, by: uid, at: serverTimestamp() },
+      status: 'decided',
+      updatedAt: serverTimestamp(),
+    });
+  });
+}
+
+/**
+ * 這家去不了：從候選拿掉、補抽一家（沒有店可以補就不補），重抽次數回到原本的數字；
+ * 已經起駕的話回到還在抽的階段。
+ */
+export async function skipMeal(id: string, uid: string, rid: string, next: PickInput | null) {
+  const { db } = fb();
+  const ref = mealRef(id);
+  await runTransaction(db, async (tx) => {
+    const snap = await tx.get(ref);
+    if (!snap.exists()) throw new MealError('missing');
+    const x = snap.data();
+    const m = toMeal(snap.id, x, toDate);
+    if (!m.cands.includes(rid)) throw new MealError('raced');
+    if (!canSkip(m, uid, Date.now())) throw new MealError('closed');
+    const rest = m.cands.filter((r) => r !== rid && r !== next?.rid);
+    tx.update(ref, {
+      skips: [...raw(x, 'skips'), { rid, by: uid, at: Timestamp.now() }],
+      picks: next ? [...raw(x, 'picks'), pickDoc(next, uid)] : raw(x, 'picks'),
+      cands: next ? [...rest, next.rid] : rest,
+      rerollsLeft: m.rerolls,
+      decision: null,
+      status: 'open',
+      updatedAt: serverTimestamp(),
+    });
+  });
+}
+
+/** 被揪的人回覆：要去（in）或不去（out）；這一餐結束前都可以改 */
+export async function answerMeal(id: string, uid: string, answer: Answer) {
+  const { db } = fb();
+  const ref = mealRef(id);
+  await runTransaction(db, async (tx) => {
+    const snap = await tx.get(ref);
+    if (!snap.exists()) throw new MealError('missing');
+    const m = toMeal(snap.id, snap.data(), toDate);
+    if (!isLive(m, Date.now()) || !m.party.includes(uid) || uid === m.host) throw new MealError('closed');
+    const others = m.going.filter((u) => u !== uid);
+    tx.update(ref, {
+      [`answers.${uid}`]: answer,
+      going: answer === 'in' ? [...others, uid] : others,
+      updatedAt: serverTimestamp(),
+    });
+  });
+}
+
+/** 發起人：取消這一餐 */
+export const cancelMeal = (id: string) => updateDoc(mealRef(id), { status: 'cancelled', updatedAt: serverTimestamp() });
+
+/** 發起人：再揪幾個人（自己吃的單揪了人就變成揪團） */
+export const inviteMeal = (id: string, ids: string[]) =>
+  updateDoc(mealRef(id), { party: arrayUnion(...ids), updatedAt: serverTimestamp() });
+
+/** 發起人：改這一餐的篩選（大家抽的時候都照這組） */
+export const setMealFilters = (id: string, filters: MealFilters) =>
+  updateDoc(mealRef(id), { filters, updatedAt: serverTimestamp() });
+
+/** 歷史：我有去的每一餐，最新的在前面，一次讀一頁 */
+export function useMealHistory(uid: string, size = 12) {
+  const key = `${uid}:${size}`;
+  const [state, setState] = useState<{
+    key: string;
+    meals: Meal[];
+    done: boolean;
+    error: boolean;
+    loading: boolean;
+  } | null>(null);
+  const cursor = useRef<QueryDocumentSnapshot<DocumentData> | null>(null);
+
+  const page = useCallback(
+    (after: QueryDocumentSnapshot<DocumentData> | null) =>
+      getDocs(
+        query(
+          collection(fb().db, 'meals'),
+          where('going', 'array-contains', uid),
+          orderBy('createdAt', 'desc'),
+          ...(after ? [startAfter(after)] : []),
+          limit(size),
+        ),
+      ),
+    [uid, size],
+  );
+
+  useEffect(() => {
+    let off = false;
+    let timer = 0;
+    let tries = 0;
+    const load = () =>
+      page(null)
+        .then((snap) => {
+          if (off) return;
+          cursor.current = snap.docs.at(-1) ?? null;
+          setState({
+            key,
+            meals: snap.docs.map(asMealDoc),
+            done: snap.docs.length < size,
+            error: false,
+            loading: false,
+          });
+        })
+        .catch((err) => {
+          if (off) return;
+          setState({ key, meals: [], done: true, error: true, loading: false });
+          // 索引還在建、網路斷了：過一下再讀一次
+          if (isTransient(err)) timer = window.setTimeout(load, retryAfter(tries++));
+        });
+    void load();
+    return () => {
+      off = true;
+      clearTimeout(timer);
+    };
+  }, [page, key, size]);
+
+  const mine = state?.key === key ? state : null;
+  const more = () => {
+    if (!mine || mine.done || mine.loading) return;
+    setState({ ...mine, loading: true });
+    page(cursor.current)
+      .then((snap) => {
+        cursor.current = snap.docs.at(-1) ?? cursor.current;
+        setState((s) =>
+          s && s.key === key
+            ? { ...s, meals: [...s.meals, ...snap.docs.map(asMealDoc)], done: snap.docs.length < size, loading: false }
+            : s,
+        );
+      })
+      .catch(() => setState((s) => (s ? { ...s, loading: false, error: true } : s)));
+  };
+  return {
+    meals: mine?.meals,
+    done: mine?.done ?? false,
+    error: mine?.error ?? false,
+    loading: !mine || mine.loading,
+    more,
+  };
+}
+
+/** 查過的「上次去」記在記憶體裡：同一家這次開網站只查一次 */
+const visits = new Map<string, Meal | null>();
+
+/** 我上一次去這家是哪一餐（店家卡用）；沒去過是 null */
+export async function lastVisit(uid: string, rid: string): Promise<Meal | null> {
+  const key = `${uid}:${rid}`;
+  if (visits.has(key)) return visits.get(key)!;
+  const snap = await getDocs(
+    query(
+      collection(fb().db, 'meals'),
+      where('going', 'array-contains', uid),
+      where('decision.rid', '==', rid),
+      orderBy('createdAt', 'desc'),
+      limit(1),
+    ),
+  );
+  const d = snap.docs[0];
+  const found = d ? asMealDoc(d) : null;
+  visits.set(key, found);
+  return found;
+}

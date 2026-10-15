@@ -119,7 +119,7 @@ try {
 
   // 愛店（自己新增的店一掛上去就是愛店）、不吃、紙條
   await page.locator('.wall .wall__item > *', { hasText: '測試拉麵店' }).click();
-  await page.waitForSelector('.shop__prefs');
+  await page.waitForSelector('.shop__acts');
   await page.waitForTimeout(600);
   await expect(
     page
@@ -128,7 +128,7 @@ try {
       .then((n) => n === 1),
     '自己新增的店已經蓋上愛店章',
   );
-  await page.locator('.shop__prefs button').nth(0).click();
+  await page.locator('.shop__acts .love-btn').click();
   await page.waitForTimeout(800);
   await expect(
     page
@@ -137,7 +137,7 @@ try {
       .then((n) => n === 0),
     '愛店章可以收回來',
   );
-  await page.locator('.shop__prefs button').nth(1).click();
+  await page.locator('.shop__block button').click();
   await page.waitForTimeout(800);
   await expect(
     page

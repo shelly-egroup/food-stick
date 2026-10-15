@@ -4,14 +4,13 @@ import { useEffect, useEffectEvent, useLayoutEffect, useMemo, useRef, useState, 
 import gsap from 'gsap';
 import { Charges } from './Charges';
 import { Icon } from './Icon';
-import { openMapSoon } from '@/lib/depart';
 import { LoveButton } from './LoveButton';
+import { MapLink } from './MapLink';
 import { Seal } from './Seal';
 import { ShareSheet } from './ShareSheet';
 import { useToast } from './Toast';
 import { paper, stamp } from '@/lib/sound';
 import { reducedMotion } from '@/lib/motion';
-import { REROLLS } from '@/lib/store';
 import { makeShareImage } from '@/lib/shareImage';
 import type { Reading, Theme } from '@/themes';
 import { categoryOf, priceOf, walkOf, type Restaurant } from '@/lib/types';
@@ -23,19 +22,30 @@ export interface OracleProps {
   reading: Reading;
   party: number;
   liked: boolean;
+  /** 這一餐還能重抽幾次、總共幾次 */
   rerollsLeft: number;
+  rerolls: number;
+  /** 現在能不能再抽、能不能起駕、能不能說這家去不了 */
+  canReroll: boolean;
+  canDecide: boolean;
+  canSkip: boolean;
+  /** 這一支就是起駕（定案）的那一支 */
+  decided?: boolean;
   /** 這張籤卡是重抽來的：籤額那一排一出現就播用掉的那一下 */
   spent?: boolean;
   busy: boolean;
   leaving: boolean;
   onReroll: () => void;
   onAccept: () => void;
+  onSkip: () => void;
   onToggleLike: () => void;
   onClose: () => void;
   onClosed: () => void;
+  /** 「看供桌上的籤」：按了彈出這一餐抽過的籤 */
+  candidates?: ReactNode;
   /** 揪團時：一行小小的消息（已經通知幾個人，或大家即時的回覆），不擋住籤卡 */
   crew?: ReactNode;
-  /** 這一團已經有結果（出發了、收回了）：不能再重抽，改顯示這句話 */
+  /** 這一餐已經結束、被收回：不能再動，改顯示這句話 */
   note?: string;
 }
 
@@ -64,6 +74,8 @@ export function Oracle(p: OracleProps) {
   const { card, copy } = theme;
   const chars = [...r.name];
   const clip = useMemo(() => deckle(f.number * 31 + 7), [f.number]);
+  // 這家去不了：按一次問「真的去不了？」，再按一次才算
+  const [asking, setAsking] = useState(false);
 
   // 展開
   useLayoutEffect(() => {
@@ -131,15 +143,17 @@ export function Oracle(p: OracleProps) {
         { opacity: 0, y: 14 },
         { opacity: 1, y: 0, duration: 0.35, stagger: 0.06, ease: 'back.out(1.6)' },
         1.55,
-      )
-      .fromTo(
+      );
+    // 起駕的那一支：定案章落下、店名慢慢收攏（還沒起駕的籤卡沒有這兩樣，不要叫 GSAP 白找）
+    if (el.querySelector('.oracle__final'))
+      tl.fromTo(
         q('.oracle__final'),
         { opacity: 0, scale: 2.6, rotate: -36 },
         { opacity: 1, scale: 1, rotate: -8, duration: 0.32, ease: 'back.out(2.4)' },
         1.85,
-      )
-      .add(() => el.querySelector('.oracle__final') && stamp(), 1.98)
-      .fromTo(
+      ).add(() => stamp(), 1.98);
+    if (el.querySelector('.oracle__final-words b'))
+      tl.fromTo(
         q('.oracle__final-words b'),
         { opacity: 0, y: 6, letterSpacing: '0.5em' },
         { opacity: 1, y: 0, letterSpacing: '0.16em', duration: 0.5, ease: 'power3.out' },
@@ -320,55 +334,52 @@ export function Oracle(p: OracleProps) {
         </div>
 
         <div className="oracle__actions">
-          {r.mapUrl ? (
-            <a
-              className="btn btn--zhu btn--lg oracle__go"
-              href={r.mapUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={(e) => {
-                // 先放出發的動畫，再開地圖
-                e.preventDefault();
-                theme.departFx(e.currentTarget);
-                openMapSoon(r.mapUrl);
-                p.onAccept();
-              }}
-            >
-              <theme.Glyph name="depart" size={30} />
-              {copy.go}
-            </a>
+          {p.decided ? (
+            // 已經起駕：籤卡上蓋著定案章；有地圖就帶我去
+            <p className="oracle__taunt oracle__taunt--final" aria-live="polite">
+              <Seal text={copy.finalSeal} size={48} rotate={-8} className="oracle__final" label={copy.finalSeal} />
+              <span className="oracle__final-words">
+                <span>{copy.meal.depart}</span>
+                <b>{r.name}</b>
+              </span>
+            </p>
           ) : (
-            <button
-              type="button"
-              className="btn btn--zhu btn--lg oracle__go"
-              onClick={(e) => {
-                theme.departFx(e.currentTarget);
-                p.onAccept();
-              }}
-            >
-              <theme.Glyph name="depart" size={30} />
-              {copy.go}
-            </button>
+            p.canDecide && (
+              <button
+                type="button"
+                className="btn btn--zhu btn--lg oracle__go"
+                onClick={(e) => {
+                  theme.departFx(e.currentTarget);
+                  p.onAccept();
+                }}
+              >
+                <theme.Glyph name="depart" size={30} />
+                {copy.go}
+              </button>
+            )
           )}
           {p.note ? (
             <p className="oracle__taunt" aria-live="polite">
               {p.note}
             </p>
-          ) : p.rerollsLeft === 0 ? (
-            // 次數用完：這一支就是定案，章跟著蓋章聲落下
-            <p className="oracle__taunt oracle__taunt--final" aria-live="polite">
-              <Seal text={copy.finalSeal} size={48} rotate={-8} className="oracle__final" label={copy.finalSeal} />
-              <span className="oracle__final-words">
-                <span>{copy.noMore}</span>
-                <b>{copy.finalObey}</b>
-              </span>
-            </p>
-          ) : (
+          ) : p.canReroll ? (
             <button type="button" className="btn btn--line" onClick={p.onReroll} aria-disabled={p.busy}>
               {copy.reroll}
-              <Charges left={p.rerollsLeft} total={REROLLS} spend={p.spent} label={`剩 ${p.rerollsLeft} 次`} />
+              <Charges left={p.rerollsLeft} total={p.rerolls} spend={p.spent} label={copy.meal.left(p.rerollsLeft)} />
             </button>
+          ) : (
+            !p.decided && (
+              // 次數用完：從候選挑一支起駕
+              <p className="oracle__taunt oracle__taunt--spent" aria-live="polite">
+                <theme.Glyph name="shake" size={26} />
+                <span className="oracle__final-words">
+                  <span>{copy.noMore}</span>
+                  <b>{copy.pickFromCands}</b>
+                </span>
+              </p>
+            )
           )}
+          {p.decided && <MapLink r={r} title={copy.meal.map} withName />}
           <div className="oracle__minor">
             <LoveButton liked={p.liked} onToggle={p.onToggleLike} />
             <button
@@ -382,10 +393,34 @@ export function Oracle(p: OracleProps) {
               {p.party > 1 ? '傳給大家' : '分享'}
             </button>
           </div>
-          {/* 揪團：一行小小的消息，不擋住籤卡 */}
-          {p.crew && (
-            <div className="oracle__crew" aria-live="polite">
-              {p.crew}
+          {(p.canSkip || p.crew || p.candidates) && (
+            <div className="oracle__extra">
+              {p.candidates}
+              {/* 揪團：一行小小的消息，不擋住籤卡 */}
+              {p.crew && (
+                <div className="oracle__crew" aria-live="polite">
+                  {p.crew}
+                </div>
+              )}
+              {p.canSkip && (
+                <button
+                  type="button"
+                  className={`oracle__skip${asking ? ' is-asking' : ''}`}
+                  onClick={() => {
+                    if (!asking) {
+                      setAsking(true);
+                      return;
+                    }
+                    setAsking(false);
+                    p.onSkip();
+                  }}
+                  onBlur={() => setAsking(false)}
+                  aria-disabled={p.busy}
+                >
+                  <theme.Glyph name="closed" size={22} />
+                  {asking ? copy.meal.cantGoAsk : copy.meal.cantGo}
+                </button>
+              )}
             </div>
           )}
         </div>

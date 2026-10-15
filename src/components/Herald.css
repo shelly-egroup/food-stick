@@ -164,22 +164,9 @@
   font-size: var(--t-sm);
   color: var(--ink-3);
 }
-.herald__sec {
+.herald__list {
   display: grid;
-  gap: 14px;
-}
-.herald__sec h3 {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 1rem;
-  letter-spacing: 0.2em;
-}
-.herald__sec h3::after {
-  content: '';
-  flex: 1;
-  height: 1.5px;
-  background: var(--rule-2);
+  gap: 18px;
 }
 
 /* ---------- 一張邀請：廟宇是紅帖、魔法是封著火漆的信 ---------- */
@@ -207,6 +194,8 @@
   align-items: center;
   gap: 10px;
   min-height: 60px;
+  /* 帖頭的色塊畫在自己身上：標題換行時色塊跟著長高；留出外框那一條線 */
+  margin: 1.5px 1.5px 0;
   padding: 10px 56px 10px 14px;
   color: var(--paper-hi);
 }
@@ -242,12 +231,7 @@
   line-height: 1.2;
 }
 .invite__lot {
-  margin-top: -6px;
-  font-family: var(--f-serif);
-  font-weight: 700;
-  font-size: var(--t-sm);
-  letter-spacing: 0.1em;
-  color: var(--accent);
+  margin-top: -2px;
 }
 /* 抽到的那首籤詩：四句排兩行，廟宇直書感的楷書、魔法是斜一點的咒語字 */
 .invite__verse {
@@ -296,22 +280,20 @@
 }
 
 /* 廟宇：紅帖。朱紅帖頭、金色雙框，右上角一顆「揪」字章；出發了整張換成金色帖頭 */
-[data-theme='temple'] .invite__paper {
-  background:
-    linear-gradient(var(--vermilion), var(--vermilion)) top / 100% 60px no-repeat,
-    var(--paper-hi);
+[data-theme='temple'] .invite__head {
+  background: var(--vermilion);
 }
-[data-theme='temple'] .invite.is-go .invite__paper {
-  background:
-    linear-gradient(var(--marigold), var(--marigold)) top / 100% 60px no-repeat,
-    var(--paper-hi);
+[data-theme='temple'] .invite.is-decided .invite__head {
+  background: var(--marigold);
 }
-[data-theme='temple'] .invite.is-go .invite__head {
+[data-theme='temple'] .invite.is-decided .invite__head {
   color: var(--ink);
 }
-[data-theme='temple'] .invite__paper::after {
+/* 金色雙框蓋在最上層（連帖頭一起框住） */
+[data-theme='temple'] .invite::after {
   content: '';
   position: absolute;
+  z-index: 1;
   inset: 5px;
   border: 1px solid var(--marigold);
   outline: 1px solid rgba(242, 185, 64, 0.5);
@@ -341,7 +323,7 @@
   color: var(--vermilion);
   rotate: -6deg;
 }
-[data-theme='temple'] .invite.is-go .invite__seal::before {
+[data-theme='temple'] .invite.is-decided .invite__seal::before {
   content: '行';
 }
 @keyframes invite-seal {
@@ -354,23 +336,25 @@
 /* 魔法：一封信。鈷藍信頭、星光，封口一顆火漆；出發了信頭亮成金色 */
 [data-theme='magic'] .invite__paper {
   border-radius: 14px;
-  background:
-    radial-gradient(circle at 12% 18%, rgba(242, 185, 64, 0.9) 0 1.4px, transparent 2px),
-    radial-gradient(circle at 58% 30%, rgba(255, 255, 255, 0.9) 0 1px, transparent 1.6px),
-    radial-gradient(circle at 82% 12%, rgba(255, 255, 255, 0.8) 0 1.2px, transparent 1.8px),
-    linear-gradient(135deg, #2c3e7a, #4a3d9e) top / 100% 60px no-repeat,
-    linear-gradient(160deg, #f8efdc, #efe2c4);
+  background: linear-gradient(160deg, #f8efdc, #efe2c4);
   box-shadow:
     5px 5px 0 var(--accent-tint),
     0 10px 28px rgba(91, 63, 140, 0.2);
 }
-[data-theme='magic'] .invite.is-go .invite__paper {
+[data-theme='magic'] .invite__head {
+  border-radius: 12.5px 12.5px 0 0;
   background:
-    radial-gradient(circle at 82% 12%, rgba(255, 255, 255, 0.9) 0 1.2px, transparent 1.8px),
-    linear-gradient(135deg, #f2b940, #e08f3a) top / 100% 60px no-repeat,
-    linear-gradient(160deg, #f8efdc, #efe2c4);
+    radial-gradient(circle at 12% 30%, rgba(242, 185, 64, 0.9) 0 1.4px, transparent 2px),
+    radial-gradient(circle at 58% 50%, rgba(255, 255, 255, 0.9) 0 1px, transparent 1.6px),
+    radial-gradient(circle at 82% 20%, rgba(255, 255, 255, 0.8) 0 1.2px, transparent 1.8px),
+    linear-gradient(135deg, #2c3e7a, #4a3d9e);
 }
-[data-theme='magic'] .invite.is-go .invite__head {
+[data-theme='magic'] .invite.is-decided .invite__head {
+  background:
+    radial-gradient(circle at 82% 20%, rgba(255, 255, 255, 0.9) 0 1.2px, transparent 1.8px),
+    linear-gradient(135deg, #f2b940, #e08f3a);
+}
+[data-theme='magic'] .invite.is-decided .invite__head {
   color: var(--ink);
 }
 [data-theme='magic'] .invite__seal {
@@ -407,157 +391,22 @@
   margin-left: 2px;
 }
 
-/* ---------- 三個分頁：收（別人揪我的）、發（我發出的）、獨（自己一個人抽的） ---------- */
-.herald__sec--inbox,
-.herald__tab--inbox {
-  --sec: var(--vermilion);
-}
-.herald__sec--sent,
-.herald__tab--sent {
-  --sec: #c98f1c;
-}
-.herald__sec--solo,
-.herald__tab--solo {
-  --sec: var(--jade);
-}
-[data-theme='magic'] .herald__sec--inbox,
-[data-theme='magic'] .herald__tab--inbox {
-  --sec: #4a3d9e;
-}
-[data-theme='magic'] .herald__sec--sent,
-[data-theme='magic'] .herald__tab--sent {
-  --sec: var(--cobalt);
-}
-[data-theme='magic'] .herald__sec--solo,
-[data-theme='magic'] .herald__tab--solo {
-  --sec: #1f7a70;
-}
-.herald__tabs {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-}
-.herald__tab {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  min-height: 58px;
-  padding: 6px 8px;
-  border: 1.5px solid var(--ink);
-  background: var(--paper-hi);
-  box-shadow: 3px 3px 0 var(--rule-2);
-  font-family: var(--f-serif);
-  font-weight: 700;
-  font-size: 0.98rem;
-  letter-spacing: 0.16em;
-  color: var(--ink-3);
-  cursor: pointer;
-  transition:
-    transform 0.25s var(--ease-spring),
-    box-shadow 0.25s var(--ease-out),
-    color 0.2s,
-    background 0.2s;
-}
-.herald__tab:active {
-  transform: translate(1px, 1px);
-}
-.herald__tab.is-on {
-  color: var(--sec);
-  background: color-mix(in srgb, var(--sec) 8%, var(--paper-hi));
-  box-shadow: 5px 5px 0 var(--sec);
-  transform: translate(-2px, -2px);
-}
-/* 沒選的那幾頁：章褪成灰的，選到的那一頁章才是紅（金、綠）的 */
-.herald__tab .herald__mark {
-  rotate: -6deg;
-  transition:
-    filter 0.25s,
-    rotate 0.3s var(--ease-spring);
-}
-.herald__tab:not(.is-on) .herald__mark {
-  filter: grayscale(1) opacity(0.45);
-  rotate: 0deg;
-}
-.herald__tab.is-on .herald__mark {
-  animation: herald-mark 0.4s var(--ease-spring) both;
-}
-@keyframes herald-mark {
-  from {
-    transform: scale(1.8) rotate(-20deg);
-  }
-}
-.herald__tab-count {
-  position: absolute;
-  top: -9px;
-  right: -9px;
-  display: grid;
-  place-items: center;
-  min-width: 22px;
-  height: 22px;
-  padding: 0 6px;
-  border: 1.5px solid var(--ink);
-  border-radius: 999px;
-  background: var(--sec);
-  color: var(--paper-hi);
-  font-family: var(--f-display);
-  font-size: 0.78rem;
-  letter-spacing: 0;
-}
-[data-theme='magic'] .herald__tab {
-  border-radius: 14px;
-}
-.herald__sec h3 {
-  color: var(--sec);
-}
-/* 換分頁時彈窗不要忽高忽低 */
-.herald__sec {
-  min-height: min(420px, 48dvh);
-  align-content: start;
-}
-@media (max-width: 380px) {
-  .herald__tabs {
-    gap: 8px;
-  }
-  .herald__tab {
-    gap: 4px;
-    letter-spacing: 0.06em;
-  }
-}
-
 /* 廟宇：我發出的紅帖蓋「發」、自己一個人求的是松綠帖頭蓋「獨」 */
 [data-theme='temple'] .invite--host .invite__seal::before {
   content: '發';
 }
-[data-theme='temple'] .invite--solo .invite__paper {
-  background:
-    linear-gradient(var(--jade), var(--jade)) top / 100% 60px no-repeat,
-    var(--paper-hi);
+[data-theme='temple'] .invite--solo .invite__head {
+  background: var(--jade);
 }
 [data-theme='temple'] .invite--solo .invite__seal::before {
   content: '獨';
 }
 /* 魔法：自己一個人施的法是一封夜綠色的信 */
-[data-theme='magic'] .invite--solo .invite__paper {
+[data-theme='magic'] .invite--solo .invite__head {
   background:
-    radial-gradient(circle at 18% 22%, rgba(255, 255, 255, 0.9) 0 1px, transparent 1.6px),
-    radial-gradient(circle at 76% 16%, rgba(242, 185, 64, 0.9) 0 1.2px, transparent 1.8px),
-    linear-gradient(135deg, #1f5f6a, #2e9c83) top / 100% 60px no-repeat,
-    linear-gradient(160deg, #f8efdc, #efe2c4);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .herald__mark {
-    animation: none;
-  }
-}
-.invite__solo-line {
-  margin-top: -4px;
-  font-family: var(--f-kai);
-  font-size: var(--t-md);
-  letter-spacing: 0.08em;
-  color: var(--sec, var(--ink-2));
+    radial-gradient(circle at 18% 30%, rgba(255, 255, 255, 0.9) 0 1px, transparent 1.6px),
+    radial-gradient(circle at 76% 22%, rgba(242, 185, 64, 0.9) 0 1.2px, transparent 1.8px),
+    linear-gradient(135deg, #1f5f6a, #2e9c83);
 }
 
 .invite__body {
@@ -648,4 +497,75 @@
 .postmark ~ .invite__lot,
 .postmark ~ .mates {
   padding-right: 70px;
+}
+
+/* 帖頭上方的小標：哪一餐、誰的帖 */
+.invite__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  width: fit-content;
+  padding: 1px 8px 1px 6px;
+  font-family: var(--f-serif);
+  font-weight: 700;
+  font-size: 0.7rem !important;
+  letter-spacing: 0.12em;
+  color: var(--ink);
+  background: var(--marigold);
+  border: 1.2px solid var(--ink);
+  border-radius: 999px;
+  opacity: 1 !important;
+}
+/* 還沒回的帖：帖子輕輕晃一下、封口那顆章一閃一閃，提醒你回 */
+.invite.is-wait {
+  animation:
+    rise-in 0.4s var(--ease-out) both,
+    invite-nudge 3.2s 1.2s ease-in-out infinite;
+}
+@keyframes invite-nudge {
+  0%,
+  86%,
+  100% {
+    rotate: 0deg;
+  }
+  90% {
+    rotate: -0.8deg;
+  }
+  95% {
+    rotate: 0.6deg;
+  }
+}
+/* 定案的那一支：店名前面一顆小小的定案章 */
+.invite__final {
+  display: inline-grid;
+  place-items: center;
+  margin-right: 8px;
+  padding: 2px 5px;
+  vertical-align: 0.25em;
+  font-family: var(--f-display);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  color: var(--paper-hi);
+  background: var(--vermilion);
+  border: 1.2px solid var(--ink);
+  rotate: -6deg;
+}
+[data-theme='magic'] .invite__final {
+  color: var(--ink);
+  background: var(--marigold);
+  border-radius: 999px;
+}
+/* 候選：一排小籤（小牌），點了回首頁翻開那一支 */
+/* 大家的回覆：數字章一排，下面頭像 */
+.invite__crew {
+  display: grid;
+  gap: 8px;
+}
+.invite__altar .tag__n {
+  margin-left: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .invite.is-wait {
+    animation: none;
+  }
 }

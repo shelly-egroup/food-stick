@@ -8,7 +8,7 @@ import { useUi } from '@/lib/uiContext';
 import { useTheme } from '@/themes';
 import { deleteRestaurant } from '@/lib/store';
 import { useToast } from '@/components/Toast';
-import { CategoryFilter, WalkFilter } from '@/components/CategoryFilter';
+import { CategoryFilter, FilterRow, ROW_ICONS, WalkFilter } from '@/components/CategoryFilter';
 import { type CategoryId, type Walk } from '@/lib/types';
 import { ShopSheet } from './ShopSheet';
 import { ShopForm } from './ShopForm';
@@ -80,7 +80,7 @@ export function Shops() {
             全公司一起維護的午餐地圖
             {ready && (
               <>
-                <span aria-hidden="true">・</span>共 <b>{restaurants.length}</b> 家
+                <i className="sub-sep" aria-hidden="true" />共 <b>{restaurants.length}</b> 家
               </>
             )}
           </p>
@@ -123,8 +123,12 @@ export function Shops() {
             {copy.shops.mine}
           </button>
         </div>
-        <CategoryFilter selected={cats} onToggle={toggleCat} />
-        <WalkFilter selected={walks} onToggle={toggleWalk} />
+        <FilterRow icon={ROW_ICONS.category} title="類型" hint="可多選">
+          <CategoryFilter selected={cats} onToggle={toggleCat} />
+        </FilterRow>
+        <FilterRow icon={ROW_ICONS.walk} title="步行" hint="從公司走過去">
+          <WalkFilter selected={walks} onToggle={toggleWalk} />
+        </FilterRow>
         {filtered && ready && (
           <div className="shops__status" role="status">
             <span className="shops__count" key={list.length}>

@@ -3,4 +3,4 @@ export { DEFAULT_THEME, THEME_IDS, type ThemeId } from './ids';
 export { THEMES } from './registry';
 export { ThemeProvider, useTheme } from './ThemeProvider';
 export { ThemeSwitch } from './ThemeSwitch';
-export type { PodiumEntry, Reading, ShareCardData, StageHandle, Theme, ThemeCopy } from './types';
+export type { DateStampProps, PodiumEntry, Reading, ShareCardData, StageHandle, Theme, ThemeCopy } from './types';
