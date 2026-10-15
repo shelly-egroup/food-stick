@@ -415,33 +415,98 @@
   padding: 18px;
   border: 1.5px dashed var(--ink);
 }
-.cold p {
-  font-family: var(--f-serif);
-  font-weight: 500;
-  color: var(--ink-2);
-}
-.cold ul {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin: 10px 0 0;
-  padding: 0;
-  list-style: none;
-}
-.cold li {
-  padding: 4px 12px;
-  background: var(--celadon);
-  border: 1.5px solid var(--ink);
-  font-family: var(--f-display);
-  font-weight: 900;
-  letter-spacing: 0.08em;
-}
 .cold h2::before {
   content: '❄';
   font-size: 0.9em;
   color: var(--cobalt);
 }
-/* 廟宇的冷宮：結了霜的冷色牆、細雪慢慢落，沒被抽中的菜牌也結了一層霜 */
+.cold__note {
+  margin-bottom: 4px;
+  font-family: var(--f-serif);
+  font-weight: 500;
+  font-size: var(--t-sm);
+  color: var(--ink-2);
+}
+.shelf {
+  position: relative;
+  padding: 20px 10px 0;
+}
+.shelf__row {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  align-items: end;
+  gap: 8px;
+  min-height: 184px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.shelf__row li {
+  display: flex;
+  justify-content: center;
+}
+.shelf__item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  width: 100%;
+  max-width: 58px;
+  padding: 14px 4px 8px;
+  border: 1.5px solid var(--ink);
+  border-bottom: 0;
+  color: var(--ink);
+  cursor: pointer;
+  transform-origin: 50% 100%;
+  rotate: calc((var(--i) - 2.5) * 0.7deg);
+  transition:
+    transform 0.4s var(--ease-spring),
+    rotate 0.4s var(--ease-spring),
+    filter 0.3s;
+}
+.shelf__name {
+  writing-mode: vertical-rl;
+  white-space: nowrap;
+  max-height: 100%;
+  overflow: hidden;
+  font-family: var(--f-display);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: 0.06em;
+}
+.shelf__cat {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+.shelf__item:hover,
+.shelf__item:focus-visible {
+  transform: translateY(-10px);
+  rotate: -3deg;
+}
+.shelf__item:active {
+  transform: translateY(-4px) scale(0.96);
+}
+.shelf__plank {
+  position: relative;
+  z-index: 2;
+  display: block;
+  height: 14px;
+  margin: 0 -10px;
+  border: 1.5px solid var(--ink);
+  background: linear-gradient(var(--wood), var(--wood-lo));
+  box-shadow: 0 6px 0 rgba(38, 33, 29, 0.15);
+}
+.shelf__motes {
+  display: none;
+}
+
+/* 廟宇：結霜的冷宮，菜牌在木架上排排站，頂上結著一排冰柱 */
 [data-theme='temple'] .cold {
   position: relative;
   overflow: hidden;
@@ -474,18 +539,192 @@
 [data-theme='temple'] .cold > * {
   position: relative;
 }
-[data-theme='temple'] .cold li {
-  background: #c9d9d6;
-  color: var(--ink-2);
+[data-theme='temple'] .shelf__item {
+  background:
+    linear-gradient(90deg, transparent 0 46%, rgba(38, 33, 29, 0.06) 46% 54%, transparent 54%),
+    linear-gradient(180deg, #ecd9b6, #d6b98a);
   box-shadow:
-    inset 0 4px 0 rgba(255, 255, 255, 0.9),
-    2px 2px 0 rgba(38, 33, 29, 0.15);
+    inset 0 7px 0 rgba(255, 255, 255, 0.85),
+    3px 0 0 rgba(38, 33, 29, 0.12);
+  color: #4a3a2c;
+}
+[data-theme='temple'] .shelf__item::before {
+  content: '';
+  position: absolute;
+  left: -1.5px;
+  right: -1.5px;
+  top: -1.5px;
+  height: 10px;
+  background: radial-gradient(circle at 5px 0, #fff 3.4px, transparent 3.9px) 0 0 / 10px 10px repeat-x;
+  filter: drop-shadow(0 1px 0 rgba(38, 33, 29, 0.25));
+}
+[data-theme='temple'] .shelf__cat {
+  padding: 1px 4px;
+  background: rgba(255, 255, 255, 0.6);
+  color: var(--ink-2);
+}
+[data-theme='temple'] .shelf__item:hover,
+[data-theme='temple'] .shelf__item:focus-visible {
+  filter: saturate(1.4) brightness(1.04);
+}
+
+/* 魔法：積灰塵的書架，書背排排站，角落結了蜘蛛網，灰塵在光裡飄 */
+[data-theme='magic'] .cold {
+  border: 1.5px solid var(--ink);
+  border-radius: 16px;
+  background: linear-gradient(160deg, #f8efdc, #efe2c4);
+}
+[data-theme='magic'] .shelf {
+  overflow: hidden;
+  margin-top: 12px;
+  padding: 22px 12px 0;
+  border: 1.5px solid var(--ink);
+  border-bottom: 0;
+  border-radius: 10px 10px 0 0;
+  background:
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.12) 0 1px, transparent 1px 22px),
+    linear-gradient(180deg, #4a3424, #2f2018);
+}
+[data-theme='magic'] .shelf::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 3;
+  width: 58px;
+  height: 58px;
+  background:
+    repeating-conic-gradient(from 90deg at 0 0, rgba(255, 255, 255, 0.4) 0 0.8deg, transparent 0.8deg 15deg),
+    repeating-radial-gradient(circle at 0 0, transparent 0 9px, rgba(255, 255, 255, 0.35) 9px 10px);
+  mask-image: radial-gradient(circle at 0 0, #000 40px, transparent 56px);
+  -webkit-mask-image: radial-gradient(circle at 0 0, #000 40px, transparent 56px);
+  pointer-events: none;
+}
+[data-theme='magic'] .shelf__motes {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: block;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle, rgba(255, 236, 190, 0.9) 0 1px, transparent 1.6px),
+    radial-gradient(circle, rgba(255, 236, 190, 0.55) 0 1.3px, transparent 2px),
+    radial-gradient(ellipse 60% 70% at 70% 0%, rgba(255, 220, 150, 0.18), transparent 70%);
+  background-size:
+    37px 41px,
+    59px 53px,
+    100% 100%;
+  animation: shelf-motes 16s linear infinite;
+}
+@keyframes shelf-motes {
+  to {
+    background-position:
+      40px -164px,
+      -60px -212px,
+      0 0;
+  }
+}
+[data-theme='magic'] .shelf__item {
+  --c: var(--cobalt);
+  border-radius: 4px 4px 0 0;
+  background:
+    linear-gradient(var(--marigold), var(--marigold)) 0 10px / 100% 2px no-repeat,
+    linear-gradient(var(--marigold), var(--marigold)) 0 calc(100% - 22px) / 100% 2px no-repeat,
+    linear-gradient(90deg, rgba(255, 255, 255, 0.18), transparent 35%, rgba(0, 0, 0, 0.2)),
+    var(--c);
+  color: #fdf6e6;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
+}
+[data-theme='magic'] .shelf__item::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 42%;
+  border-radius: 4px 4px 0 0;
+  background: linear-gradient(rgba(236, 226, 205, 0.78), rgba(236, 226, 205, 0));
+  pointer-events: none;
+  transition: opacity 0.4s;
+}
+[data-theme='magic'] .shelf__item:hover::after,
+[data-theme='magic'] .shelf__item:focus-visible::after {
+  opacity: 0;
+}
+[data-theme='magic'] .shelf__row li:nth-child(6n + 2) .shelf__item {
+  --c: var(--vermilion);
+}
+[data-theme='magic'] .shelf__row li:nth-child(6n + 3) .shelf__item {
+  --c: var(--jade);
+}
+[data-theme='magic'] .shelf__row li:nth-child(6n + 4) .shelf__item {
+  --c: #4a3d9e;
+}
+[data-theme='magic'] .shelf__row li:nth-child(6n + 5) .shelf__item {
+  --c: #8b5b36;
+}
+[data-theme='magic'] .shelf__row li:nth-child(6n + 6) .shelf__item {
+  --c: #1f7a70;
+}
+[data-theme='magic'] .shelf__cat {
+  color: #f2e2b0;
+  opacity: 0.9;
+}
+[data-theme='magic'] .shelf__plank {
+  margin: 0 -12px;
+  border-radius: 0 0 6px 6px;
+  background: linear-gradient(#a06a3f, #6e4527);
 }
 @media (prefers-reduced-motion: reduce) {
-  [data-theme='temple'] .cold::before {
+  [data-theme='temple'] .cold::before,
+  [data-theme='magic'] .shelf__motes {
     animation: none;
   }
 }
+
+/* 名次、前三名、紙條都能點開店家 */
+.ranklist li {
+  position: relative;
+  transition: background 0.2s;
+}
+.ranklist__open {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.ranklist__name {
+  transition:
+    transform 0.3s var(--ease-spring),
+    color 0.2s;
+}
+.ranklist li:hover {
+  background: var(--accent-tint);
+}
+.ranklist li:hover .ranklist__name {
+  transform: translateX(4px);
+  color: var(--accent);
+}
+.podium__open {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.podium__slot:hover .podium__name,
+.sky__star:hover .sky__name {
+  color: var(--accent);
+}
+.titles .vignette {
+  margin-top: -4px;
+}
+
 /* ---------- 最新紙條：廟宇是廟口的繪馬掛架，魔法是一面星空留言板（紙條本身的樣子在 components/NoteCard.css） ---------- */
 .rack {
   position: relative;
@@ -654,43 +893,6 @@
   background: var(--marigold);
   clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
   order: -1;
-}
-
-/* 塵封書架：沒被選中的店是一本本躺平、蒙上灰的書 */
-[data-theme='magic'] .cold {
-  border: 0;
-  padding: 0;
-}
-[data-theme='magic'] .cold h2::before {
-  content: '';
-  font-size: inherit;
-  background: #a6a1b8;
-}
-[data-theme='magic'] .cold ul {
-  gap: 10px;
-  padding: 14px 12px 0;
-  border-bottom: 9px solid var(--wood-lo);
-  box-shadow: 0 1.5px 0 var(--ink);
-}
-[data-theme='magic'] .cold li {
-  position: relative;
-  padding: 6px 16px 6px 22px;
-  border-radius: 3px 6px 6px 3px;
-  background: #8f8aa6;
-  color: #fbf8ff;
-  letter-spacing: 0.1em;
-  box-shadow:
-    inset 8px 0 0 rgba(0, 0, 0, 0.18),
-    inset 0 3px 0 rgba(255, 255, 255, 0.28);
-}
-[data-theme='magic'] .cold li::after {
-  content: '';
-  position: absolute;
-  left: 13px;
-  top: 4px;
-  bottom: 4px;
-  width: 0;
-  border-left: 1.5px solid rgba(255, 255, 255, 0.5);
 }
 
 @media (min-width: 900px) {

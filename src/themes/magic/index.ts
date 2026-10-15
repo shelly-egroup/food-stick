@@ -1,4 +1,4 @@
-import { owlHoot, sparkle, twinkle } from '@/lib/sound';
+import { flutter, owlHoot, sparkle, twinkle } from '@/lib/sound';
 import type { Theme } from '../types';
 import { copy } from './copy';
 import { read } from './reading';
@@ -33,6 +33,16 @@ export const magic: Theme = {
   heraldSound: () => {
     owlHoot(1.1);
     setTimeout(() => twinkle(5), 420);
+  },
+  // 沒有新消息：貓頭鷹拍拍翅膀、好奇地咕一聲；有新信就叫兩聲、亮一下
+  heraldTap: (news) => {
+    if (news) {
+      owlHoot(1.1);
+      setTimeout(() => twinkle(5), 420);
+      return;
+    }
+    flutter(3);
+    setTimeout(() => owlHoot(1.3), 180);
   },
   Emblem,
   LoveStamp,

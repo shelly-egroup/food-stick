@@ -254,3 +254,33 @@
     animation: none;
   }
 }
+
+/* 次數用完：定案章＋一句話 */
+.oracle__taunt--final {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  min-height: 64px;
+  border-style: solid;
+  border-color: var(--accent);
+  background: var(--paper-hi);
+}
+.oracle__final {
+  flex: none;
+}
+[data-theme='magic'] .oracle__taunt--final {
+  border-radius: 14px;
+}
+.oracle__final-words {
+  display: grid;
+  gap: 2px;
+  text-align: left;
+}
+.oracle__final-words b {
+  font-family: var(--f-display);
+  font-weight: 900;
+  font-size: var(--t-md);
+  letter-spacing: 0.16em;
+  color: var(--accent);
+}

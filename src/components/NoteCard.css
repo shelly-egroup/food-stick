@@ -362,3 +362,28 @@
     animation: none;
   }
 }
+
+.note.is-link {
+  cursor: pointer;
+}
+.note__shop--link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+}
+.note__shop--link i {
+  font-style: normal;
+  transition: transform 0.25s var(--ease-spring);
+}
+.note.is-link:hover .note__shop--link i {
+  transform: translateX(4px);
+}
+.note.is-link:hover .note__shop--link {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

@@ -6,6 +6,7 @@ import { Charges } from './Charges';
 import { Icon } from './Icon';
 import { openMapSoon } from '@/lib/depart';
 import { LoveButton } from './LoveButton';
+import { Seal } from './Seal';
 import { ShareSheet } from './ShareSheet';
 import { useToast } from './Toast';
 import { paper, stamp } from '@/lib/sound';
@@ -130,6 +131,19 @@ export function Oracle(p: OracleProps) {
         { opacity: 0, y: 14 },
         { opacity: 1, y: 0, duration: 0.35, stagger: 0.06, ease: 'back.out(1.6)' },
         1.55,
+      )
+      .fromTo(
+        q('.oracle__final'),
+        { opacity: 0, scale: 2.6, rotate: -36 },
+        { opacity: 1, scale: 1, rotate: -8, duration: 0.32, ease: 'back.out(2.4)' },
+        1.85,
+      )
+      .add(() => el.querySelector('.oracle__final') && stamp(), 1.98)
+      .fromTo(
+        q('.oracle__final-words b'),
+        { opacity: 0, y: 6, letterSpacing: '0.5em' },
+        { opacity: 1, y: 0, letterSpacing: '0.16em', duration: 0.5, ease: 'power3.out' },
+        2.1,
       );
     return () => void tl.kill();
     // 換一支籤就重新展開
@@ -336,9 +350,18 @@ export function Oracle(p: OracleProps) {
               {copy.go}
             </button>
           )}
-          {p.note || p.rerollsLeft === 0 ? (
+          {p.note ? (
             <p className="oracle__taunt" aria-live="polite">
-              {p.note || copy.noMore}
+              {p.note}
+            </p>
+          ) : p.rerollsLeft === 0 ? (
+            // 次數用完：這一支就是定案，章跟著蓋章聲落下
+            <p className="oracle__taunt oracle__taunt--final" aria-live="polite">
+              <Seal text={copy.finalSeal} size={48} rotate={-8} className="oracle__final" label={copy.finalSeal} />
+              <span className="oracle__final-words">
+                <span>{copy.noMore}</span>
+                <b>{copy.finalObey}</b>
+              </span>
             </p>
           ) : (
             <button type="button" className="btn btn--line" onClick={p.onReroll} aria-disabled={p.busy}>

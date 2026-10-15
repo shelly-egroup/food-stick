@@ -1,4 +1,4 @@
-import { chime, gong } from '@/lib/sound';
+import { chime, gong, gongTap } from '@/lib/sound';
 import type { Theme } from '../types';
 import { copy } from './copy';
 import { read } from './reading';
@@ -31,6 +31,7 @@ export const temple: Theme = {
   sound: chime,
   departFx,
   heraldSound: gong,
+  heraldTap: (news) => (news ? gong() : gongTap()),
   Emblem,
   LoveStamp,
   LoveSlot,

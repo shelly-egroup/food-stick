@@ -564,6 +564,15 @@ export function gong() {
   noiseHit(ac, t, 1200, 1.5, 0.12, 0.12);
 }
 
+/** 木槌輕碰一下銅鑼：短短的「鏘」，沒有長長的尾音（自己點報馬仔、沒有新消息時） */
+export function gongTap() {
+  const ac = audio();
+  if (!ac) return;
+  const t = ac.currentTime + 0.01;
+  noiseHit(ac, t, 700, 2, 0.14, 0.04);
+  [1, 1.48, 2.02].forEach((m, i) => tone(ac, t, 262 * m, 0.1 / (i + 1), 0.55 - i * 0.12, 'sine', 262 * m * 0.99));
+}
+
 /** 釘子彈飛：一聲清脆的金屬響 */
 export function ping() {
   const ac = audio();

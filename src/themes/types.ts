@@ -42,8 +42,15 @@ export interface ThemeCopy {
   /** 設定裡改名字：改完按這顆才生效（蓋章、署名） */
   rename: string;
   /** 重抽時嗆一句，依序使用 */
-  taunts: string[];
+  /** 重抽時舞台上的碎念：第一、二、三次重抽各一組，每次從那一組隨機挑一句 */
+  taunts: string[][];
+  /** 重抽次數用完（籤卡上取代重抽鈕的那句話） */
   noMore: string;
+  /** 次數用完之後：籤卡上落下的定案章（兩個字）、首頁大按鈕（點了重新攤開今天的最終結果）、封住籤筒（水晶球）的那張封條 */
+  finalSeal: string;
+  finalCta: string;
+  finalBand: string;
+  finalObey: string;
   /** 愛店按鈕：還沒按、按下後，以及按鈕上的小字說明 */
   likeStamp: string;
   likedLabel: string;
@@ -162,9 +169,16 @@ export interface ThemeCopy {
     name: string;
     eyebrow: string;
     lede: string;
-    /** 收到的邀請、自己發出的邀請兩區的標題 */
+    /** 收到的邀請、自己發出的邀請、今天自己一個人抽的，三區的標題 */
     inbox: string;
     sent: string;
+    solo: string;
+    /** 三個分頁：章（一個字）、分頁上的短名字、那一頁空著時的一句話 */
+    marks: { inbox: string; sent: string; solo: string };
+    tabs: { inbox: string; sent: string; solo: string };
+    none: Record<'inbox' | 'sent' | 'solo', { title: string; hint: string }>;
+    soloNote: string;
+    soloLine: string;
     emptyTitle: string;
     emptyHint: string;
     /** 上方通知鈕的說明（有幾則新消息） */
@@ -233,8 +247,10 @@ export interface ThemeCopy {
       'picky' | 'pioneer' | 'collector',
       { name: string; mark: string; rule: string; desc: (n: number) => string }
     >;
-    /** 這個月沒被抽中過的店 */
     cold: string;
+    coldNote: (n: number) => string;
+    titlesEmpty: { title: string; hint: string };
+    pager: { shelfPrev: string; shelfNext: string; notesPrev: string; notesNext: string };
     /** 還沒有店可以上榜：插畫底下的兩行字與去店家頁的按鈕 */
     emptyTitle: string;
     emptyHint: string;
@@ -255,6 +271,7 @@ export interface PodiumProps {
   unit: string;
   /** 換排序時重新揭曉 */
   revealKey: string;
+  onOpen?: (r: Restaurant) => void;
 }
 
 /**
@@ -297,7 +314,17 @@ export interface GlyphProps {
  * 還沒有任何店家、篩選（搜尋）後一家都沒有、排行榜還沒有店可以上榜
  */
 export type VignetteKind =
-  'notes-empty' | 'notes-error' | 'crew-empty' | 'shops-empty' | 'shops-none' | 'ranks-empty' | 'herald-empty';
+  | 'notes-empty'
+  | 'notes-error'
+  | 'crew-empty'
+  | 'shops-empty'
+  | 'shops-none'
+  | 'ranks-empty'
+  | 'herald-empty'
+  | 'herald-inbox'
+  | 'herald-sent'
+  | 'herald-solo'
+  | 'titles-empty';
 
 export interface VignetteProps {
   kind: VignetteKind;
@@ -414,6 +441,8 @@ export interface Theme {
   sound: () => void;
   /** 有人揪你、抽到了、出發了：報馬仔敲鑼、貓頭鷹叫兩聲 */
   heraldSound: () => void;
+  /** 自己點上方的報馬仔（貓頭鷹）時：沒有新消息輕輕一下（木槌碰鑼、貓頭鷹探頭），有新消息就照樣敲鑼（叫兩聲） */
+  heraldTap: (news: boolean) => void;
   /** 按下出發（起駕出發、啟程冒險）時的那一下：鞭炮炸開、掃帚飛上天 */
   departFx: (from: Element) => void;
   /** 切換鈕上的小圖 */

@@ -60,7 +60,7 @@ function nameSize(name: string, first: boolean) {
  * 星盤：一片夜空，前三名是三顆亮星，用星座的線連起來；金星在最上面，外圈是慢慢轉的星軌。
  * 揭曉時由銅星往金星一顆一顆點亮。
  */
-export function StarChart({ top, unit, revealKey }: PodiumProps) {
+export function StarChart({ top, unit, revealKey, onOpen }: PodiumProps) {
   const root = useRef<HTMLElement>(null);
   const narrow = useMedia('(max-width: 640px)');
   const spots = narrow ? SPOTS.narrow : SPOTS.wide;
@@ -210,6 +210,9 @@ export function StarChart({ top, unit, revealKey }: PodiumProps) {
                 {unit}
               </span>
             </span>
+            {onOpen && (
+              <button type="button" className="podium__open" onClick={() => onOpen(x.r)} aria-label={`看${x.r.name}`} />
+            )}
           </article>
         );
       })}

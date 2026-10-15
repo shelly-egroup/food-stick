@@ -146,7 +146,7 @@ export const useDrawsSince = (since: Date, on: boolean) =>
 
 export const useLatestNotes = (on: boolean) =>
   useQuery(
-    on ? () => query(collectionGroup(fb().db, 'comments'), orderBy('createdAt', 'desc'), limit(12)) : null,
+    on ? () => query(collectionGroup(fb().db, 'comments'), orderBy('createdAt', 'desc'), limit(36)) : null,
     asNote,
     `latest:${on}`,
   );

@@ -24,7 +24,7 @@ function PodiumName({ name, first }: { name: string; first: boolean }) {
  * 金榜：狀元站中間最高，榜眼、探花分站兩旁。
  * 放榜時榜單由上往下展開，探花、榜眼、狀元依序落下、蓋上名號章。
  */
-export function Podium({ top, unit, revealKey }: PodiumProps) {
+export function Podium({ top, unit, revealKey, onOpen }: PodiumProps) {
   const board = useRef<HTMLElement>(null);
 
   useLayoutEffect(() => {
@@ -89,6 +89,9 @@ export function Podium({ top, unit, revealKey }: PodiumProps) {
               <b>{x.value}</b>
               {unit}
             </p>
+            {onOpen && (
+              <button type="button" className="podium__open" onClick={() => onOpen(x.r)} aria-label={`看${x.r.name}`} />
+            )}
           </article>
         );
       })}

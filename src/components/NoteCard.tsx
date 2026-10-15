@@ -31,6 +31,7 @@ export function NoteCard({
   shop,
   tilt = 0,
   onDelete,
+  onOpen,
 }: {
   text: string;
   author: Pick<Member, 'id' | 'name' | 'photoURL'>;
@@ -40,6 +41,7 @@ export function NoteCard({
   tilt?: number;
   /** 有給才能拿掉；失敗要 reject，紙條會放回原位 */
   onDelete?: () => Promise<void>;
+  onOpen?: () => void;
 }) {
   const { copy } = useTheme().theme;
   const root = useRef<HTMLLIElement>(null);
@@ -76,12 +78,28 @@ export function NoteCard({
   return (
     <li
       ref={root}
-      className={`note${asking ? ' is-asking' : ''}${leaving ? ' is-leaving' : ''}`}
+      className={`note${asking ? ' is-asking' : ''}${leaving ? ' is-leaving' : ''}${onOpen ? ' is-link' : ''}`}
       style={{ '--tilt': `${tilt}deg` } as CSSProperties}
+      onClick={onOpen}
     >
       <span className="note__paper" aria-hidden="true" />
       <span className="note__hang" aria-hidden="true" />
-      {shop && <b className="note__shop">{shop}</b>}
+      {shop &&
+        (onOpen ? (
+          <button
+            type="button"
+            className="note__shop note__shop--link"
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpen();
+            }}
+          >
+            {shop}
+            <i aria-hidden="true">›</i>
+          </button>
+        ) : (
+          <b className="note__shop">{shop}</b>
+        ))}
       <p className="note__text">{text}</p>
       <footer className="note__foot">
         <span className="note__face">

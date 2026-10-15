@@ -6,26 +6,57 @@ import Link from 'next/link';
 import { Avatar } from '@/components/Avatar';
 import { Loading } from '@/components/Loading';
 import { NoteCard } from '@/components/NoteCard';
+import { Pager } from '@/components/Pager';
+import { useToast } from '@/components/Toast';
 import { useAppData } from '@/lib/appData';
 import { useTheme, type PodiumEntry } from '@/themes';
-import { useLatestNotes } from '@/lib/store';
+import { deleteRestaurant, useLatestNotes } from '@/lib/store';
 import { reducedMotion } from '@/lib/motion';
 import { MONTHS, ago } from '@/lib/format';
-import { categoryOf, type Member } from '@/lib/types';
+import { categoryOf, type Member, type Restaurant } from '@/lib/types';
+import { ShopSheet } from './ShopSheet';
+import { ShopForm } from './ShopForm';
 import './Ranks.css';
 
 type Sort = 'likes' | 'draws';
 
 /** 每張紙條歪一點點：只轉紙，不轉字，字才清楚 */
 const TILTS = [-1.2, 0.8, -0.4, 1, -0.8, 0.5];
+const SHELF = 6;
+const NOTES = 4;
+
+const fontFor = (name: string) => Math.min(17, Math.floor(116 / Math.max(1, [...name].length)));
+const boardFor = (name: string) =>
+  Math.min(176, Math.max(108, Math.ceil([...name].length * fontFor(name) * 1.08) + 52));
+
+function usePageMotion(page: number, run: (el: HTMLElement, dir: number) => gsap.core.Tween | void) {
+  const ref = useRef<HTMLUListElement>(null);
+  const last = useRef(page);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    const dir = page === last.current ? 0 : page > last.current ? 1 : -1;
+    last.current = page;
+    if (!el || dir === 0 || reducedMotion()) return;
+    const t = run(el, dir);
+    return () => void t?.kill();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page]);
+  return ref;
+}
 
 export function Ranks() {
   const { members, restaurants, restaurantMap, memberMap, draws, ready } = useAppData();
   const { theme } = useTheme();
   const { copy, Podium, Badge } = theme;
   const notes = useLatestNotes(true);
+  const toast = useToast();
   const [sort, setSort] = useState<Sort>('likes');
   const list = useRef<HTMLOListElement>(null);
+  const [openId, setOpenId] = useState<string | null>(null);
+  const [editId, setEditId] = useState<string | null>(null);
+  const [coldPage, setColdPage] = useState(0);
+  const [notesPage, setNotesPage] = useState(0);
+  const openShop = (r: Restaurant) => setOpenId(r.id);
 
   const monthStart = useMemo(() => {
     const d = new Date();
@@ -50,7 +81,26 @@ export function Ranks() {
   const top: PodiumEntry[] = rows.slice(0, 3).map((x) => ({ r: x.r, value: valueOf(x) }));
   const rest = rows.slice(3, 10);
   const maxVal = Math.max(1, ...rows.map(valueOf));
-  const cold = rows.filter((x) => x.picked === 0).slice(-3);
+  const cold = rows.filter((x) => x.picked === 0).reverse();
+  const coldPages = Math.ceil(cold.length / SHELF);
+  const coldAt = Math.min(coldPage, Math.max(0, coldPages - 1));
+  const shelf = cold.slice(coldAt * SHELF, coldAt * SHELF + SHELF);
+  const shelfRef = usePageMotion(coldAt, (el, dir) =>
+    gsap.fromTo(
+      el.children,
+      { opacity: 0, x: 46 * dir, y: -18, rotate: 9 * dir },
+      {
+        opacity: 1,
+        x: 0,
+        y: 0,
+        rotate: 0,
+        duration: 0.5,
+        stagger: 0.05 * dir,
+        ease: 'back.out(1.7)',
+        clearProps: 'all',
+      },
+    ),
+  );
 
   const titles = useMemo(() => {
     const by = <T,>(list: T[], score: (t: T) => number) =>
@@ -88,7 +138,19 @@ export function Ranks() {
   }, [sort, rest.length]);
 
   const month = MONTHS[new Date().getMonth()];
-  const latest = notes.data?.filter((n) => restaurantMap.has(n.rid)).slice(0, 6);
+  const latest = notes.data?.filter((n) => restaurantMap.has(n.rid));
+  const notePages = Math.ceil((latest?.length ?? 0) / NOTES);
+  const notesAt = Math.min(notesPage, Math.max(0, notePages - 1));
+  const notesShown = latest?.slice(notesAt * NOTES, notesAt * NOTES + NOTES);
+  const notesRef = usePageMotion(notesAt, (el, dir) =>
+    gsap.fromTo(
+      el.children,
+      { opacity: 0, rotate: -14 * dir, y: -22, transformOrigin: '50% 0%' },
+      { opacity: 1, rotate: 0, y: 0, duration: 0.7, stagger: 0.07, ease: 'elastic.out(1, 0.55)', clearProps: 'all' },
+    ),
+  );
+  const open = openId ? (restaurantMap.get(openId) ?? null) : null;
+  const editing = editId ? (restaurantMap.get(editId) ?? null) : null;
 
   return (
     <div className="ranks">
@@ -126,12 +188,18 @@ export function Ranks() {
         </div>
       ) : (
         <>
-          <Podium top={top} unit={sort === 'likes' ? '人愛' : '次命定'} revealKey={sort} />
+          <Podium top={top} unit={sort === 'likes' ? '人愛' : '次命定'} revealKey={sort} onOpen={openShop} />
 
           {rest.length > 0 && (
             <ol className="ranklist" start={4} ref={list}>
               {rest.map((x, k) => (
                 <li key={x.r.id}>
+                  <button
+                    type="button"
+                    className="ranklist__open"
+                    onClick={() => openShop(x.r)}
+                    aria-label={`看${x.r.name}`}
+                  />
                   <span className="ranklist__no">{copy.ranks.no(k + 4)}</span>
                   <span className="ranklist__name">{x.r.name}</span>
                   <span className="ranklist__cat">{categoryOf(x.r.category).label}</span>
@@ -147,41 +215,69 @@ export function Ranks() {
       )}
 
       <div className="ranks__more">
-        {titles.length > 0 && (
+        {ready && (
           <section className="titles" aria-label="本月稱號">
             <h2>本月稱號</h2>
+            {titles.length === 0 && <theme.Vignette kind="titles-empty" />}
             {/* 廟宇是掛在木桿上的三面錦旗，魔法是三張塔羅牌；每一張都寫明是怎麼選出來的 */}
-            <ul className="honors">
-              {titles.map((t, i) => (
-                <li key={t.key} className="honor" style={{ '--i': i } as CSSProperties}>
-                  <span className="honor__silk">
-                    <span className="honor__rule">{t.rule}</span>
-                    <span className="honor__mark">
-                      <Badge text={t.mark} size={38} />
+            {titles.length > 0 && (
+              <ul className="honors">
+                {titles.map((t, i) => (
+                  <li key={t.key} className="honor" style={{ '--i': i } as CSSProperties}>
+                    <span className="honor__silk">
+                      <span className="honor__rule">{t.rule}</span>
+                      <span className="honor__mark">
+                        <Badge text={t.mark} size={38} />
+                      </span>
+                      <b className="honor__name">{t.name}</b>
+                      <span className="honor__who">
+                        <Avatar member={t.m} size={30} />
+                        <span>{t.m.name}</span>
+                      </span>
+                      <span className="honor__stat">{t.d}</span>
                     </span>
-                    <b className="honor__name">{t.name}</b>
-                    <span className="honor__who">
-                      <Avatar member={t.m} size={30} />
-                      <span>{t.m.name}</span>
-                    </span>
-                    <span className="honor__stat">{t.d}</span>
-                  </span>
-                  <span className="honor__fringe" aria-hidden="true" />
-                </li>
-              ))}
-            </ul>
+                    <span className="honor__fringe" aria-hidden="true" />
+                  </li>
+                ))}
+              </ul>
+            )}
           </section>
         )}
 
         {cold.length > 0 && (
           <section className="cold" aria-label={copy.ranks.cold}>
             <h2>{copy.ranks.cold}</h2>
-            <p>這個月還沒被{copy.picked}過：</p>
-            <ul>
-              {cold.map((x) => (
-                <li key={x.r.id}>{x.r.name}</li>
-              ))}
-            </ul>
+            <p className="cold__note">{copy.ranks.coldNote(cold.length)}</p>
+            <div className="shelf">
+              <span className="shelf__motes" aria-hidden="true" />
+              <ul className="shelf__row" ref={shelfRef}>
+                {shelf.map((x, i) => (
+                  <li key={x.r.id} style={{ '--i': i } as CSSProperties}>
+                    <button
+                      type="button"
+                      className="shelf__item"
+                      style={{ height: boardFor(x.r.name) }}
+                      onClick={() => openShop(x.r)}
+                      aria-label={`看${x.r.name}`}
+                    >
+                      <span className="shelf__name" style={{ fontSize: fontFor(x.r.name) }}>
+                        {x.r.name}
+                      </span>
+                      <span className="shelf__cat">{categoryOf(x.r.category).label}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              <span className="shelf__plank" aria-hidden="true" />
+            </div>
+            <Pager
+              page={coldAt}
+              pages={coldPages}
+              onPage={setColdPage}
+              prev={copy.ranks.pager.shelfPrev}
+              next={copy.ranks.pager.shelfNext}
+              label={copy.ranks.cold}
+            />
           </section>
         )}
 
@@ -195,8 +291,8 @@ export function Ranks() {
             // 廟宇是廟口的繪馬掛架（屋簷、兩根柱子、一排排橫木），魔法是一面星空留言板
             <div className="rack">
               <span className="rack__top" aria-hidden="true" />
-              <ul>
-                {latest.map((n, i) => (
+              <ul ref={notesRef}>
+                {notesShown?.map((n, i) => (
                   <NoteCard
                     key={n.id}
                     text={n.text}
@@ -204,13 +300,39 @@ export function Ranks() {
                     when={ago(n.createdAt)}
                     shop={restaurantMap.get(n.rid)?.name}
                     tilt={TILTS[i]}
+                    onOpen={() => {
+                      const r = restaurantMap.get(n.rid);
+                      if (r) openShop(r);
+                    }}
                   />
                 ))}
               </ul>
             </div>
           )}
+          <Pager
+            page={notesAt}
+            pages={notePages}
+            onPage={setNotesPage}
+            prev={copy.ranks.pager.notesPrev}
+            next={copy.ranks.pager.notesNext}
+            label="最新紙條"
+          />
         </section>
       </div>
+
+      <ShopSheet
+        restaurant={open}
+        onClose={() => setOpenId(null)}
+        onEdit={() => {
+          setEditId(openId);
+          setOpenId(null);
+        }}
+        onRemove={(id) => {
+          setOpenId(null);
+          deleteRestaurant(id).catch(() => toast(copy.shops.removeFailed, '咦'));
+        }}
+      />
+      <ShopForm open={!!editing} editing={editing} onClose={() => setEditId(null)} onSaved={() => setEditId(null)} />
     </div>
   );
 }
