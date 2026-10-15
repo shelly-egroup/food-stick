@@ -39,7 +39,7 @@ export interface OracleProps {
 }
 
 /** 毛邊紙：四邊細碎的不規則邊緣 */
-function deckle(seed: number, n = 30, amp = 1.8) {
+export function deckle(seed: number, n = 30, amp = 1.8) {
   let s = seed;
   const rnd = () => Math.max(0, ((s = (s * 9301 + 49297) % 233280) / 233280 - 0.5) * 2 * amp) + 0.6;
   const pts: string[] = [];

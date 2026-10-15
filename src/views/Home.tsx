@@ -3,6 +3,7 @@
 import { useEffect, useEffectEvent, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Oracle } from '@/components/Oracle';
+import { UnsealCard } from '@/components/UnsealCard';
 import { Charges } from '@/components/Charges';
 import { Icon } from '@/components/Icon';
 import { CategoryFilter } from '@/components/CategoryFilter';
@@ -387,6 +388,8 @@ export function Home() {
 
   const filtered = filters.categories.length + filters.prices.length > 0;
   const [filtersOpen, setFiltersOpen] = useState(false);
+  // 搖手機被 iOS 拒絕了：點首頁的封印小標籤，攤開解封籤教怎麼重新允許
+  const [unsealOpen, setUnsealOpen] = useState(false);
   const summary = [
     filters.categories.length
       ? CATEGORIES.filter((c) => filters.categories.includes(c.id))
@@ -585,9 +588,14 @@ export function Home() {
               </span>
             )}
             {shake.supported &&
-              !shake.denied &&
               canDraw &&
-              (shake.enabled ? (
+              (shake.denied ? (
+                // iOS 拒絕過就不會再問：籤筒（水晶球）被封住、想搖卻卡住，點了攤開解封籤
+                <button type="button" className="dock__shake is-sealed" onClick={() => setUnsealOpen(true)}>
+                  <theme.Glyph name="shake" size={22} />
+                  {copy.shake.denied}
+                </button>
+              ) : shake.enabled ? (
                 <span className="dock__shake is-on">
                   <theme.Glyph name="shake" size={22} />
                   {copy.shake.on}
@@ -601,6 +609,8 @@ export function Home() {
           </p>
         )}
       </section>
+
+      {unsealOpen && <UnsealCard theme={theme} onClose={() => setUnsealOpen(false)} />}
 
       {result && (
         <Oracle

@@ -95,10 +95,26 @@ export interface ThemeCopy {
     invite: string;
     invited: string;
   };
-  /** 搖手機抽籤：首頁的提示（已經能搖、還要點一下才能搖），設定裡的開關名稱與說明 */
+  /** 搖手機抽籤：首頁的提示（已經能搖、還要點一下才能搖、被拒絕了），設定裡的開關名稱與說明 */
   shake: {
     on: string;
     ask: string;
+    /** 被拒絕時首頁的小標籤：點了打開解封籤 */
+    denied: string;
+    /** 解封籤：長得跟解籤的籤卡一樣，教使用者怎麼重新允許「動作與方向」 */
+    unseal: {
+      no: string;
+      brand: string;
+      /** 右上角的章（一個字）與它被讀出來的名稱 */
+      seal: string;
+      sealLabel: string;
+      name: string;
+      /** 四句籤詩 */
+      lines: string[];
+      /** 白話的步驟，放在「解曰／預言」後面 */
+      steps: string;
+      ok: string;
+    };
     setting: string;
     settingHint: string;
   };

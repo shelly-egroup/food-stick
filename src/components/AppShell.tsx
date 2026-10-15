@@ -13,6 +13,7 @@ import { AppDataProvider } from '@/lib/appData';
 import { ThemeProvider } from '@/themes';
 import { UiProvider, useUi } from '@/lib/uiContext';
 import { signInWithGoogle, signOutNow } from '@/lib/firebase';
+import { installAudioUnlock } from '@/lib/sound';
 import { ensureMember, isEgroupEmail, syncPhoto, useAuthUser, useMembership } from '@/lib/store';
 import type { Member } from '@/lib/types';
 
@@ -32,6 +33,9 @@ export function AppShell({ children }: { children: ReactNode }) {
 }
 
 function Shell({ children }: { children: ReactNode }) {
+  // 第一次點畫面就把聲音叫醒（只管聲音，搖手機的權限另外問）
+  useEffect(() => installAudioUnlock(), []);
+
   const user = useAuthUser();
   const allowed = !!user && isEgroupEmail(user.email);
   const member = useMembership(allowed ? user?.uid : undefined);

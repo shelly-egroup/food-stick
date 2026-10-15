@@ -27,6 +27,9 @@ export function setSoundOn(on: boolean) {
   } catch {
     /* 無痕模式存不了也沒關係 */
   }
+  // 打開通常是在點開關的當下，順便叫醒；關掉就讓 iPhone 恢復跟著靜音開關走
+  if (on) unlock();
+  else mediaPlayback(false);
   listeners.forEach((fn) => fn(on));
 }
 export function onSoundChange(fn: (on: boolean) => void) {
@@ -50,8 +53,100 @@ function audio(): AudioContext | null {
     const data = noiseBuf.getChannelData(0);
     for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
   }
-  if (ctx.state === 'suspended') void ctx.resume();
+  // iOS 除了 suspended，被來電打斷時是 interrupted，一樣要叫醒
+  if (ctx.state !== 'running' && ctx.state !== 'closed') void ctx.resume().catch(() => undefined);
   return ctx;
+}
+
+/*
+ * iPhone 的 Web Audio 預設跟著靜音開關走：切成靜音，音量開再大也沒聲音。
+ * 把網頁的聲音改成「媒體播放」（像看影片一樣），靜音開關打開也聽得到；
+ * 想安靜的人在「我的設定」關掉音效就好。
+ * iOS 17 以上有 navigator.audioSession；更舊的 iOS 要一直播一段聽不到的 <audio> 才會切過去。
+ */
+type AudioSessionNavigator = Navigator & { audioSession?: { type: string } };
+let keepAlive: HTMLAudioElement | null = null;
+
+const isIOS = () =>
+  /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+/** 半秒的無聲 WAV（8kHz、8-bit，128 就是靜音） */
+function silentWav() {
+  const n = 4000;
+  const bytes = new Uint8Array(44 + n);
+  const view = new DataView(bytes.buffer);
+  const text = (at: number, s: string) => [...s].forEach((c, i) => (bytes[at + i] = c.charCodeAt(0)));
+  text(0, 'RIFF');
+  view.setUint32(4, 36 + n, true);
+  text(8, 'WAVEfmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, 1, true);
+  view.setUint32(24, 8000, true);
+  view.setUint32(28, 8000, true);
+  view.setUint16(32, 1, true);
+  view.setUint16(34, 8, true);
+  text(36, 'data');
+  view.setUint32(40, n, true);
+  bytes.fill(128, 44);
+  return `data:audio/wav;base64,${btoa(String.fromCharCode(...bytes))}`;
+}
+
+function mediaPlayback(on: boolean) {
+  const nav = navigator as AudioSessionNavigator;
+  if (nav.audioSession) {
+    nav.audioSession.type = on ? 'playback' : 'auto';
+    return;
+  }
+  if (!on) {
+    keepAlive?.pause();
+    return;
+  }
+  if (!isIOS()) return;
+  if (!keepAlive) {
+    keepAlive = document.createElement('audio');
+    keepAlive.src = silentWav();
+    keepAlive.loop = true;
+    keepAlive.preload = 'auto';
+    keepAlive.setAttribute('x-webkit-airplay', 'deny');
+  }
+  void keepAlive.play().catch(() => undefined);
+}
+
+/** 叫醒聲音：一定要在使用者點擊的當下做，iOS 才會放行 */
+function unlock() {
+  if (!enabled) return;
+  mediaPlayback(true);
+  const ac = audio();
+  if (!ac) return;
+  // 舊的 iOS 要在點擊當下真的播一聲才算數：播一個聽不到的 1 個 sample
+  const src = ac.createBufferSource();
+  src.buffer = ac.createBuffer(1, 1, ac.sampleRate);
+  src.connect(ac.destination);
+  src.start();
+}
+
+/**
+ * 點畫面任何地方就叫醒聲音（有開音效才叫）。只處理聲音，跟搖手機的權限無關。
+ * 已經醒著就不做事；切到背景回來、被來電打斷之後，下一次點擊會再叫醒一次。
+ */
+export function installAudioUnlock() {
+  // 只有這幾種事件算「使用者點擊」，pointerdown 在手機上不算
+  const events = ['touchend', 'click', 'keydown'] as const;
+  const onTap = () => {
+    if (!enabled) return;
+    if (ctx?.state === 'running' && (!keepAlive || !keepAlive.paused)) return;
+    unlock();
+  };
+  const onHide = () => {
+    if (document.hidden) keepAlive?.pause();
+  };
+  events.forEach((e) => document.addEventListener(e, onTap, { capture: true, passive: true }));
+  document.addEventListener('visibilitychange', onHide);
+  return () => {
+    events.forEach((e) => document.removeEventListener(e, onTap, { capture: true }));
+    document.removeEventListener('visibilitychange', onHide);
+  };
 }
 
 function env(g: GainNode, t: number, peak: number, attack: number, decay: number) {

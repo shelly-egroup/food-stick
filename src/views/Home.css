@@ -187,11 +187,36 @@ button.dock__shake:active {
     rotate: -2deg;
   }
 }
+/* 被封印：朱紅虛線框，籤筒想搖卻被卡住，只抖一下 */
+.dock__shake.is-sealed {
+  border-color: var(--vermilion);
+  color: var(--vermilion);
+}
+.dock__shake.is-sealed .glyph {
+  animation: dock-stuck 2.6s ease-in-out infinite;
+}
+@keyframes dock-stuck {
+  0%,
+  78%,
+  100% {
+    translate: 0 0;
+  }
+  82% {
+    translate: -2px 0;
+  }
+  86% {
+    translate: 2px 0;
+  }
+  90% {
+    translate: -1px 0;
+  }
+}
 [data-theme='magic'] .dock__shake {
   border-radius: 999px;
 }
 @media (prefers-reduced-motion: reduce) {
-  .dock__shake.is-on .glyph {
+  .dock__shake.is-on .glyph,
+  .dock__shake.is-sealed .glyph {
     animation: none;
   }
 }

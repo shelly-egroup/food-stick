@@ -64,7 +64,8 @@ export function askMotion(silent = false): Promise<boolean> {
 
 /**
  * 搖手機觸發。預設開：Android 直接可用；
- * iOS 不能自己打開，就在使用者第一次點畫面（任何地方都可以）的時候順便問一次權限。
+ * iOS 要使用者自己按首頁「開啟搖手機」的按鈕（或在設定裡打開）才問權限，
+ * 不在點別的東西（例如廟貓）的時候突然跳出詢問。
  */
 export function useShake(onShake: () => void, active: boolean) {
   const supported = useShakeSupported();
@@ -75,12 +76,10 @@ export function useShake(onShake: () => void, active: boolean) {
   const enabled = usable && (!askFirst || permission === 'granted');
   const fire = useEffectEvent(onShake);
 
+  // 先不靠點擊試一次：這次瀏覽已經同意過就直接通過，沒有的話等使用者按按鈕
   useEffect(() => {
     if (!usable || !askFirst || permission !== 'unknown') return;
     void askMotion(true);
-    const once = () => void askMotion();
-    document.addEventListener('click', once, { once: true, capture: true });
-    return () => document.removeEventListener('click', once, { capture: true });
   }, [usable, askFirst, permission]);
 
   useEffect(() => {
