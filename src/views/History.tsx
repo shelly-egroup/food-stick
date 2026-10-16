@@ -1,18 +1,35 @@
 'use client';
 
-import { useEffect, useId, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useId, useMemo, useRef, useState, type CSSProperties, type MouseEvent } from 'react';
+import gsap from 'gsap';
 import Link from 'next/link';
+import { createPortal } from 'react-dom';
 import { Avatar } from '@/components/Avatar';
+import { Candidates } from '@/components/Candidates';
+import { Oracle } from '@/components/Oracle';
+import { useToast } from '@/components/Toast';
 import { LineIcon } from '@/components/CategoryIcon';
 import { Loading } from '@/components/Loading';
 import { Seal } from '@/components/Seal';
 import { Tag, Tags } from '@/components/Tags';
 import { MapLink } from '@/components/MapLink';
 import { useAppData } from '@/lib/appData';
-import { candidatesOf, chosenOf, isLive, latestOf, modeOf, skipOf, slotIcon, taipeiDate, type Meal } from '@/lib/meal';
+import {
+  candidatesOf,
+  chosenOf,
+  isLive,
+  latestOf,
+  modeOf,
+  pickOf,
+  skipOf,
+  slotIcon,
+  taipeiDate,
+  type Meal,
+  type MealPick,
+} from '@/lib/meal';
 import { reducedMotion } from '@/lib/motion';
-import { paper, twinkle } from '@/lib/sound';
-import { useMealHistory } from '@/lib/store';
+import { paper, stamp, twinkle } from '@/lib/sound';
+import { setPref, useMealHistory } from '@/lib/store';
 import { useNow } from '@/lib/useBrowser';
 import { readingOf } from '@/lib/verse';
 import { categoryOf, type Member } from '@/lib/types';
@@ -127,20 +144,128 @@ export function History() {
 
   const empty = !hist.loading && shownList.length === 0;
 
+  // 彩蛋：封面的小圖一秒內連點三下，翻出今天的一句（同一天同一句，再點三下收回去）
+  const [egg, setEgg] = useState<number | null>(null);
+  const taps = useRef<number[]>([]);
+  const cover = useRef<HTMLElement>(null);
+  const magic = theme.id === 'magic';
+  /** 魔法封面上劃過幾顆流星（臨時加進夜空，劃完就拿掉） */
+  const meteors = (n: number) => {
+    const sky = cover.current?.querySelector('.ledger__sky');
+    if (!sky || reducedMotion()) return;
+    for (let k = 0; k < n; k++) {
+      const m = document.createElement('i');
+      m.className = 'ledger__meteor ledger__meteor--now';
+      m.style.top = `${4 + Math.random() * 46}%`;
+      m.style.right = `${4 + Math.random() * 50}%`;
+      m.style.animationDelay = `${k * 0.18 + Math.random() * 0.15}s`;
+      m.addEventListener('animationend', () => m.remove());
+      sky.appendChild(m);
+    }
+  };
+  const tapEgg = (e: MouseEvent<HTMLButtonElement>) => {
+    // 每點一下都有反應：簿子抖一抖、翻一頁（日誌轉一圈、閃一下），才會想再多點幾下
+    if (!reducedMotion())
+      gsap.fromTo(
+        e.currentTarget,
+        // 小圖本身用 CSS 的 rotate 歪著 -4°，這裡的旋轉是疊在上面的，從 0 回到 0
+        { rotate: 0 },
+        magic
+          ? {
+              keyframes: { rotate: [0, 360], scale: [1, 1.18, 1] },
+              duration: 0.6,
+              ease: 'back.out(1.6)',
+              clearProps: 'transform',
+            }
+          : { keyframes: { rotate: [0, -10, 12, -5, 0] }, duration: 0.5, ease: 'sine.inOut', clearProps: 'transform' },
+      );
+    if (magic) twinkle(taps.current.length + 2);
+    else paper(0.12);
+    const t = Date.now();
+    taps.current = [...taps.current.filter((x) => t - x < 1000), t];
+    if (taps.current.length < 3) return;
+    taps.current = [];
+    if (egg !== null) return setEgg(null);
+    const day = Number(taipeiDate(t).replaceAll('-', ''));
+    setEgg((day * 7 + me.id.length) % copy.history.egg.lines.length);
+    if (magic) {
+      twinkle(9);
+      meteors(6);
+    } else stamp();
+  };
+  /** 點大標題：字一個一個跳起來（廟宇像毛筆字被吹動，魔法像咒語發光） */
+  const tapTitle = (e: MouseEvent<HTMLHeadingElement>) => {
+    if (reducedMotion()) return;
+    const chars = e.currentTarget.querySelectorAll('span');
+    if (magic) twinkle(6);
+    else paper(0.2);
+    gsap.fromTo(
+      chars,
+      { y: 0, rotate: 0 },
+      {
+        keyframes: { y: [0, -16, 0], rotate: [0, magic ? 0 : -8, 0], scale: [1, magic ? 1.2 : 1.08, 1] },
+        duration: 0.55,
+        stagger: 0.08,
+        ease: 'power2.out',
+      },
+    );
+  };
+  /** 點日期章：抬起來、重新蓋下去 */
+  const tapStamp = (e: MouseEvent<HTMLElement>) => {
+    const el = e.currentTarget;
+    if (reducedMotion() || el.classList.contains('is-stamping')) return;
+    el.classList.add('is-stamping');
+    gsap
+      .timeline({ onComplete: () => el.classList.remove('is-stamping') })
+      .to(el, { y: -22, rotate: -10, scale: 1.12, duration: 0.2, ease: 'power2.out' })
+      .to(el, { y: 0, rotate: 0, scale: 1, duration: 0.12, ease: 'power4.in' })
+      .add(() => stamp())
+      .to(el, { scaleX: 1.08, scaleY: 0.92, duration: 0.07, yoyo: true, repeat: 1 });
+  };
+  /** 點魔法封面的星座：星星一顆顆亮起來，劃過一顆流星 */
+  const tapSky = () => {
+    const sky = cover.current?.querySelector('.ledger__sky');
+    if (!sky || reducedMotion()) return;
+    twinkle(7);
+    gsap.fromTo(
+      sky.querySelectorAll('.ledger__star'),
+      { scale: 1 },
+      { scale: 2.2, duration: 0.18, yoyo: true, repeat: 1, stagger: 0.07, transformOrigin: '50% 50%' },
+    );
+    meteors(1);
+  };
+
   return (
     <div className={`ledger ledger--${theme.id}`}>
-      <header className="ledger__cover">
-        {theme.id === 'magic' && <NightSky />}
+      <header className="ledger__cover" ref={cover}>
+        {magic && <NightSky onTap={tapSky} />}
         <div className="ledger__label">
-          <span className="ledger__glyph">
+          {/* 彩蛋：連點這顆小圖三下 */}
+          <button type="button" className="ledger__glyph" onClick={tapEgg} aria-label={copy.history.title}>
             <theme.Glyph name="ledger" size={52} />
-          </span>
+          </button>
           <div>
             <p className="eyebrow">{copy.history.eyebrow}</p>
-            <h1 className="ledger__title">{copy.history.title}</h1>
+            <h1 className="ledger__title" onClick={tapTitle} aria-label={copy.history.title}>
+              {[...copy.history.title].map((c, k) => (
+                <span key={k} aria-hidden="true">
+                  {c}
+                </span>
+              ))}
+            </h1>
           </div>
         </div>
-        <p className="ledger__lede">{copy.history.lede}</p>
+        {egg !== null ? (
+          <p key={egg} className="ledger__egg" aria-live="polite">
+            <Seal text={copy.history.egg.seal} size={40} rotate={-8} className="ledger__egg-seal" />
+            <span>
+              <small>{copy.history.egg.title}</small>
+              <b>{copy.history.egg.lines[egg]}</b>
+            </span>
+          </p>
+        ) : (
+          <p className="ledger__lede">{copy.history.lede}</p>
+        )}
         <ul className="ledger__stats" aria-label="這個月">
           <li>
             <NumberSeal n={stats.count} />
@@ -199,7 +324,7 @@ export function History() {
         >
           {days.map((d) => (
             <li key={d.date} className="ledger__day">
-              <div className="ledger__date">
+              <div className="ledger__date" onClick={tapStamp}>
                 <theme.DateStamp date={dayOf(d.date)} size={70} />
               </div>
               <ol className="ledger__meals">
@@ -297,11 +422,11 @@ const DIPPER: [number, number, number][] = [
 ];
 
 /** 魔法封面上的夜空：右上角一組會一閃一閃的星座，偶爾一顆流星劃過 */
-function NightSky() {
+function NightSky({ onTap }: { onTap: () => void }) {
   const line = [...DIPPER, DIPPER[3]].map(([x, y]) => `${x},${y}`).join(' ');
   return (
     <span className="ledger__sky" aria-hidden="true">
-      <svg className="ledger__constellation" viewBox="0 0 126 70" width="126" height="70">
+      <svg className="ledger__constellation" viewBox="0 0 126 70" width="126" height="70" onClick={onTap}>
         <polyline points={line} fill="none" stroke="rgba(242, 185, 64, 0.5)" strokeWidth="1.1" strokeDasharray="2 3" />
         {DIPPER.map(([x, y, r], i) => (
           <circle key={i} className="ledger__star" cx={x} cy={y} r={r} style={{ '--i': i } as CSSProperties} />
@@ -332,6 +457,8 @@ function Entry({ m, i, now }: { m: Meal; i: number; now: number }) {
   const by = m.decision ? (m.decision.by === me.id ? '你' : (memberMap.get(m.decision.by)?.name ?? '同事')) : '';
   // 求過的每一支（照抽到的順序，同一家只列一次）：起駕的、去不了的都標出來
   const tried = [...new Map(m.picks.map((p) => [p.rid, p])).values()];
+  // 點開的那一支籤卡（swap：左右翻過來的方向）
+  const [view, setView] = useState<{ rid: string; swap?: 1 | -1 } | null>(null);
   const at = m.createdAt;
 
   return (
@@ -425,26 +552,104 @@ function Entry({ m, i, now }: { m: Meal; i: number; now: number }) {
             {copy.history.cands}
             <b className="entry__tried-n">{tried.length}</b>
           </summary>
-          <ul>
-            {tried.map((p) => {
-              const skipped = !!skipOf(m, p.rid) && !candidatesOf(m).some((c) => c.rid === p.rid);
-              const chosen = m.decision?.rid === p.rid;
-              return (
-                <li key={p.rid} className={chosen ? 'is-chosen' : skipped ? 'is-skipped' : ''}>
-                  <span>{p.name}</span>
-                  {chosen && <em>{copy.finalSeal}</em>}
-                  {skipped && (
-                    <em>
-                      <theme.Glyph name="closed" size={14} />
-                      {copy.history.skipped}
-                    </em>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
+          {/* 跟供桌彈窗同一排籤（牌）：起駕的蓋定案章，去不了的褪色；點一支打開籤卡 */}
+          <Candidates
+            meal={m}
+            picks={tried}
+            hint={false}
+            past
+            onOpen={(rid) => setView({ rid, swap: undefined })}
+            skipped={(rid) => {
+              const s = skipOf(m, rid);
+              if (!s || candidatesOf(m).some((c) => c.rid === rid)) return false;
+              return s.why ? copy.meal.skipWhy[s.why].short : copy.history.skipped;
+            }}
+          />
         </details>
       )}
+      {/* 籤卡蓋滿整個畫面：掛到 body 上，才不會被這一頁進場動畫的 transform 困住 */}
+      {view &&
+        createPortal(
+          <PastCard m={m} tried={tried} view={view} onView={setView} onClosed={() => setView(null)} />,
+          document.body,
+        )}
     </li>
+  );
+}
+
+/**
+ * 食籤簿裡點開的籤卡：跟首頁同一張，只是這一餐已經過去了，沒有起駕、重抽這些按鈕。
+ * 起駕的那支蓋定案章、可以帶我去；去不了的寫原因；其他的寫最後去了哪家。左右翻同一餐求過的每一支。
+ */
+function PastCard({
+  m,
+  tried,
+  view,
+  onView,
+  onClosed,
+}: {
+  m: Meal;
+  tried: MealPick[];
+  view: { rid: string; swap?: 1 | -1 };
+  onView: (v: { rid: string; swap?: 1 | -1 }) => void;
+  onClosed: () => void;
+}) {
+  const { me, restaurantMap } = useAppData();
+  const { theme } = useTheme();
+  const { copy } = theme;
+  const toast = useToast();
+  const [leaving, setLeaving] = useState(false);
+  const r = restaurantMap.get(view.rid);
+  const p = pickOf(m, view.rid);
+  if (!r || !p) return null;
+  const at = tried.findIndex((x) => x.rid === view.rid);
+  const chosen = chosenOf(m);
+  const skip = skipOf(m, view.rid);
+  const isChosen = chosen?.rid === view.rid;
+  const skipped = !isChosen && !!skip && !candidatesOf(m).some((c) => c.rid === view.rid);
+  const note = isChosen
+    ? undefined
+    : skipped
+      ? skip.why
+        ? `${copy.history.skipped}：${copy.meal.skipWhy[skip.why].title}`
+        : copy.history.skipped
+      : chosen
+        ? copy.meal.departedTo(restaurantMap.get(chosen.rid)?.name ?? chosen.name)
+        : copy.meal.ended;
+  const liked = me.likes.includes(r.id);
+  return (
+    <Oracle
+      key={`${m.id}:${view.rid}`}
+      theme={theme}
+      restaurant={r}
+      reading={readingOf(theme, r, p, modeOf(m))}
+      party={m.going.length}
+      liked={liked}
+      rerollsLeft={0}
+      rerolls={0}
+      canReroll={false}
+      canDecide={false}
+      canSkip={false}
+      decided={isChosen}
+      note={note}
+      busy={leaving}
+      leaving={leaving}
+      swap={view.swap}
+      deck={
+        tried.length > 1 && at >= 0
+          ? {
+              at,
+              total: tried.length,
+              onStep: (dir) => tried[at + dir] && onView({ rid: tried[at + dir].rid, swap: dir }),
+            }
+          : undefined
+      }
+      onReroll={() => {}}
+      onAccept={() => {}}
+      onSkip={() => {}}
+      onToggleLike={() => setPref(me.id, r.id, liked ? null : 'like').catch(() => toast('沒有存到，等一下再試', '咦'))}
+      onClose={() => setLeaving(true)}
+      onClosed={onClosed}
+    />
   );
 }

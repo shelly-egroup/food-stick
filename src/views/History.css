@@ -34,7 +34,127 @@
   border: 1.5px solid var(--ink);
   box-shadow: 4px 4px 0 var(--ink);
   rotate: -4deg;
+  padding: 0;
+  color: inherit;
+  cursor: pointer;
   animation: cover-seal 0.5s 0.45s var(--ease-spring) both;
+}
+.ledger__glyph:active {
+  scale: 0.94;
+}
+
+/* ---------- 彩蛋：連點封面小圖三下翻出今天的一句 ---------- */
+.ledger__egg {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  max-width: 34em;
+  margin: 0;
+  padding: 12px 16px;
+}
+.ledger__egg > span {
+  display: grid;
+  gap: 4px;
+}
+.ledger__egg small {
+  font-family: var(--f-serif);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  opacity: 0.85;
+}
+.ledger__egg b {
+  font-family: var(--f-kai);
+  font-size: 1.12rem;
+  font-weight: 700;
+  line-height: 1.5;
+  letter-spacing: 0.06em;
+}
+.ledger__egg-seal {
+  flex: none;
+  animation: egg-stamp 0.4s 0.15s var(--ease-spring) both;
+}
+@keyframes egg-stamp {
+  from {
+    opacity: 0;
+    scale: 2.4;
+    rotate: -30deg;
+  }
+}
+/* 廟宇：從簿子裡抽出一張黃曆紙，米黃底、朱紅字，像撕下來那樣往下一抖 */
+.ledger--temple .ledger__egg {
+  color: var(--vermilion-lo);
+  background: repeating-linear-gradient(to bottom, transparent 0 27px, rgba(200, 60, 40, 0.18) 27px 28px), #fbf1d6;
+  border: 1.5px solid var(--ink);
+  box-shadow: 4px 4px 0 var(--ink);
+  transform-origin: 50% 0;
+  animation: almanac-drop 0.6s var(--ease-spring) both;
+}
+@keyframes almanac-drop {
+  from {
+    opacity: 0;
+    transform: translateY(-18px) rotate(-3deg) scaleY(0.4);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(3px) rotate(1deg) scaleY(1.04);
+  }
+}
+/* 魔法：隱形墨水，字從模糊的金光裡慢慢浮出來，兩顆流星劃過 */
+.ledger--magic .ledger__egg {
+  position: relative;
+  overflow: hidden;
+  color: var(--marigold);
+  background: rgba(20, 22, 60, 0.45);
+  border: 1px dashed rgba(242, 185, 64, 0.7);
+  border-radius: 12px;
+}
+.ledger--magic .ledger__egg b {
+  color: #fff6d8;
+  animation: ink-reveal 1.2s var(--ease-out) both;
+}
+.ledger--magic .ledger__egg::before,
+.ledger--magic .ledger__egg::after {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: 70%;
+  width: 70px;
+  height: 1.6px;
+  background: linear-gradient(90deg, #fff6d8, transparent);
+  rotate: 150deg;
+  animation: egg-meteor 0.9s 0.2s ease-in both;
+}
+.ledger--magic .ledger__egg::after {
+  left: 40%;
+  animation-delay: 0.65s;
+}
+@keyframes ink-reveal {
+  from {
+    opacity: 0;
+    filter: blur(6px);
+    letter-spacing: 0.3em;
+    text-shadow: 0 0 18px var(--marigold);
+  }
+}
+@keyframes egg-meteor {
+  from {
+    opacity: 1;
+    translate: 0 0;
+  }
+  to {
+    opacity: 0;
+    translate: -160px 90px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ledger__egg,
+  .ledger__egg b,
+  .ledger__egg-seal,
+  .ledger__egg::before,
+  .ledger__egg::after {
+    animation: none !important;
+  }
 }
 .ledger__cover .eyebrow {
   color: currentColor;
@@ -442,50 +562,11 @@
 .entry__tried[open] summary::after {
   content: '－';
 }
-.entry__tried ul {
-  list-style: none;
-  margin: 10px 0 0;
-  padding: 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-.entry__tried li {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  font-family: var(--f-serif);
-  font-size: var(--t-sm);
-  border: 1.2px solid var(--rule-strong);
-  background: var(--paper-hi);
-}
-.entry__tried li em {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  font-style: normal;
-  font-size: 0.7rem;
-  font-weight: 900;
-  letter-spacing: 0.08em;
-}
-.entry__tried li.is-chosen {
-  border-color: var(--ink);
-  background: var(--accent-tint);
-}
-.entry__tried li.is-chosen em {
-  color: var(--accent);
-}
-.entry__tried li.is-skipped span {
-  text-decoration: line-through 1.5px;
-  color: var(--ink-3);
-}
-.entry__tried li.is-skipped em {
-  color: var(--ink-3);
+.entry__tried .cands {
+  margin-top: 12px;
 }
 [data-theme='magic'] .entry__slot,
-[data-theme='magic'] .entry__result,
-[data-theme='magic'] .entry__tried li {
+[data-theme='magic'] .entry__result {
   border-radius: 999px;
 }
 [data-theme='magic'] .entry__seal {
@@ -607,12 +688,12 @@
   flex: none;
   overflow: visible;
   filter: drop-shadow(0 0 8px rgba(242, 185, 64, 0.45));
-  animation: planet-float 5s ease-in-out infinite;
+  animation: ledger-planet-float 5s ease-in-out infinite;
 }
 .ledger__stats li:nth-child(2) .num-planet {
   animation-delay: -2.5s;
 }
-@keyframes planet-float {
+@keyframes ledger-planet-float {
   50% {
     translate: 0 -2px;
     rotate: -4deg;
@@ -832,4 +913,46 @@
   color: var(--ink);
   background: var(--marigold);
   border-radius: 50%;
+}
+
+/* ---------- 彩蛋：封面標題的字可以點、日期章可以重蓋、星座可以點亮 ---------- */
+.ledger__title {
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.ledger__title span {
+  display: inline-block;
+}
+.ledger__date {
+  cursor: pointer;
+}
+.ledger__constellation {
+  pointer-events: auto;
+  cursor: pointer;
+}
+.ledger__constellation .ledger__star {
+  transform-box: fill-box;
+}
+/* 點出來的流星：只劃一次 */
+.ledger__meteor--now {
+  animation: meteor-now 0.9s linear both;
+}
+@keyframes meteor-now {
+  0% {
+    translate: 0 0;
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  100% {
+    translate: -260px 150px;
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ledger__meteor--now {
+    display: none;
+  }
 }

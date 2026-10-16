@@ -482,7 +482,8 @@
   letter-spacing: 0.08em;
   text-wrap: balance;
 }
-.crew__gather-head span {
+/* 只管標題底下那一行；裡面的回覆標籤（要去、還沒回）用自己的顏色，不然鈷藍底上會變成深字看不清 */
+.crew__gather-head p > span {
   font-size: var(--t-xs);
   font-weight: 500;
   color: var(--ink-2);

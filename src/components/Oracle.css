@@ -393,3 +393,252 @@
   color: var(--ink);
   background: var(--marigold);
 }
+
+/* ---------- 供桌上有好幾支：籤卡兩側的箭頭、底下一排小點，籤卡可以左右拖 ---------- */
+.card-shadow.is-deck {
+  touch-action: pan-y;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.card-shadow.is-deck:active {
+  cursor: grabbing;
+}
+.oracle__nav {
+  position: absolute;
+  top: 190px;
+  z-index: 8;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  color: var(--ink);
+  background: var(--paper-hi);
+  border: 1.5px solid var(--ink);
+  border-radius: 50%;
+  box-shadow: 2px 2px 0 var(--accent);
+  cursor: pointer;
+  transition:
+    transform 0.2s var(--ease-spring),
+    opacity 0.2s;
+}
+.oracle__nav--prev {
+  left: -21px;
+}
+.oracle__nav--next {
+  right: -21px;
+}
+.oracle__nav[aria-disabled='true'] {
+  opacity: 0.3;
+  cursor: default;
+  box-shadow: none;
+}
+@media (hover: hover) {
+  .oracle__nav--prev:not([aria-disabled='true']):hover {
+    transform: translateX(-3px);
+  }
+  .oracle__nav--next:not([aria-disabled='true']):hover {
+    transform: translateX(3px);
+  }
+}
+[data-theme='magic'] .oracle__nav {
+  color: var(--marigold);
+  background: linear-gradient(160deg, #2c5596, #1f3d73);
+  box-shadow:
+    inset 0 0 0 2px rgba(242, 185, 64, 0.7),
+    2px 2px 0 var(--ink);
+}
+.oracle__deck {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin: -6px 0 -4px;
+}
+.oracle__deck i {
+  width: 8px;
+  height: 8px;
+  border: 1.3px solid var(--ink);
+  border-radius: 999px;
+  background: var(--paper-hi);
+  transition:
+    width 0.3s var(--ease-spring),
+    background 0.2s;
+}
+.oracle__deck i.is-on {
+  width: 22px;
+  background: var(--accent);
+}
+[data-theme='magic'] .oracle__deck i.is-on {
+  background: var(--marigold);
+}
+/* 切過來時掃過籤卡的一道光 */
+.card > .card__shine {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(
+      105deg,
+      transparent 38%,
+      rgba(255, 236, 170, 0.55) 47%,
+      rgba(255, 255, 255, 0.85) 50%,
+      rgba(255, 236, 170, 0.55) 53%,
+      transparent 62%
+    )
+    0 0 / 260% 100% no-repeat;
+}
+@media (max-width: 380px) {
+  .oracle__nav--prev {
+    left: -12px;
+  }
+  .oracle__nav--next {
+    right: -12px;
+  }
+}
+
+/* 回頭挑候選：籤卡上方彈出一句虧人的話 */
+.oracle__tease {
+  position: absolute;
+  top: -22px;
+  left: 50%;
+  z-index: 9;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100% - 24px);
+  padding: 8px 16px 8px 10px;
+  font-family: var(--f-kai);
+  font-weight: 700;
+  font-size: var(--t-md);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  color: var(--ink);
+  background: var(--paper-hi);
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  box-shadow: 3px 3px 0 var(--accent);
+  translate: -50% 0;
+  animation: tease-pop 0.45s var(--ease-spring) both;
+}
+.oracle__tease::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -8px;
+  width: 12px;
+  height: 12px;
+  background: var(--paper-hi);
+  border-right: 1.5px solid var(--ink);
+  border-bottom: 1.5px solid var(--ink);
+  translate: -50% 0;
+  rotate: 45deg;
+}
+@keyframes tease-pop {
+  from {
+    opacity: 0;
+    scale: 0.4;
+    translate: -50% 14px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .oracle__tease {
+    animation: none;
+  }
+}
+
+/* 籤卡展開之後才長出來的按鈕（資料晚到）：淡入，不要突然跳出來 */
+.oracle__extra > *,
+.oracle__actions > .oracle__taunt {
+  animation: rise-in 0.35s var(--ease-out) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .oracle__extra > *,
+  .oracle__actions > .oracle__taunt {
+    animation: none;
+  }
+}
+
+/* 起駕後改去別張：按鈕上大字＋一行小字（原本要去哪家） */
+.oracle__go-words {
+  display: grid;
+  gap: 2px;
+  text-align: left;
+  line-height: 1.15;
+}
+.oracle__go-words small {
+  font-family: var(--f-serif);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  opacity: 0.85;
+}
+
+/* ---------- 這家去不了：選原因的彈窗 ---------- */
+.skipwhy__hint {
+  margin: 0 0 14px;
+  font-family: var(--f-kai);
+  font-size: var(--t-sm);
+  color: var(--ink-2);
+}
+.skipwhy {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.skipwhy__opt {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  min-height: 78px;
+  padding: 12px 14px;
+  text-align: left;
+  color: var(--ink);
+  background: var(--paper-hi);
+  border: 1.5px solid var(--ink);
+  box-shadow: 3px 3px 0 var(--accent);
+  cursor: pointer;
+  animation: rise-in 0.35s calc(var(--i) * 60ms) var(--ease-out) both;
+  transition:
+    transform 0.2s var(--ease-spring),
+    box-shadow 0.2s;
+}
+.skipwhy__opt b {
+  font-family: var(--f-display);
+  font-weight: 900;
+  font-size: 1rem;
+  line-height: 1.3;
+  letter-spacing: 0.04em;
+}
+.skipwhy__opt span {
+  font-size: var(--t-xs);
+  color: var(--ink-2);
+}
+@media (hover: hover) {
+  .skipwhy__opt:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 5px 5px 0 var(--accent);
+  }
+}
+.skipwhy__opt:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--accent);
+}
+[data-theme='magic'] .skipwhy__opt {
+  border-radius: 14px;
+}
+@media (max-width: 340px) {
+  .skipwhy {
+    grid-template-columns: 1fr;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .skipwhy__opt {
+    animation: none;
+  }
+}

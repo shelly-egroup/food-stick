@@ -4,6 +4,7 @@ import {
   MEAL_MS,
   NO_MEAL_FILTERS,
   canDecide,
+  canSwitch,
   canDraw,
   canReopen,
   canSkip,
@@ -15,6 +16,7 @@ import {
   mealsFor,
   needsMe,
   showsLive,
+  keptToday,
   stateOf,
   taipeiDate,
   tallyOf,
@@ -119,7 +121,7 @@ describe('候選', () => {
     const m = meal({
       picks: [pick('a'), pick('b'), pick('c'), pick('a', { seed: 9 })],
       cands: ['c', 'a'],
-      skips: [{ rid: 'b', by: 'me', at: at(0) }],
+      skips: [{ rid: 'b', by: 'me', at: at(0), why: 'crowded' }],
     });
     assert.deepEqual(
       candidatesOf(m).map((p) => p.rid),
@@ -163,6 +165,22 @@ describe('能不能抽、起駕、去不了', () => {
     assert.equal(canDecide(m, 'me', T0), false);
   });
 
+  it('起駕之後、這餐結束前可以改去別張；只有一張、時間到了、不去的人都不行', () => {
+    const m = meal({
+      party: ['me', 'a'],
+      answers: { a: 'out' },
+      picks: [pick('a'), pick('b')],
+      cands: ['a', 'b'],
+      status: 'decided',
+      decision: { rid: 'a', by: 'me', at: at(0) },
+    });
+    assert.equal(canSwitch(m, 'me', T0), true);
+    assert.equal(canSwitch({ ...m, cands: ['a'] }, 'me', T0), false);
+    assert.equal(canSwitch(m, 'me', T0 + MEAL_MS), false);
+    assert.equal(canSwitch(m, 'a', T0), false);
+    assert.equal(canSwitch({ ...m, status: 'open', decision: null }, 'me', T0), false);
+  });
+
   it('取消了、或時間到了還沒起駕，可以重新開張；起駕過的不行', () => {
     assert.equal(canReopen(meal({ status: 'cancelled' }), T0), true);
     assert.equal(canReopen(meal(), T0 + MEAL_MS), true);
@@ -189,6 +207,12 @@ describe('進行中與紅點', () => {
     assert.equal(showsLive(d, 'a', T0), false);
     assert.equal(showsLive(d, 'b', T0), true);
     assert.equal(showsLive(d, 'b', T0 + MEAL_MS), false);
+    // 起駕了：通知裡今天的揪團單還留著，回頭找得到；時間到了也一樣（同一天），取消的不留、一個人的不放
+    assert.equal(keptToday(d, 'me', T0), true);
+    assert.equal(keptToday(d, 'me', T0 + MEAL_MS), true);
+    assert.equal(keptToday(d, 'b', T0), false);
+    assert.equal(keptToday({ ...d, status: 'cancelled' }, 'me', T0), false);
+    assert.equal(keptToday({ ...d, party: ['me'] }, 'me', T0), false);
   });
 
   it('紅點只算還沒回的邀請', () => {

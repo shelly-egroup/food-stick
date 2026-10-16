@@ -55,10 +55,17 @@
 .meal-slot.is-on svg {
   color: currentColor;
 }
+/* 鎖住（這一餐開了）：不再整塊淡掉看不清，改成虛線框、灰字，一看就知道不能點但字還讀得到 */
 .meal-slots.is-locked .meal-slot:not(.is-on) {
-  opacity: 0.38;
+  color: var(--ink-3);
+  background: var(--paper-lo);
+  border-style: dashed;
+  border-color: rgba(38, 33, 29, 0.4);
   cursor: not-allowed;
   transform: none;
+}
+.meal-slots.is-locked .meal-slot:not(.is-on) svg {
+  color: var(--ink-3);
 }
 .meal-slot--add {
   border-style: dashed;
@@ -99,7 +106,10 @@
 [data-theme='magic'] .meal-slot {
   border-radius: 14px;
 }
+/* 選中：維持原本的鈷藍底；金字放在鈷藍上不夠清楚，字改成米白，金色只留給小圖 */
 [data-theme='magic'] .meal-slot.is-on {
+  color: var(--paper-hi);
+  text-shadow: 0 1px 0 rgba(10, 18, 40, 0.35);
   box-shadow:
     3px 3px 0 var(--ink),
     0 0 18px rgba(155, 123, 255, 0.45);

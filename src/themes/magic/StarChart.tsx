@@ -814,7 +814,7 @@ export function StarChart({ top, rest = [], unit, revealKey, onOpen }: PodiumPro
     });
     tl.fromTo(q('.sky__link'), { opacity: 0 }, { opacity: 1, duration: 0.7, ease: 'power1.inOut' }, '>-0.2');
     // 名次列表不等星盤演完，一進來就出現
-    const rows = ledger.current?.querySelectorAll('.ledger__row');
+    const rows = ledger.current?.querySelectorAll('.catalog__row');
     if (rows?.length)
       tl.fromTo(
         rows,
@@ -822,7 +822,7 @@ export function StarChart({ top, rest = [], unit, revealKey, onOpen }: PodiumPro
         { opacity: 1, x: 0, duration: 0.3, stagger: 0.04, ease: 'power2.out', clearProps: 'all' },
         0,
       ).fromTo(
-        ledger.current!.querySelectorAll('.ledger__star'),
+        ledger.current!.querySelectorAll('.catalog__star'),
         { scale: 0, rotate: -90 },
         {
           scale: 1,
@@ -953,17 +953,17 @@ export function StarChart({ top, rest = [], unit, revealKey, onOpen }: PodiumPro
         })}
       </section>
       {rest.length > 0 && (
-        <ol ref={ledger} className="ledger" start={4}>
-          <li className="ledger__sky" aria-hidden="true">
+        <ol ref={ledger} className="catalog" start={4}>
+          <li className="catalog__sky" aria-hidden="true">
             {sparks.map((p, i) => (
               <span
                 key={i}
-                className={`ledger__spark ledger__spark--${p.kind}${p.big ? ' is-big' : ''}`}
+                className={`catalog__spark catalog__spark--${p.kind}${p.big ? ' is-big' : ''}`}
                 style={{ left: `${p.x}%`, top: `${p.y}%`, '--d': `${p.d}s`, '--dl': `${p.dl}s` } as CSSProperties}
               />
             ))}
             <span
-              className="ledger__shoot"
+              className="catalog__shoot"
               style={{ top: `${shoot.y}%`, '--d': `${shoot.d}s`, '--dl': `${shoot.dl}s` } as CSSProperties}
             />
           </li>
@@ -974,33 +974,33 @@ export function StarChart({ top, rest = [], unit, revealKey, onOpen }: PodiumPro
             const timing = { '--d': `${d}s`, '--dl': `${fx(-hash(x.r.id + 'dl' + seed) * d * 2)}s` } as CSSProperties;
             const flashy = pfx === 'twinkle' || pfx === 'flare';
             return (
-              <li key={x.r.id} className="ledger__row">
+              <li key={x.r.id} className="catalog__row">
                 <button
                   type="button"
-                  className="ledger__hit"
+                  className="catalog__hit"
                   onClick={() => onOpen?.(x.r)}
                   aria-label={`看${x.r.name}`}
                 >
-                  <span className="ledger__no">{copy.ranks.no(k + 4)}</span>
+                  <span className="catalog__no">{copy.ranks.no(k + 4)}</span>
                   <svg
-                    className={`ledger__star${flashy ? ` ledger__star--${pfx}` : ''}`}
+                    className={`catalog__star${flashy ? ` catalog__star--${pfx}` : ''}`}
                     viewBox="-15 -12 30 24"
                     aria-hidden="true"
                     style={{ scale: String(mag), ...timing }}
                   >
-                    <g className={flashy ? undefined : `ledger__fx ledger__fx--${pfx}`}>
+                    <g className={flashy ? undefined : `catalog__fx catalog__fx--${pfx}`}>
                       <Planet k={k} />
                     </g>
                     {pfx === 'orbit' && (
-                      <g className="ledger__orbit-x">
-                        <g className="ledger__orbit-y">
-                          <circle className="ledger__moon" r="2.2" fill="#f6e7b8" stroke={INK} strokeWidth="0.9" />
+                      <g className="catalog__orbit-x">
+                        <g className="catalog__orbit-y">
+                          <circle className="catalog__moon" r="2.2" fill="#f6e7b8" stroke={INK} strokeWidth="0.9" />
                         </g>
                       </g>
                     )}
                     {flashy && (
                       <path
-                        className="ledger__glint"
+                        className="catalog__glint"
                         d="M9 -13 L10 -9.5 L13.5 -8.5 L10 -7.5 L9 -4 L8 -7.5 L4.5 -8.5 L8 -9.5 Z"
                         fill="#fff6d6"
                         stroke={INK}
@@ -1008,8 +1008,8 @@ export function StarChart({ top, rest = [], unit, revealKey, onOpen }: PodiumPro
                       />
                     )}
                   </svg>
-                  <span className="ledger__name">{x.r.name}</span>
-                  <span className="ledger__val">
+                  <span className="catalog__name">{x.r.name}</span>
+                  <span className="catalog__val">
                     <b>{x.value}</b>
                     {unit}
                   </span>

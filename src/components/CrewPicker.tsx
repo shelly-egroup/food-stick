@@ -4,13 +4,12 @@ import { useRef, useState, type CSSProperties } from 'react';
 import { useTheme } from '@/themes';
 import { answerMeal, cancelMeal, inviteMeal } from '@/lib/store';
 import { useAppData } from '@/lib/appData';
-import { modeOf, type Meal } from '@/lib/meal';
+import { modeOf, tallyOf, type Meal } from '@/lib/meal';
 import { reducedMotion } from '@/lib/motion';
 import type { Member } from '@/lib/types';
 import { Avatar } from './Avatar';
 import { CrewSheet } from './CrewSheet';
 import { MateMarks } from './MateMarks';
-import { Tally } from './Tags';
 import { useToast } from './Toast';
 import './CrewPicker.css';
 
@@ -148,6 +147,8 @@ export function CrewPicker({
   if (meal && modeOf(meal) === 'group' && !adding) {
     const mine = meal.host === me.id;
     const host = memberMap.get(meal.host)?.name ?? '同事';
+    // 底下每個人的頭像都標了回覆，這裡只要一行字總結（不再疊一排數字章）
+    const t = tallyOf(meal, me.id);
     return (
       <div className={`crew crew--gather${mine ? '' : ' crew--member'}`} role="group" aria-label={copy.crew.title}>
         <div className="crew__gather-head">
@@ -156,9 +157,7 @@ export function CrewPicker({
           </span>
           <p>
             <b>{mine ? copy.crew.sent : copy.crew.member(host)}</b>
-            <span aria-live="polite">
-              <Tally meal={meal} skip={me.id} />
-            </span>
+            <span aria-live="polite">{copy.crew.tally(t.in, t.wait, t.out)}</span>
           </p>
           <span className="crew__gather-acts">
             {mine && (

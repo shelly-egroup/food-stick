@@ -1,3 +1,4 @@
+import type { SkipWhy } from '@/lib/meal';
 import type { ComponentType, ForwardRefExoticComponent, RefAttributes } from 'react';
 import type gsap from 'gsap';
 import type { IconName } from '@/components/Icon';
@@ -46,8 +47,15 @@ export interface ThemeCopy {
   taunts: string[][];
   /** 重抽次數用完（籤卡上取代重抽鈕的那句話） */
   noMore: string;
+  /** 篩選摘要：價位沒選或全選（不限價位）時的說法：香油錢無上限、法力無上限 */
+  priceAny: string;
   /** 次數用完之後：提醒從候選挑一支起駕 */
   pickFromCands: string;
+  /** 籤卡上次數用完時的第二行：有好幾支可以左右翻、只剩這一支 */
+  pickSwipe: string;
+  pickOnly: string;
+  /** 起駕的不是最後抽到的那支（回頭挑候選）：隨機虧一句 */
+  backPick: string[];
   /** 定案章（兩個字）：起駕的那一支、首頁封住籤筒（水晶球）的封條、歷史 */
   finalSeal: string;
   /** 首頁封條上的大字（前面另有一塊餐別小牌）：「神明已定」 */
@@ -168,8 +176,11 @@ export interface ThemeCopy {
     lookAll: string;
     /** 這家去不了：按鈕、再按一次確定、別人按了之後的消息、沒有店可以補的時候 */
     cantGo: string;
-    cantGoAsk: string;
-    cantGoBy: (name: string, shop: string) => string;
+    /** 去不了的彈窗：標題、說明，每個原因有主題的說法（title）、白話（hint）、短短兩三個字（short，食籤簿、通知用） */
+    cantGoTitle: string;
+    cantGoHint: string;
+    skipWhy: Record<SkipWhy, { title: string; hint: string; short: string }>;
+    cantGoBy: (name: string, shop: string, why?: string) => string;
     cantGoNone: string;
     /** 重新開張時：重抽次數接續原本的 */
     reopen: (n: number) => string;
@@ -178,6 +189,11 @@ export interface ThemeCopy {
     /** 有人搶先一步抽了、這一餐已經結束 */
     raced: string;
     ended: string;
+    /** 已經起駕了，翻到不是定案的那支：這餐結束了（或不能改）就說最後去了哪家 */
+    departedTo: (name: string) => string;
+    /** 起駕後改去這一張的按鈕：大字，和底下一行小字（原本要去哪家） */
+    switchTo: string;
+    switchFrom: (name: string) => string;
     /** 這一餐其實已經開了，只是畫面還沒同步到 */
     syncing: string;
   };
@@ -226,6 +242,8 @@ export interface ThemeCopy {
     marks: Record<HistoryTab, string>;
     tabs: Record<HistoryTab, string>;
     none: Record<Exclude<HistoryTab, 'all'>, { title: string; hint: string }>;
+    /** 彩蛋：連點封面的小圖三下翻出今天的一句（廟宇是黃曆宜忌，魔法是隱形墨水），同一天同一句 */
+    egg: { title: string; seal: string; lines: readonly string[] };
   };
   /**
    * 紙條區的空狀態與讀不到時，插畫底下的兩行字；

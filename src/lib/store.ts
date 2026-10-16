@@ -33,6 +33,7 @@ import {
   MAX_PARTY,
   MEAL_MS,
   canDecide,
+  canSwitch,
   canDraw,
   canReopen,
   canSkip,
@@ -42,6 +43,7 @@ import {
   type Meal,
   type MealFilters,
   type MealPick,
+  type SkipWhy,
   type Slot,
 } from './meal';
 import type { Crew, Member, Note, Restaurant } from './types';
@@ -105,17 +107,10 @@ export function useMembership(uid: string | undefined) {
 }
 
 /**
- * 監聽或查詢出錯後 Firestore 不會自己重試。這幾種是暫時的（索引還在建、網路斷了、伺服器忙），
- * 過一下再試：2、4、8…秒，最久 30 秒一次；權限不足這類不會自己好的就不重試。
+ * 監聽或查詢出錯後 Firestore 不會自己重試。這幾種是暫時的（網路斷了、伺服器忙），
+ * 過一下再試：2、4、8…秒，最久 30 秒一次；權限不足、缺索引這類不會自己好的就不重試。
  */
-const TRANSIENT = new Set([
-  'failed-precondition',
-  'unavailable',
-  'deadline-exceeded',
-  'resource-exhausted',
-  'internal',
-  'aborted',
-]);
+const TRANSIENT = new Set(['unavailable', 'deadline-exceeded', 'resource-exhausted', 'internal', 'aborted']);
 const isTransient = (err: unknown) => TRANSIENT.has((err as { code?: string } | null)?.code ?? '');
 const retryAfter = (tries: number) => Math.min(30_000, 2_000 * 2 ** tries);
 
@@ -456,15 +451,21 @@ export async function drawMeal(id: string, uid: string, expect: number, pick: Pi
 }
 
 /** 起駕：從候選選一家（就是定案），大家同時收到 */
-export async function decideMeal(id: string, uid: string, rid: string) {
+/**
+ * 起駕（定案）。from 是畫面上看到的定案：還沒起駕是 null；起駕後改去別張時是原本那家。
+ * 資料庫裡的定案跟畫面上不一樣（有人搶先起駕或先改了），就算搶輸。
+ */
+export async function decideMeal(id: string, uid: string, rid: string, from: string | null = null) {
   const { db } = fb();
   const ref = mealRef(id);
   await runTransaction(db, async (tx) => {
     const snap = await tx.get(ref);
     if (!snap.exists()) throw new MealError('missing');
     const m = toMeal(snap.id, snap.data(), toDate);
-    if (m.status === 'decided') throw new MealError('raced');
-    if (!canDecide(m, uid, Date.now()) || !m.cands.includes(rid)) throw new MealError('closed');
+    if ((m.decision?.rid ?? null) !== from) throw new MealError('raced');
+    const now = Date.now();
+    const allowed = from === null ? canDecide(m, uid, now) : canSwitch(m, uid, now) && rid !== from;
+    if (!allowed || !m.cands.includes(rid)) throw new MealError('closed');
     tx.update(ref, {
       decision: { rid, by: uid, at: serverTimestamp() },
       status: 'decided',
@@ -477,7 +478,7 @@ export async function decideMeal(id: string, uid: string, rid: string) {
  * 這家去不了：從候選拿掉、補抽一家（沒有店可以補就不補），重抽次數回到原本的數字；
  * 已經起駕的話回到還在抽的階段。
  */
-export async function skipMeal(id: string, uid: string, rid: string, next: PickInput | null) {
+export async function skipMeal(id: string, uid: string, rid: string, next: PickInput | null, why?: SkipWhy) {
   const { db } = fb();
   const ref = mealRef(id);
   await runTransaction(db, async (tx) => {
@@ -489,7 +490,7 @@ export async function skipMeal(id: string, uid: string, rid: string, next: PickI
     if (!canSkip(m, uid, Date.now())) throw new MealError('closed');
     const rest = m.cands.filter((r) => r !== rid && r !== next?.rid);
     tx.update(ref, {
-      skips: [...raw(x, 'skips'), { rid, by: uid, at: Timestamp.now() }],
+      skips: [...raw(x, 'skips'), { rid, by: uid, at: Timestamp.now(), ...(why ? { why } : {}) }],
       picks: next ? [...raw(x, 'picks'), pickDoc(next, uid)] : raw(x, 'picks'),
       cands: next ? [...rest, next.rid] : rest,
       rerollsLeft: m.rerolls,
@@ -575,7 +576,7 @@ export function useMealHistory(uid: string, size = 12) {
         .catch((err) => {
           if (off) return;
           setState({ key, meals: [], done: true, error: true, loading: false });
-          // 索引還在建、網路斷了：過一下再讀一次
+          // 網路斷了：過一下再讀一次
           if (isTransient(err)) timer = window.setTimeout(load, retryAfter(tries++));
         });
     void load();

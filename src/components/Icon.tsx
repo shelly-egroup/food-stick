@@ -10,6 +10,8 @@ const PATHS = {
   bell: 'M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15L6 16Zm4 4h4',
   bellOff: 'M6 16V11a6 6 0 0 1 9.5-4.9M18 11v5l1.5 2H8M10 20h4M4 4l16 16',
   arrow: 'M5 12h14M13 6l6 6-6 6',
+  'chevron-left': 'M15 5l-7 7 7 7',
+  'chevron-right': 'M9 5l7 7-7 7',
   edit: 'M4 20h4L19 9l-4-4L4 16v4Zm10-14 4 4',
   share: 'M12 3v12M7 8l5-5 5 5M5 13v7h14v-7',
   phone: 'M8 2h8a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm3 17h2',

@@ -88,6 +88,14 @@ const spark = (x: number, y: number, r: number) => {
 const ORB = { x: 34, y: 352 };
 const MOTES = 18;
 const OWL = { x: 300, y: 132, s: 0.64 };
+/** 貓頭鷹除了書架還會去停的地方（腳底座標）：窗台、吊燈頂、梯子 */
+const SPOTS: { x: number; y: number; lamp?: boolean }[] = [
+  { x: 166, y: 140 },
+  { x: 108, y: 45, lamp: true },
+  { x: 334, y: 236 },
+];
+/** 飛回來之後多久沒人理就睡著 */
+const OWL_NAP_MS = 12000;
 const pct = (v: number, of: number) => `${(v / of) * 100}%`;
 
 export function DustStudy({
@@ -107,6 +115,14 @@ export function DustStudy({
   const row = useRef<HTMLUListElement>(null);
   const busy = useRef({ spider: false, orb: false, owl: false });
   const [hat, setHat] = useState(false);
+  // 貓頭鷹平常在書櫃頂上打盹；點醒了會飛去書架叼一本書出來轉一圈，飛回來一陣子沒人理又睡著
+  const [asleep, setAsleep] = useState(true);
+  const nap = useRef(0);
+  useEffect(() => () => clearTimeout(nap.current), []);
+  const napLater = () => {
+    clearTimeout(nap.current);
+    nap.current = window.setTimeout(() => setAsleep(true), OWL_NAP_MS);
+  };
 
   useEffect(() => {
     const el = root.current;
@@ -216,45 +232,183 @@ export function DustStudy({
       .to(q('.study__lamp-glow, .study__lamp-fire'), { opacity: 0, duration: 0.8 }, 2.4);
   };
 
+  /** 一本書轉著飄出書架、在空中晃一下，再轉回原位 */
+  const floatBook = (book: HTMLElement, onDone?: () => void) => {
+    const cavity = book.closest('.study__cavity');
+    cavity?.classList.add('is-float');
+    const r = book.getBoundingClientRect();
+    burst(book, { x: r.left + r.width / 2, y: r.top + 4, n: 22 });
+    twinkle(6);
+    return gsap
+      .timeline({
+        onComplete: () => {
+          gsap.set(book, { clearProps: 'transform' });
+          cavity?.classList.remove('is-float');
+          onDone?.();
+        },
+      })
+      .to(book, {
+        y: -r.height * 0.16,
+        rotationY: 360,
+        rotation: -8,
+        scale: 1.22,
+        transformPerspective: 600,
+        duration: 0.85,
+        ease: 'power2.out',
+      })
+      .to(book, { y: -r.height * 0.1, rotation: 6, duration: 0.45, yoyo: true, repeat: 1, ease: 'sine.inOut' })
+      .to(book, { y: 0, rotationY: 720, rotation: 0, scale: 1, duration: 0.7, ease: 'back.out(1.6)' })
+      .add(() => paper(0.15), '-=0.3');
+  };
+
+  /** 拍翅膀：跟施法頁同一隻、同一種拍法（.owl-run.is-flying，翅膀以肩膀為軸），拍 dur 秒 */
+  const flap = (tl: gsap.core.Timeline, owl: Element, at: number, dur: number) =>
+    tl.add(() => owl.classList.add('is-flying'), at).add(() => owl.classList.remove('is-flying'), at + dur);
+
   const pokeOwl = () => {
     const el = root.current;
-    if (!el || busy.current.owl || reducedMotion()) return;
+    if (!el || busy.current.owl) return;
+    clearTimeout(nap.current);
+    const wasAsleep = asleep;
+    setAsleep(false);
+    if (reducedMotion()) return napLater();
     busy.current.owl = true;
     const q = gsap.utils.selector(el);
-    const chance = roll();
-    flutter(4);
-    owlHoot(chance < 0.3 ? 1.3 : 1.05);
-    const tl = gsap.timeline({ onComplete: () => void (busy.current.owl = false) });
-    tl.to(
-      q('.study__owl .owl__wing--l'),
-      { rotate: 40, duration: 0.1, yoyo: true, repeat: 5, svgOrigin: '-17 -36' },
-      0,
-    ).to(q('.study__owl .owl__wing--r'), { rotate: -40, duration: 0.1, yoyo: true, repeat: 5, svgOrigin: '17 -36' }, 0);
-    if (chance < 0.35) {
-      tl.to(q('.study__owl'), { y: -12, duration: 0.2, yoyo: true, repeat: 1, ease: 'power2.out' }, 0).add(
-        () => setHat((h) => !h),
-        0.2,
-      );
-    } else if (chance < 0.6) {
-      const owl = q('.study__owl');
+    const owl = q('.study__owl')[0];
+    const tl = gsap.timeline({
+      onComplete: () => {
+        owl.classList.remove('is-flying');
+        // 飛完一定回到書櫃頂上：外層位移、旋轉、透明度都清掉
+        gsap.set(owl, { clearProps: 'transform,opacity' });
+        busy.current.owl = false;
+        napLater();
+      },
+    });
+    let t = 0;
+    if (wasAsleep) {
+      // 驚醒：Zzz 散掉、整隻彈起來、臉放大一下，咕一聲
+      owlHoot(1.3);
+      tl.to(owl, { y: -14, duration: 0.16, ease: 'power2.out' }, 0)
+        .to(owl, { y: 0, duration: 0.3, ease: 'bounce.out' }, 0.16)
+        .fromTo(
+          q('.study__owl .owl__face'),
+          { scale: 0.86 },
+          { scale: 1.12, duration: 0.18, yoyo: true, repeat: 1, transformOrigin: '50% 50%' },
+          0.05,
+        );
+      t = 0.6;
+    } else owlHoot(1.05);
+
+    const pivot = `${OWL.x} ${OWL.y}`;
+    // 落地：壓扁一下（壓裡面那層 .owl__hop；.owl 本身帶著位置屬性，不能動它，不然會懸在半空）
+    const land = (at: number) =>
       tl.to(
-        q('.study__owl .owl__wing--l'),
-        { rotate: 40, duration: 0.09, yoyo: true, repeat: 23, svgOrigin: '-17 -36' },
-        0,
-      )
-        .to(
-          q('.study__owl .owl__wing--r'),
-          { rotate: -40, duration: 0.09, yoyo: true, repeat: 23, svgOrigin: '17 -36' },
-          0,
-        )
-        .to(owl, { x: -46, duration: 1.1, ease: 'sine.inOut' }, 0)
-        .to(owl, { y: -26, duration: 0.55, ease: 'sine.out' }, 0)
-        .to(owl, { y: 6, duration: 0.55, ease: 'sine.in' }, 0.55)
-        .to(owl, { x: 0, duration: 1.1, ease: 'sine.inOut' }, 1.1)
-        .to(owl, { y: -20, duration: 0.55, ease: 'sine.out' }, 1.1)
-        .to(owl, { y: 0, duration: 0.55, ease: 'sine.in' }, 1.65);
+        q('.study__owl .owl__hop'),
+        { scaleY: 0.86, scaleX: 1.08, duration: 0.08, yoyo: true, repeat: 1, transformOrigin: '50% 100%' },
+        at,
+      );
+    /** 從 (x0, y0) 飛到 (x1, y1)（都是相對書櫃頂的位移），中間拱一個弧、身體往飛的方向斜 */
+    const fly = (at: number, x0: number, y0: number, x1: number, y1: number, dur = 1) => {
+      const peak = Math.min(y0, y1) - 40;
+      tl.add(() => flutter(Math.round(dur * 8)), at);
+      flap(tl, owl, at, dur);
+      tl.to(owl, { x: x1, duration: dur, ease: 'sine.inOut' }, at)
+        .to(owl, { y: peak, duration: dur / 2, ease: 'sine.out' }, at)
+        .to(owl, { y: y1, duration: dur / 2, ease: 'sine.in' }, at + dur / 2)
+        .to(owl, { rotate: x1 < x0 ? -10 : 10, duration: dur / 2, svgOrigin: pivot }, at)
+        .to(owl, { rotate: 0, duration: 0.25, svgOrigin: pivot }, at + dur);
+      land(at + dur);
+      return at + dur;
+    };
+    /** 停一下、左右張望 */
+    const lookAround = (at: number) =>
+      tl
+        .to(q('.study__owl .owl__face'), { x: -3, duration: 0.25 }, at + 0.3)
+        .to(q('.study__owl .owl__face'), { x: 3, duration: 0.3 }, at + 0.9)
+        .to(q('.study__owl .owl__face'), { x: 0, duration: 0.25 }, at + 1.5);
+
+    const r = roll();
+    // 睡醒一定會飛；醒著的時候也可能只是跳一跳、歪頭
+    const plan = wasAsleep
+      ? r < 0.4
+        ? 'book'
+        : r < 0.85
+          ? 'spot'
+          : 'away'
+      : r < 0.28
+        ? 'book'
+        : r < 0.56
+          ? 'spot'
+          : r < 0.72
+            ? 'away'
+            : r < 0.88
+              ? 'hop'
+              : 'tilt';
+    const books = q('.study__book') as HTMLElement[];
+    const book = books[Math.floor(roll() * books.length)];
+
+    if (plan === 'book' && book) {
+      // 飛去書架：停在那本書旁邊（往書架中間那一側），書轉著飄出來再轉回去，飛回書櫃頂
+      const sr = el.getBoundingClientRect();
+      const br = book.getBoundingClientRect();
+      const bx = ((br.left + br.width / 2 - sr.left) / sr.width) * W;
+      const bw = (br.width / sr.width) * W;
+      const by = ((br.top - sr.top) / sr.height) * H;
+      const side = bx < (CAVITY.x0 + CAVITY.x1) / 2 ? 1 : -1;
+      const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
+      const dx = clamp(bx + side * (bw / 2 + 16), CAVITY.x0 + 18, CAVITY.x1 - 18) - OWL.x;
+      const dy = clamp(by + 34, CAVITY.y0 + 48, CAVITY.y1 - 4) - OWL.y;
+      const there = fly(t, 0, 0, dx, dy);
+      const stay = 2.3;
+      flap(tl, owl, there, stay);
+      tl.to(owl, { y: dy - 6, duration: 0.38, yoyo: true, repeat: 5, ease: 'sine.inOut' }, there).add(
+        () => void floatBook(book),
+        there + 0.1,
+      );
+      fly(there + stay, dx, dy, 0, 0);
+    } else if (plan === 'spot' || (plan === 'book' && !book)) {
+      // 飛去別的地方停一下：窗台、吊燈（燈會被壓得晃一晃）、梯子
+      // 戴著巫師帽就不去吊燈：帽尖會被畫面上緣切掉
+      const spots = SPOTS.filter((x) => !(x.lamp && hat));
+      const spot = spots[Math.floor(roll() * spots.length)];
+      const dx = spot.x - OWL.x;
+      const dy = spot.y - OWL.y;
+      const there = fly(t, 0, 0, dx, dy);
+      if (spot.lamp)
+        tl.fromTo(
+          q('.study__lamp'),
+          { rotate: 0 },
+          { keyframes: { rotate: [7, -5, 3, -1.5, 0] }, duration: 1.8, ease: 'sine.out', svgOrigin: '108 0' },
+          there,
+        ).fromTo(
+          // 貓頭鷹跟著燈晃：晃裡面那層、以腳底為軸，外層（帶著位移）不動
+          q('.study__owl .owl__hop'),
+          { rotate: 0 },
+          { keyframes: { rotate: [6, -4, 2.5, -1, 0] }, duration: 1.8, ease: 'sine.out', transformOrigin: '50% 100%' },
+          there,
+        );
+      lookAround(there);
+      fly(there + 2.1, dx, dy, 0, 0);
+    } else if (plan === 'away') {
+      // 飛出畫面：過一陣子換一身打扮（或脫掉）飛回來
+      const out = { x: 170, y: -230 };
+      fly(t, 0, 0, out.x, out.y, 1.1);
+      tl.to(owl, { opacity: 0, duration: 0.2 }, t + 0.9)
+        .add(() => setHat((h) => !h), t + 1.6)
+        .set(owl, { x: -360, y: -200, opacity: 1 }, t + 3.6);
+      fly(t + 3.6, -360, -200, 0, 0, 1.4);
+    } else if (plan === 'hop') {
+      flap(tl, owl, t, 0.5);
+      tl.to(owl, { y: -12, duration: 0.2, yoyo: true, repeat: 1, ease: 'power2.out' }, t).add(
+        () => setHat((h) => !h),
+        t + 0.2,
+      );
+      land(t + 0.4);
     } else {
-      tl.to(q('.study__owl'), { y: -6, duration: 0.15, yoyo: true, repeat: 3 }, 0);
+      // 歪頭想一下
+      tl.to(owl, { rotate: -14, duration: 0.25, svgOrigin: pivot }, t)
+        .to(owl, { rotate: 10, duration: 0.3, svgOrigin: pivot }, t + 0.6)
+        .to(owl, { rotate: 0, duration: 0.3, ease: 'back.out(2)', svgOrigin: pivot }, t + 1.1);
     }
   };
 
@@ -394,30 +548,9 @@ export function DustStudy({
   const openBook = (e: React.MouseEvent<HTMLButtonElement>, b: StudyBook) => {
     const btn = e.currentTarget;
     if (reducedMotion()) return onOpen(b.id);
-    const r = btn.getBoundingClientRect();
-    burst(btn, { x: r.left + r.width / 2, y: r.top + 4, n: 30 });
-    const chance = roll();
-    if (chance < 0.15) {
-      flutter(7);
-      sparkle();
-      gsap
-        .timeline({ onComplete: () => onOpen(b.id) })
-        .to(btn, { y: -60, rotate: -16, duration: 0.35, ease: 'power2.out' })
-        .to(btn, {
-          keyframes: { x: [0, 40, 10, -30, 0], y: [-60, -96, -112, -80, -60], rotate: [-16, 12, -8, 12, -6] },
-          duration: 1.4,
-          ease: 'sine.inOut',
-        })
-        .to(btn, { scaleX: 0.5, duration: 0.09, yoyo: true, repeat: 15, transformOrigin: '50% 50%' }, 0.3)
-        .to(btn, { x: 0, y: 0, rotate: 0, scaleX: 1, duration: 0.45, ease: 'bounce.out' });
-      return;
-    }
-    paper(0.2);
-    twinkle(5);
-    gsap
-      .timeline({ onComplete: () => onOpen(b.id) })
-      .to(btn, { y: -26, rotate: -5, duration: 0.3, ease: 'power2.out' })
-      .to(btn, { y: 0, rotate: 0, duration: 0.5, ease: 'back.out(2)' }, '+=0.15');
+    // 點一本書：它轉著飄出書架、晃一下再轉回去，才翻開
+    sparkle();
+    floatBook(btn, () => onOpen(b.id));
   };
 
   const u = (v: number) => `calc(${v} * var(--u))`;
@@ -635,9 +768,18 @@ export function DustStudy({
           <CrystalBall id="study-orb" cx={ORB.x} cy={ORB.y} r={14} runes={false} />
           <rect x="10" y="326" width="48" height="52" fill="transparent" />
         </g>
-        <g className="study__owl" pointerEvents="auto">
-          <Owl x={OWL.x} y={OWL.y} s={OWL.s} onPoke={pokeOwl} outfit={hat ? 'hat' : 'none'} />
+        <g className="study__owl owl-run" pointerEvents="auto">
+          <Owl x={OWL.x} y={OWL.y} s={OWL.s} onPoke={pokeOwl} outfit={hat ? 'hat' : 'none'} asleep={asleep} />
         </g>
+        {asleep && (
+          <g className="study__zzz" pointerEvents="none" aria-hidden="true">
+            {['z', 'z', 'Z'].map((z, i) => (
+              <text key={i} x={OWL.x + 14 + i * 7} y={OWL.y - 40 - i * 9} style={{ '--i': i } as CSSProperties}>
+                {z}
+              </text>
+            ))}
+          </g>
+        )}
         <g className="study__motes" pointerEvents="none">
           {Array.from({ length: MOTES }, (_, i) => (
             <path
@@ -680,6 +822,9 @@ export function DustStudy({
                   onClick={(e) => openBook(e, b)}
                   aria-label={`看${b.name}`}
                 >
+                  <span className="study__tag" aria-hidden="true">
+                    就這本
+                  </span>
                   <span className="study__sigil" aria-hidden="true">
                     {SIGILS[i % SIGILS.length]}
                   </span>

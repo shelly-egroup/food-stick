@@ -27,6 +27,7 @@ import {
   REROLLS,
   slotIcon,
   canDecide,
+  canSwitch,
   canDraw,
   canReopen,
   canSkip,
@@ -34,6 +35,7 @@ import {
   decided,
   isGoing,
   isLive,
+  candidatesOf,
   latestOf,
   mealIdOf,
   mealsFor,
@@ -42,6 +44,7 @@ import {
   taipeiDate,
   type Meal,
   type MealFilters,
+  type SkipWhy,
 } from '@/lib/meal';
 import {
   MealError,
@@ -127,6 +130,8 @@ interface Shown {
   r: Restaurant;
   reading: Reading;
   spent?: boolean;
+  /** 在籤卡上左右切過來的：從哪一側滑進來 */
+  swap?: 1 | -1;
 }
 
 export function Home() {
@@ -151,7 +156,7 @@ export function Home() {
   const [taunt, setTaunt] = useState('');
   const pendingReroll = useRef(false);
   // 這家去不了：籤卡收起來之後，補抽一家時要拿掉的那一家
-  const pendingSkip = useRef<string | null>(null);
+  const pendingSkip = useRef<{ rid: string; why: SkipWhy } | null>(null);
   const { pulse, drawAsk, doneDrawAsk, openAsk, doneOpenAsk, hide: hideHerald } = useHerald();
 
   // ---------- 現在的這一餐 ----------
@@ -249,11 +254,18 @@ export function Home() {
   const [candsOpen, setCandsOpen] = useState(false);
 
   // ---------- 翻開某一支 ----------
-  const openPick = (m: Meal, rid: string, spent = false) => {
+  const openPick = (m: Meal, rid: string, spent = false, swap?: 1 | -1) => {
     const p = pickOf(m, rid);
     const r = restaurantMap.get(rid);
     if (!p || !r) return;
-    setResult({ key: `${m.id}:${rid}:${p.seed}`, mealId: m.id, r, reading: readingOf(theme, r, p, modeOf(m)), spent });
+    setResult({
+      key: `${m.id}:${rid}:${p.seed}`,
+      mealId: m.id,
+      r,
+      reading: readingOf(theme, r, p, modeOf(m)),
+      spent,
+      swap,
+    });
     setPhase('revealed');
     // 籤卡翻開時，前面開著的彈窗（供桌、篩選）都收起來，不要擋住籤卡
     setCandsOpen(false);
@@ -279,7 +291,7 @@ export function Home() {
    * 抽籤：先跑主題的儀式動畫，同時請 AI 寫一首新的籤詩；寫進這一餐之後才展開籤卡（AI 來不及就用原本的）。
    * skip：這家去不了，補抽一家（不扣次數）。pick 是使用者直接點的法器（魔法版）。
    */
-  async function runDraw(opts: { pick?: string; skip?: string } = {}) {
+  async function runDraw(opts: { pick?: string; skip?: string; why?: SkipWhy } = {}) {
     const target = meal;
     if (!opts.skip && !canDrawNow) {
       toast(copy.noMore, copy.acceptSeal);
@@ -298,7 +310,7 @@ export function Home() {
     });
     if (!hit && opts.skip && target) {
       // 沒有別家可以補：只把這家拿掉
-      skipMeal(target.id, me.id, opts.skip, null).catch(() => toast('沒有成功，等一下再試', '咦'));
+      skipMeal(target.id, me.id, opts.skip, null, opts.why).catch(() => toast('沒有成功，等一下再試', '咦'));
       toast(copy.meal.cantGoNone, copy.acceptSeal);
       setPhase('idle');
       return;
@@ -332,7 +344,7 @@ export function Home() {
     // 寫進這一餐：有人搶先一步的話，改翻開他抽到的那一支
     const id = target?.id ?? mealIdOf(today, slot, me.id);
     try {
-      if (opts.skip && target) await skipMeal(target.id, me.id, opts.skip, input);
+      if (opts.skip && target) await skipMeal(target.id, me.id, opts.skip, input, opts.why);
       else if (target) await drawMeal(target.id, me.id, target.picks.length, input);
       else {
         const how = await openMeal({
@@ -410,9 +422,27 @@ export function Home() {
   const resultLive = !!resultMeal && isLive(resultMeal, t);
   const isChosen = !!result && resultMeal?.decision?.rid === result.r.id;
   const inCands = !!result && !!resultMeal?.cands.includes(result.r.id);
-  const note = resultMeal && !resultLive && !isChosen ? copy.meal.ended : undefined;
+  // 不是定案的那支：起駕過、這餐還沒結束、我也能改，就把起駕鈕換成「改往這裡」（鈕上寫原本要去哪家）；
+  // 不能改了（結束了、我不去）就說最後去了哪家；沒起駕、時間到了就說這餐結束了
+  const departed = resultMeal && !isChosen ? chosenOf(resultMeal) : null;
+  const departedName = departed ? (restaurantMap.get(departed.rid)?.name ?? departed.name) : '';
+  const switching = !!departed && !!resultMeal && canSwitch(resultMeal, me.id, t) && inCands;
+  const note = departed
+    ? switching
+      ? undefined
+      : copy.meal.departedTo(departedName)
+    : resultMeal && !resultLive && !isChosen
+      ? copy.meal.ended
+      : undefined;
   /** 供桌（預言牌陣）彈窗攤開的那一餐：籤卡開著就是籤卡那一餐 */
   const altar = resultMeal ?? shown;
+  // 供桌上有好幾支：籤卡上直接左右切到旁邊那支，不用回到供桌彈窗
+  const deck = resultMeal ? candidatesOf(resultMeal) : [];
+  const deckAt = result ? deck.findIndex((x) => x.rid === result.r.id) : -1;
+  const stepDeck = (dir: 1 | -1) => {
+    const next = deck[deckAt + dir];
+    if (phase === 'revealed' && resultMeal && next) openPick(resultMeal, next.rid, false, dir);
+  };
 
   const reroll = () => {
     if (phase !== 'revealed' || !resultMeal || !canDraw(resultMeal, me.id, t)) return;
@@ -448,20 +478,30 @@ export function Home() {
   }, [openAsk, shown?.id]);
 
   /** 起駕：這一支就是定案，大家同時收到 */
+  const [tease, setTease] = useState<string | undefined>();
+  const lastTease = useRef('');
   const accept = () => {
-    if (phase !== 'revealed' || !result || !resultMeal) return;
+    if (phase !== 'revealed' || !result || !resultMeal || tease) return;
     toast(result.r.mapUrl ? copy.acceptedGo : copy.accepted, copy.acceptSeal);
     markDeparted(resultMeal.id);
-    decideMeal(resultMeal.id, me.id, result.r.id).catch((err) =>
+    decideMeal(resultMeal.id, me.id, result.r.id, resultMeal.decision?.rid ?? null).catch((err) =>
       toast(err instanceof MealError && err.reason === 'raced' ? copy.meal.raced : '沒有成功，等一下再試', '咦'),
     );
-    setPhase('leaving');
+    // 起駕（或改去）的不是最後抽到的那支：籤卡搖搖頭、虧一句再收起來
+    const backPick = resultMeal.cands.length > 1 && latestOf(resultMeal)?.rid !== result.r.id;
+    if (!backPick || reducedMotion()) return setPhase('leaving');
+    // 隨機挑一句，不跟上一次一樣
+    const lines = copy.backPick.filter((l) => l !== lastTease.current);
+    const line = lines[Math.floor(Math.random() * lines.length)];
+    lastTease.current = line;
+    setTease(line);
+    window.setTimeout(() => setPhase('leaving'), 1700);
   };
 
   /** 這家去不了：收起籤卡，神明（水晶球）另指一家 */
-  const skipHere = () => {
+  const skipHere = (why: SkipWhy) => {
     if (phase !== 'revealed' || !result || !resultMeal) return;
-    pendingSkip.current = result.r.id;
+    pendingSkip.current = { rid: result.r.id, why };
     setPhase('leaving');
   };
 
@@ -472,13 +512,14 @@ export function Home() {
 
   const onClosed = async () => {
     setResult(null);
+    setTease(undefined);
     await stage.current?.settle();
     if (pendingReroll.current || pendingSkip.current) {
-      const skip = pendingSkip.current ?? undefined;
+      const skip = pendingSkip.current;
       pendingReroll.current = false;
       pendingSkip.current = null;
       await sleep(160);
-      await runDraw({ skip });
+      await runDraw({ skip: skip?.rid, why: skip?.why });
       return;
     }
     setPhase('idle');
@@ -530,18 +571,20 @@ export function Home() {
   const filtered = filters.categories.length + filters.prices.length + walks.length > 0;
   // 搖手機被 iOS 拒絕了：點首頁的封印小標籤，攤開解封籤教怎麼重新允許
   const [unsealOpen, setUnsealOpen] = useState(false);
+  // 篩選摘要：沒選和全選都是不限，不用一個一個列出來
+  const some = (n: number, all: number) => n > 0 && n < all;
   const summary = [
-    filters.categories.length
+    some(filters.categories.length, CATEGORIES.length)
       ? CATEGORIES.filter((c) => filters.categories.includes(c.id))
           .map((c) => c.label)
           .join('、')
       : '全部類型',
-    filters.prices.length
+    some(filters.prices.length, PRICES.length)
       ? PRICES.filter((p) => filters.prices.includes(p.v))
           .map((p) => p.label)
           .join('、')
-      : '不限價位',
-    ...(walks.length
+      : copy.priceAny,
+    ...(some(walks.length, WALKS.length)
       ? [
           `步行 ${WALKS.filter((w) => walks.includes(w.v))
             .map((w) => w.label)
@@ -879,10 +922,14 @@ export function Home() {
           rerollsLeft={resultMeal?.rerollsLeft ?? rerollsLeft}
           rerolls={resultMeal?.rerolls ?? rerolls}
           canReroll={!!resultMeal && canDraw(resultMeal, me.id, t) && resultMeal.picks.length > 0}
-          canDecide={!!resultMeal && canDecide(resultMeal, me.id, t) && inCands}
-          canSkip={!!resultMeal && canSkip(resultMeal, me.id, t) && inCands}
+          canDecide={(!!resultMeal && canDecide(resultMeal, me.id, t) && inCands) || switching}
+          switching={switching ? departedName : undefined}
+          canSkip={!!resultMeal && canSkip(resultMeal, me.id, t) && inCands && !departed}
           decided={isChosen}
           spent={result.spent}
+          swap={result.swap}
+          tease={tease}
+          deck={deck.length > 1 && deckAt >= 0 ? { at: deckAt, total: deck.length, onStep: stepDeck } : undefined}
           note={note}
           busy={phase !== 'revealed'}
           leaving={phase === 'leaving'}

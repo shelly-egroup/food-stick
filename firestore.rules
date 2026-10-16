@@ -162,7 +162,8 @@ service cloud.firestore {
         && validText(p.verdict, 0, 60);
     }
     function validSkip(s, cands) {
-      return s is map && s.keys().hasOnly(['rid', 'by', 'at']) && s.keys().hasAll(['rid', 'by', 'at'])
+      return s is map && s.keys().hasOnly(['rid', 'by', 'at', 'why']) && s.keys().hasAll(['rid', 'by', 'at'])
+        && (!('why' in s) || s.why in ['crowded', 'closed', 'soldout', 'mood'])
         && s.rid in cands
         && s.by == request.auth.uid
         && s.at is timestamp
@@ -278,12 +279,14 @@ service cloud.firestore {
                 && request.resource.data.rerollsLeft == resource.data.rerollsLeft - 1))
         && request.resource.data.updatedAt == request.time;
 
-      // 要去的人：起駕（從候選選一家，就是定案）
+      // 要去的人：起駕（從候選選一家，就是定案）；起駕後、這餐結束前也可以改去候選裡的別張
       allow update: if onlyKeys(['decision', 'status', 'updatedAt'])
         && isMember()
         && mealGoing(resource.data)
         && mealLive(resource.data)
-        && resource.data.status == 'open'
+        && (resource.data.status == 'open'
+          || (resource.data.status == 'decided'
+            && request.resource.data.decision.rid != resource.data.decision.rid))
         && request.resource.data.status == 'decided'
         && request.resource.data.decision is map
         && request.resource.data.decision.keys().hasOnly(['rid', 'by', 'at'])

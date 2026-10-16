@@ -104,10 +104,16 @@ export interface MealPick {
 }
 
 /** 「這家去不了」：哪一家、誰按的 */
+/** 去不了的原因：人太多、沒開、賣完、不想吃 */
+export const SKIP_WHYS = ['crowded', 'closed', 'soldout', 'mood'] as const;
+export type SkipWhy = (typeof SKIP_WHYS)[number];
+
 export interface MealSkip {
   rid: string;
   by: string;
   at: Date | null;
+  /** 為什麼去不了；舊資料沒有 */
+  why: SkipWhy | null;
 }
 
 export interface MealFilters extends DrawFilters {
@@ -201,7 +207,8 @@ export function toMeal(id: string, x: Raw, toDate: (v: unknown) => Date | null):
     cands: strings(x.cands),
     skips: list(x.skips).map((s) => {
       const q = (s ?? {}) as Raw;
-      return { rid: text(q.rid), by: text(q.by), at: toDate(q.at) };
+      const why = SKIP_WHYS.find((w) => w === q.why) ?? null;
+      return { rid: text(q.rid), by: text(q.by), at: toDate(q.at), why };
     }),
     decision:
       decision && text(decision.rid)
@@ -252,6 +259,9 @@ export const canDraw = (m: Meal, uid: string, now: number) =>
 /** 現在能不能起駕：還在抽的階段、我要去、有候選 */
 export const canDecide = (m: Meal, uid: string, now: number) =>
   isLive(m, now) && m.status === 'open' && isGoing(m, uid) && m.cands.length > 0;
+/** 起駕之後、這餐結束前：要去的人可以改去候選裡的別張 */
+export const canSwitch = (m: Meal, uid: string, now: number) =>
+  isLive(m, now) && m.status === 'decided' && isGoing(m, uid) && m.cands.length > 1;
 /** 「這家去不了」：起駕前後都可以，只要這餐還沒結束 */
 export const canSkip = (m: Meal, uid: string, now: number) => isLive(m, now) && isGoing(m, uid) && m.cands.length > 0;
 /** 同一個餐別可以重新開張：取消了，或時間到了還沒起駕（重抽次數接續原本的） */
@@ -262,6 +272,17 @@ export function showsLive(m: Meal, uid: string, now: number) {
   if (!m.party.includes(uid) || !isLive(m, now)) return false;
   return m.status === 'open' || stateOf(m, uid) === 'wait';
 }
+
+/**
+ * 通知裡另外留著的：今天跟我有關的揪團單，起駕（定案）了也不收，方便回頭找去哪家、跟誰去。
+ * 還在進行、要我處理的那些由 showsLive 負責，這裡只補它沒列的；取消的不留。
+ */
+export const keptToday = (m: Meal, uid: string, now: number) =>
+  m.date === taipeiDate(now) &&
+  m.party.length > 1 &&
+  m.party.includes(uid) &&
+  m.status !== 'cancelled' &&
+  !showsLive(m, uid, now);
 
 /** 有事等我做（紅點）：還沒回的邀請 */
 export const needsMe = (m: Meal, uid: string, now: number) =>

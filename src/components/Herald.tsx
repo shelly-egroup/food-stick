@@ -14,6 +14,7 @@ import {
   modeOf,
   needsMe,
   showsLive,
+  keptToday,
   slotIcon,
   stateOf,
   type Answer,
@@ -128,7 +129,11 @@ function describe(
       const s = m.skips.at(-1)!;
       if (s.by !== me && st !== 'out') {
         news = {
-          text: copy.meal.cantGoBy(name(s.by), was.picks.findLast((p) => p.rid === s.rid)?.name ?? ''),
+          text: copy.meal.cantGoBy(
+            name(s.by),
+            was.picks.findLast((p) => p.rid === s.rid)?.name ?? '',
+            s.why ? copy.meal.skipWhy[s.why].short : undefined,
+          ),
           big: true,
         };
         pulse = { id: m.id, kind: 'skipped' };
@@ -165,7 +170,7 @@ function describe(
  * 上方的鑼（貓頭鷹）旁邊記著幾件事等你回。點開是一張張紅帖（封著火漆的信），直接在上面回覆。
  */
 export function HeraldProvider({ children }: { children: ReactNode }) {
-  const { me, live: mine, memberMap, ready } = useAppData();
+  const { me, live: mine, meals, memberMap, ready } = useAppData();
   const { theme } = useTheme();
   const { copy } = theme;
   const now = useNow();
@@ -182,12 +187,20 @@ export function HeraldProvider({ children }: { children: ReactNode }) {
   const unread = live.filter((m) => needsMe(m, me.id, now)).length;
   // 通知開著的時候，剛回覆完的帖子先留著（例如起駕之後才補按「我要去」，不會一按就消失）；關掉再收
   const [kept, setKept] = useState<string[]>([]);
+  // 今天的揪團單：起駕了也留在通知最後面，回頭找得到（不算進紅點）
+  const today = [...new Map([...meals, ...mine].map((m) => [m.id, m])).values()]
+    .filter((m) => keptToday(m, me.id, now))
+    .sort((a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0));
   const listed = open
     ? [
         ...live,
-        ...mine.filter((m) => kept.includes(m.id) && !live.includes(m) && isLive(m, now) && m.party.includes(me.id)),
+        ...mine.filter(
+          (m) =>
+            kept.includes(m.id) && !live.includes(m) && !today.includes(m) && isLive(m, now) && m.party.includes(me.id),
+        ),
+        ...today,
       ]
-    : live;
+    : [...live, ...today];
 
   // 資料一變就跟上一次比：有新消息就跳橫幅、通知鈕晃一下（資料第一次到齊時不跳）
   const [prev, setPrev] = useState<Meal[] | null>(null);

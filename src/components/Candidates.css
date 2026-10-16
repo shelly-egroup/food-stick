@@ -236,7 +236,8 @@
   font-family: var(--f-serif);
   font-size: 0.62rem;
   letter-spacing: 0.06em;
-  color: var(--marigold);
+  /* 小字放在藍紫牌面上：用亮一階的金，才看得清 */
+  color: #ffd77a;
 }
 .cands--magic .cand__name {
   display: -webkit-box;
@@ -300,4 +301,33 @@
 .cands--magic .cand__no,
 .cands--magic .cand__name {
   text-wrap: balance;
+}
+
+/* 食籤簿裡攤開來看的：不能點，不抬起來 */
+.cand.is-still {
+  cursor: default;
+}
+/* 說過去不了的那支：褪色，底下蓋一張「去不了」 */
+.cand.is-skipped {
+  filter: grayscale(0.85);
+  opacity: 0.62;
+}
+.cand__skip {
+  position: absolute;
+  left: 50%;
+  bottom: -12px;
+  translate: -50% 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 7px;
+  font-family: var(--f-serif);
+  font-size: 0.64rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  color: var(--paper-hi);
+  background: var(--ink);
+  border-radius: 999px;
+  rotate: -6deg;
 }
