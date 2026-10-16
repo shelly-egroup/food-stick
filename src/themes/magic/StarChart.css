@@ -249,7 +249,7 @@
 .sky__name {
   color: var(--paper-hi);
 }
-.ledger {
+.catalog {
   position: relative;
   display: grid;
   margin: 0;
@@ -262,7 +262,7 @@
     var(--paper-hi);
   list-style: none;
 }
-.ledger::before {
+.catalog::before {
   content: 'STAR CATALOGUE';
   display: block;
   padding: 6px 4px 8px;
@@ -273,10 +273,10 @@
   letter-spacing: 0.34em;
   color: var(--cobalt);
 }
-.ledger__row + .ledger__row {
+.catalog__row + .catalog__row {
   border-top: 1px dashed rgba(38, 33, 29, 0.16);
 }
-.ledger__hit {
+.catalog__hit {
   display: grid;
   grid-template-columns: 2.6em 26px minmax(0, 1fr) auto;
   align-items: center;
@@ -290,27 +290,27 @@
   cursor: pointer;
   transition: background 0.2s;
 }
-.ledger__hit:hover,
-.ledger__hit:focus-visible {
+.catalog__hit:hover,
+.catalog__hit:focus-visible {
   background: rgba(58, 104, 173, 0.07);
 }
-.ledger__no {
+.catalog__no {
   font-family: var(--f-latin);
   font-style: italic;
   font-weight: 600;
   font-size: 1.1rem;
   color: var(--cobalt);
 }
-.ledger__star {
+.catalog__star {
   width: 26px;
   height: 26px;
   overflow: visible;
   transition: rotate 0.5s var(--ease-spring);
 }
-.ledger__hit:hover .ledger__star {
+.catalog__hit:hover .catalog__star {
   rotate: 72deg;
 }
-.ledger__name {
+.catalog__name {
   overflow: hidden;
   font-family: var(--f-display);
   font-weight: 900;
@@ -319,16 +319,16 @@
   text-overflow: ellipsis;
   transition: translate 0.3s var(--ease-spring);
 }
-.ledger__hit:hover .ledger__name {
+.catalog__hit:hover .catalog__name {
   translate: 4px 0;
   color: var(--cobalt);
 }
-.ledger__val {
+.catalog__val {
   font-size: var(--t-xs);
   color: var(--ink-3);
   white-space: nowrap;
 }
-.ledger__val b {
+.catalog__val b {
   margin-right: 2px;
   font-family: var(--f-display);
   font-size: 1.05rem;
@@ -358,27 +358,27 @@
   border-style: solid;
   border-color: rgba(242, 185, 64, 0.42);
 }
-.starchart--nebula .ledger {
+.starchart--nebula .catalog {
   background:
     radial-gradient(circle, rgba(74, 61, 158, 0.08) 0 1px, transparent 1.4px) 0 0 / 14px 14px,
     #fbf7ff;
 }
-.starchart--nebula .ledger::before,
-.starchart--nebula .ledger__no {
+.starchart--nebula .catalog::before,
+.starchart--nebula .catalog__no {
   color: #4a3d9e;
 }
-.ledger__star {
+.catalog__star {
   width: 30px;
   height: 24px;
 }
-.ledger__hit {
+.catalog__hit {
   grid-template-columns: 2.6em 30px minmax(0, 1fr) auto;
 }
-.ledger__hit:hover .ledger__star {
+.catalog__hit:hover .catalog__star {
   rotate: 0deg;
   translate: 0 -3px;
 }
-.ledger__star {
+.catalog__star {
   transition: translate 0.3s var(--ease-spring);
 }
 
@@ -405,7 +405,7 @@
 .starchart--nebula .sky__stat {
   text-shadow: none;
 }
-.starchart--nebula .ledger {
+.starchart--nebula .catalog {
   border-top: 1.5px solid var(--ink);
   border-radius: 16px;
   color: #fff;
@@ -415,29 +415,29 @@
     linear-gradient(180deg, #1d2050, #241f5c);
   box-shadow: 8px 8px 0 var(--marigold);
 }
-.starchart--nebula .ledger::before {
+.starchart--nebula .catalog::before {
   color: var(--marigold);
   border-color: rgba(242, 185, 64, 0.4);
 }
-.starchart--nebula .ledger__row + .ledger__row {
+.starchart--nebula .catalog__row + .catalog__row {
   border-color: rgba(255, 255, 255, 0.12);
 }
-.starchart--nebula .ledger__hit {
+.starchart--nebula .catalog__hit {
   color: #fff;
 }
-.starchart--nebula .ledger__hit:hover {
+.starchart--nebula .catalog__hit:hover {
   background: rgba(155, 123, 255, 0.14);
 }
-.starchart--nebula .ledger__no {
+.starchart--nebula .catalog__no {
   color: var(--marigold);
 }
-.starchart--nebula .ledger__hit:hover .ledger__name {
+.starchart--nebula .catalog__hit:hover .catalog__name {
   color: var(--marigold);
 }
-.starchart--nebula .ledger__val {
+.starchart--nebula .catalog__val {
   color: rgba(255, 255, 255, 0.7);
 }
-.starchart--nebula .ledger__val b {
+.starchart--nebula .catalog__val b {
   color: var(--marigold);
 }
 
@@ -540,21 +540,21 @@
 }
 
 /* 星等表：每次進來隨機決定，有的行星會轉、會飄、會晃、帶著小衛星繞，有的會閃 */
-.ledger__row {
+.catalog__row {
   position: relative;
   z-index: 1;
 }
-.ledger__fx {
+.catalog__fx {
   transform-box: fill-box;
   transform-origin: center;
 }
-.ledger__fx--spin {
+.catalog__fx--spin {
   animation: planet-spin calc(var(--d) * 3) linear var(--dl) infinite;
 }
-.ledger__fx--bob {
+.catalog__fx--bob {
   animation: planet-float var(--d) ease-in-out var(--dl) infinite alternate;
 }
-.ledger__fx--sway {
+.catalog__fx--sway {
   animation: planet-sway var(--d) ease-in-out var(--dl) infinite alternate;
 }
 @keyframes planet-spin {
@@ -578,10 +578,10 @@
     transform: rotate(16deg);
   }
 }
-.ledger__orbit-x {
+.catalog__orbit-x {
   animation: orbit-x calc(var(--d) / 2) ease-in-out var(--dl) infinite alternate;
 }
-.ledger__orbit-y {
+.catalog__orbit-y {
   animation: orbit-y calc(var(--d) / 2) ease-in-out calc(var(--dl) - var(--d) / 4) infinite alternate;
 }
 @keyframes orbit-x {
@@ -600,10 +600,10 @@
     transform: translateY(5px);
   }
 }
-.ledger__star--twinkle {
+.catalog__star--twinkle {
   animation: planet-twinkle var(--d) ease-in-out var(--dl) infinite;
 }
-.ledger__star--flare {
+.catalog__star--flare {
   animation: planet-flare calc(var(--d) * 1.6) ease-out var(--dl) infinite;
 }
 @keyframes planet-twinkle {
@@ -627,15 +627,15 @@
     filter: drop-shadow(0 0 7px rgba(255, 236, 170, 1)) brightness(1.4);
   }
 }
-.ledger__glint {
+.catalog__glint {
   transform-box: fill-box;
   transform-origin: center;
   transform: scale(0);
 }
-.ledger__star--twinkle .ledger__glint {
+.catalog__star--twinkle .catalog__glint {
   animation: glint var(--d) ease-in-out var(--dl) infinite;
 }
-.ledger__star--flare .ledger__glint {
+.catalog__star--flare .catalog__glint {
   animation: glint-flare calc(var(--d) * 1.6) ease-out var(--dl) infinite;
 }
 @keyframes glint {
@@ -661,7 +661,7 @@
   }
 }
 
-.ledger__sky {
+.catalog__sky {
   position: absolute;
   inset: 0;
   z-index: 0;
@@ -669,7 +669,7 @@
   border-radius: inherit;
   pointer-events: none;
 }
-.ledger__spark {
+.catalog__spark {
   position: absolute;
   width: 7px;
   height: 7px;
@@ -678,18 +678,18 @@
   clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
   opacity: 0.55;
 }
-.ledger__spark.is-big {
+.catalog__spark.is-big {
   width: 11px;
   height: 11px;
   margin: -5.5px 0 0 -5.5px;
 }
-.ledger__spark--tw {
+.catalog__spark--tw {
   animation: spark-tw var(--d) ease-in-out var(--dl) infinite;
 }
-.ledger__spark--drift {
+.catalog__spark--drift {
   animation: spark-drift calc(var(--d) * 2.4) ease-in-out var(--dl) infinite alternate;
 }
-.ledger__spark--pulse {
+.catalog__spark--pulse {
   width: 4px;
   height: 4px;
   margin: -2px 0 0 -2px;
@@ -728,10 +728,10 @@
     box-shadow: 0 0 6px 2px rgba(58, 104, 173, 0.45);
   }
 }
-.starchart--nebula .ledger__spark {
+.starchart--nebula .catalog__spark {
   background: #f2d98a;
 }
-.starchart--nebula .ledger__spark--pulse {
+.starchart--nebula .catalog__spark--pulse {
   background: #fff;
   animation-name: spark-pulse-night;
 }
@@ -746,7 +746,7 @@
     box-shadow: 0 0 6px 2px rgba(201, 184, 255, 0.7);
   }
 }
-.ledger__shoot {
+.catalog__shoot {
   position: absolute;
   left: 0;
   width: 70px;
@@ -757,7 +757,7 @@
   rotate: 14deg;
   animation: shoot var(--d) ease-in var(--dl) infinite;
 }
-.starchart--nebula .ledger__shoot {
+.starchart--nebula .catalog__shoot {
   background: linear-gradient(90deg, rgba(255, 255, 255, 0), #fff);
 }
 @keyframes shoot {
@@ -775,24 +775,24 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .ledger__fx,
-  .ledger__orbit-x,
-  .ledger__orbit-y,
-  .ledger__star--twinkle,
-  .ledger__star--flare,
-  .ledger__glint,
-  .ledger__spark,
-  .ledger__shoot {
+  .catalog__fx,
+  .catalog__orbit-x,
+  .catalog__orbit-y,
+  .catalog__star--twinkle,
+  .catalog__star--flare,
+  .catalog__glint,
+  .catalog__spark,
+  .catalog__shoot {
     animation: none;
   }
 }
-.starchart--cobalt .ledger__spark {
+.starchart--cobalt .catalog__spark {
   width: 9px;
   height: 9px;
   margin: -4.5px 0 0 -4.5px;
   background: #e0a52a;
 }
-.starchart--cobalt .ledger__spark.is-big {
+.starchart--cobalt .catalog__spark.is-big {
   width: 13px;
   height: 13px;
   margin: -6.5px 0 0 -6.5px;

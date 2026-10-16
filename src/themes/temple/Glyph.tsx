@@ -284,6 +284,137 @@ export function Glyph({ name, size = 22 }: GlyphProps) {
           />
         </g>
       )}
+      {name === 'closed' && (
+        <>
+          {/* 這家去不了：屋簷下鐵捲門拉了一半，掛著一塊朱紅「休」牌 */}
+          <path d="M2.6 8 4.4 4h15.2l1.8 4Z" fill="var(--jade)" stroke={INK} strokeWidth="1.4" strokeLinejoin="round" />
+          <rect x="4" y="8" width="16" height="13" fill="var(--paper-hi)" stroke={INK} strokeWidth="1.4" />
+          <g className="glyph__shutter">
+            <rect x="5.4" y="9.2" width="13.2" height="8.6" fill="#b8b0a6" stroke={INK} strokeWidth="1.1" />
+            <path d="M5.4 11.6h13.2M5.4 14h13.2M5.4 16.4h13.2" stroke={INK} strokeWidth="0.7" opacity="0.6" />
+          </g>
+          <g transform="rotate(-8 12 17.4)">
+            <rect
+              x="8.8"
+              y="14.4"
+              width="6.4"
+              height="6"
+              rx="0.6"
+              fill="var(--vermilion)"
+              stroke={INK}
+              strokeWidth="1.1"
+            />
+            <path d="M10.4 16.4h3.2M12 15.6v3.6M10.8 18.8l1.2-1.6 1.2 1.6" stroke="var(--paper-hi)" strokeWidth="0.9" />
+          </g>
+        </>
+      )}
+      {name === 'ledger' && (
+        <>
+          {/* 食籤簿：朱紅封面的線裝簿，白色題簽，金線穿釘，垂一條穗子 */}
+          <rect
+            x="5"
+            y="3.4"
+            width="14"
+            height="17.6"
+            rx="0.8"
+            fill="var(--vermilion)"
+            stroke={INK}
+            strokeWidth="1.4"
+          />
+          <rect x="8" y="5.6" width="4.4" height="10.4" fill="var(--paper-hi)" stroke={INK} strokeWidth="1" />
+          <path d="M10.2 7.6v6.4" stroke={INK} strokeWidth="1" strokeLinecap="round" />
+          <g stroke="var(--marigold)" strokeWidth="1.1" strokeLinecap="round">
+            <path d="M16.4 3.4v17.6" />
+            <path d="M16.4 6.4h2.6M16.4 10.4h2.6M16.4 14.4h2.6M16.4 18.4h2.6" />
+          </g>
+          <path
+            className="glyph__tassel"
+            d="M19 18.4c1.4 1 1.6 2.4 1.2 4"
+            stroke={INK}
+            strokeWidth="1.1"
+            fill="none"
+            strokeLinecap="round"
+          />
+        </>
+      )}
+      {name === 'empty' && (
+        <>
+          {/* 還沒有：一只空碗，筷子擱在碗口，旁邊一個小小的問號 */}
+          <path d="M3.4 12.4h17.2a8.6 7.4 0 0 1-17.2 0Z" fill="var(--paper-hi)" stroke={INK} strokeWidth="1.4" />
+          <path
+            d="M9 19.4h6l-.7 2.2H9.7Z"
+            fill="var(--vermilion)"
+            stroke={INK}
+            strokeWidth="1.2"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M2.4 10.4 20.8 6.2M3 11.8l18.4-4.2"
+            stroke="var(--wood-lo)"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+          />
+          <path
+            className="glyph__ask"
+            d="M10.2 1.8a1.8 1.8 0 1 1 2.4 1.7c-.5.2-.6.5-.6 1.1M12 6.3v.1"
+            fill="none"
+            stroke="var(--vermilion)"
+            strokeWidth="1.3"
+            strokeLinecap="round"
+          />
+        </>
+      )}
+      {name === 'alone' && (
+        <>
+          {/* 一個人：小圓桌上只擺一碗冒著熱氣的飯 */}
+          <ellipse cx="12" cy="13.4" rx="9.4" ry="3.6" fill="var(--vermilion)" stroke={INK} strokeWidth="1.3" />
+          <path d="M7.6 16.6 6.6 21.2M16.4 16.6l1 4.6" stroke={INK} strokeWidth="1.5" strokeLinecap="round" />
+          <path d="M9.2 12.6h5.6a2.8 2 0 0 1-5.6 0Z" fill="var(--paper-hi)" stroke={INK} strokeWidth="1.1" />
+          <path
+            d="M11 10.8c-.5-.8.5-1.3 0-2.2M13 10.8c-.5-.8.5-1.3 0-2.2"
+            fill="none"
+            stroke={INK}
+            strokeWidth="0.9"
+            strokeLinecap="round"
+            opacity="0.6"
+          />
+        </>
+      )}
+      {name === 'altar' && (
+        <>
+          {/* 供桌：木桌面、朱紅桌巾滾金邊，桌上橫放著兩支抽過的籤 */}
+          <g transform="rotate(5 12 6)">
+            <rect
+              x="6"
+              y="4.6"
+              width="12.4"
+              height="1.9"
+              rx="0.95"
+              fill="var(--bamboo)"
+              stroke={INK}
+              strokeWidth="0.9"
+            />
+            <path d="M15.6 4.6h2a.95.95 0 0 1 0 1.9h-2Z" fill="var(--vermilion)" />
+          </g>
+          <g transform="rotate(-6 12 8)">
+            <rect
+              x="4.8"
+              y="7"
+              width="13.6"
+              height="1.9"
+              rx="0.95"
+              fill="var(--bamboo)"
+              stroke={INK}
+              strokeWidth="0.9"
+            />
+            <path d="M6.8 7h-1a.95.95 0 0 0 0 1.9h1Z" fill="var(--vermilion)" />
+          </g>
+          <path d="M2.6 9.8h18.8v2.2H2.6Z" fill="var(--wood)" stroke={INK} strokeWidth="1.3" strokeLinejoin="round" />
+          <path d="M4 12h16v6.2H4Z" fill="var(--vermilion)" stroke={INK} strokeWidth="1.3" />
+          <path d="M5.4 13.6h13.2M5.4 16.6h13.2" stroke="var(--marigold)" strokeWidth="0.9" />
+          <path d="M5.2 18.2v3.2M18.8 18.2v3.2" stroke={INK} strokeWidth="1.6" strokeLinecap="round" />
+        </>
+      )}
       {name === 'shake' && (
         <>
           <g className="glyph__tube">

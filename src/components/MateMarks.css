@@ -39,10 +39,10 @@
   letter-spacing: 0.08em;
   color: var(--ink-3);
 }
-.mate.is-go .mate__say {
+.mate.is-in .mate__say {
   color: var(--accent-lo);
 }
-.mate.is-pass .mate__face {
+.mate.is-out .mate__face {
   filter: grayscale(1);
   opacity: 0.5;
 }
@@ -119,30 +119,30 @@
   border: 1px dashed var(--rule-strong);
   line-height: 1.4;
 }
-.mate.is-go .mate__say {
+.mate.is-in .mate__say {
   border: 1px solid var(--ink);
   background: var(--accent);
   color: var(--paper-hi);
 }
-.mate.is-pass .mate__say {
+.mate.is-out .mate__say {
   border-color: transparent;
   color: var(--ink-3);
   text-decoration: line-through;
 }
-[data-theme='temple'] .mate.is-go .mate__say {
+[data-theme='temple'] .mate.is-in .mate__say {
   rotate: -4deg;
 }
 [data-theme='magic'] .mate__say {
   border-radius: 999px;
 }
-[data-theme='magic'] .mate.is-go .mate__say {
+[data-theme='magic'] .mate.is-in .mate__say {
   border-color: transparent;
   background: linear-gradient(135deg, #2c3e7a, #4a3d9e);
   color: #fff3d0;
   box-shadow: 0 0 8px rgba(155, 123, 255, 0.55);
 }
 .mates--compact .mate__hat {
-  top: -44%;
+  display: none;
 }
 
 /* 籤卡上的小一號：頭像疊在一起，只留記號 */
@@ -165,7 +165,7 @@
 }
 
 /* ---------- 廟宇：紅帖、揪字章、改天 ---------- */
-[data-theme='temple'] .mate.is-go .mate__face {
+[data-theme='temple'] .mate.is-in .mate__face {
   box-shadow:
     0 0 0 2px var(--paper-hi),
     0 0 0 3.5px var(--vermilion);
@@ -182,7 +182,7 @@
   rotate: 10deg;
   animation: mate-bob 1.8s ease-in-out infinite;
 }
-[data-theme='temple'] .mate.is-go .mate__mark {
+[data-theme='temple'] .mate.is-in .mate__mark {
   display: grid;
   place-items: center;
   background: var(--vermilion);
@@ -191,7 +191,7 @@
   rotate: -8deg;
   animation: mate-pop 0.35s var(--ease-spring) both;
 }
-[data-theme='temple'] .mate.is-go .mate__mark::before {
+[data-theme='temple'] .mate.is-in .mate__mark::before {
   content: '揪';
   font-family: var(--f-display);
   font-weight: 900;
@@ -200,7 +200,7 @@
   color: var(--paper-hi);
   rotate: 8deg;
 }
-[data-theme='temple'] .mate.is-pass .mate__mark {
+[data-theme='temple'] .mate.is-out .mate__mark {
   display: grid;
   place-items: center;
   right: -12px;
@@ -212,7 +212,7 @@
   rotate: -6deg;
   animation: mate-pop 0.35s var(--ease-spring) both;
 }
-[data-theme='temple'] .mate.is-pass .mate__mark::before {
+[data-theme='temple'] .mate.is-out .mate__mark::before {
   content: '改天';
   font-family: var(--f-serif);
   font-weight: 700;
@@ -221,20 +221,20 @@
   color: var(--ink-2);
   rotate: 6deg;
 }
-[data-theme='temple'] .mates--compact .mate.is-pass .mate__mark,
-[data-theme='temple'] .mates--compact .mate.is-go .mate__mark::before {
+[data-theme='temple'] .mates--compact .mate.is-out .mate__mark,
+[data-theme='temple'] .mates--compact .mate.is-in .mate__mark::before {
   font-size: 0;
 }
-[data-theme='temple'] .mates--compact .mate.is-pass .mate__mark {
+[data-theme='temple'] .mates--compact .mate.is-out .mate__mark {
   width: 14px;
   right: -4px;
 }
-[data-theme='temple'] .mates--compact .mate.is-pass .mate__mark::before {
+[data-theme='temple'] .mates--compact .mate.is-out .mate__mark::before {
   content: '';
 }
 
 /* ---------- 魔法：送信中的信、亮起的星、睡著的月亮 ---------- */
-[data-theme='magic'] .mate.is-go .mate__face {
+[data-theme='magic'] .mate.is-in .mate__face {
   box-shadow:
     0 0 0 2px var(--paper-hi),
     0 0 0 3.5px var(--marigold),
@@ -253,13 +253,13 @@
     #f5e9cc;
   animation: mate-fly 1.6s ease-in-out infinite;
 }
-[data-theme='magic'] .mate.is-go .mate__mark {
+[data-theme='magic'] .mate.is-in .mate__mark {
   background: var(--marigold);
   clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
   filter: drop-shadow(0 0 4px rgba(155, 123, 255, 0.95));
   animation: mate-pop 0.35s var(--ease-spring) both;
 }
-[data-theme='magic'] .mate.is-pass .mate__mark {
+[data-theme='magic'] .mate.is-out .mate__mark {
   width: 16px;
   height: 16px;
   border-radius: 50%;

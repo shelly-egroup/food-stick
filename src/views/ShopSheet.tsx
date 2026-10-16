@@ -1,6 +1,6 @@
 'use client';
 
-import { useLayoutEffect, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import gsap from 'gsap';
 import { Sheet } from '@/components/Sheet';
 import { Avatar } from '@/components/Avatar';
@@ -9,14 +9,16 @@ import { CategoryIcon, WalkIcon } from '@/components/CategoryIcon';
 import { Icon } from '@/components/Icon';
 import { Loading } from '@/components/Loading';
 import { LoveButton } from '@/components/LoveButton';
+import { MapLink } from '@/components/MapLink';
 import { NoteCard } from '@/components/NoteCard';
 import { useToast } from '@/components/Toast';
 import { useAppData } from '@/lib/appData';
 import { useTheme } from '@/themes';
-import { addNote, deleteNote, setPref, useNotes, type Pref } from '@/lib/store';
+import { addNote, deleteNote, lastVisit, setPref, useNotes, type Pref } from '@/lib/store';
+import { decided, type Meal } from '@/lib/meal';
 import { paper, stamp } from '@/lib/sound';
 import { reducedMotion, sleep } from '@/lib/motion';
-import { ago, toChineseNumber } from '@/lib/format';
+import { ago } from '@/lib/format';
 import { categoryOf, priceOf, walkOf, type Restaurant } from '@/lib/types';
 import './ShopSheet.css';
 
@@ -64,13 +66,6 @@ function EditAside({ r, onEdit }: { r: Restaurant; onEdit: () => void }) {
       </button>
     );
   return <p className="shop__locked">{theme.copy.shops.locked(memberMap.get(r.createdBy)?.name ?? '建立的人')}</p>;
-}
-
-/** 張貼日期：廟宇用中文數字（九月十日），魔法用阿拉伯數字（9 月 10 日）；不是今年才加年份 */
-function postedOn(d: Date, temple: boolean) {
-  const y = d.getFullYear() === new Date().getFullYear() ? '' : `${d.getFullYear()} 年 `;
-  const m = d.getMonth() + 1;
-  return temple ? `${y}${toChineseNumber(m)}月${toChineseNumber(d.getDate())}日` : `${y}${m} 月 ${d.getDate()} 日`;
 }
 
 function Detail({ r, onRemove }: { r: Restaurant; onRemove: (id: string) => void }) {
@@ -211,11 +206,15 @@ function Detail({ r, onRemove }: { r: Restaurant; onRemove: (id: string) => void
                 <span className="shop__poster-name">{poster.name}</span>
               </span>
               {r.createdAt && (
-                <time className="shop__posted" dateTime={r.createdAt.toISOString()}>
-                  {postedOn(r.createdAt, theme.id === 'temple')}
-                </time>
+                <theme.DateStamp
+                  date={r.createdAt}
+                  size={60}
+                  className="shop__posted is-pressed"
+                  label={`張貼於 ${r.createdAt.getFullYear()} 年 ${r.createdAt.getMonth() + 1} 月 ${r.createdAt.getDate()} 日`}
+                />
               )}
             </li>
+            <LastVisit rid={r.id} />
           </ul>
         </div>
         {/* 動作區：愛店和不吃並排一樣高，地圖連結整條 */}
@@ -233,20 +232,7 @@ function Detail({ r, onRemove }: { r: Restaurant; onRemove: (id: string) => void
             </button>
           </div>
           {blocked && <p className="shop__block-hint">{theme.copy.blockedHint}</p>}
-          {r.mapUrl && (
-            <a className="shop__map" href={r.mapUrl} target="_blank" rel="noopener noreferrer">
-              <span className="shop__map-pin" aria-hidden="true">
-                <Icon name="pin" size={20} />
-              </span>
-              <span className="shop__map-text">
-                <b>帶我去這家</b>
-                <small>Google 地圖・步行 {walkOf(r.walk).label}</small>
-              </span>
-              <span className="shop__map-go" aria-hidden="true">
-                <Icon name="arrow" size={18} />
-              </span>
-            </a>
-          )}
+          <MapLink r={r} className="shop__map" />
         </div>
       </div>
 
@@ -342,5 +328,73 @@ function Detail({ r, onRemove }: { r: Restaurant; onRemove: (id: string) => void
         </div>
       )}
     </div>
+  );
+}
+
+const WEEK = '日一二三四五六';
+
+/**
+ * 你上次在這家起駕是哪一餐：日期、哪一餐、跟誰去。
+ * 這個月的直接從即時資料找，找不到再去歷史裡查一次。
+ */
+function LastVisit({ rid }: { rid: string }) {
+  const { me, meals, memberMap } = useAppData();
+  const { theme } = useTheme();
+  const { copy } = theme;
+  const local = useMemo(
+    () =>
+      decided(meals)
+        .filter((m) => m.decision!.rid === rid && m.going.includes(me.id))
+        .sort((a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0))[0] ?? null,
+    [meals, rid, me.id],
+  );
+  const [remote, setRemote] = useState<{ rid: string; meal: Meal | null } | null>(null);
+  useEffect(() => {
+    if (local) return;
+    let off = false;
+    lastVisit(me.id, rid)
+      .then((m) => !off && setRemote({ rid, meal: m }))
+      .catch(() => !off && setRemote({ rid, meal: null }));
+    return () => {
+      off = true;
+    };
+  }, [local, me.id, rid]);
+  const last = local ?? (remote?.rid === rid ? remote.meal : undefined);
+  const at = last?.createdAt;
+  const mates = last ? last.going.filter((u) => u !== me.id).flatMap((u) => memberMap.get(u) ?? []) : [];
+  return (
+    <li className="shop__last">
+      <b>上次</b>
+      <span className={`shop__last-line${last ? '' : ' is-none'}`}>
+        <theme.Glyph name={last === null ? 'empty' : 'ledger'} size={last === null ? 26 : 20} />
+        {last === undefined ? (
+          '翻簿子中…'
+        ) : last && at ? (
+          <>
+            <span>
+              {at.getMonth() + 1}/{at.getDate()}（週{WEEK[at.getDay()]}）{last.slot.label}
+            </span>
+            {mates.length ? (
+              <span
+                className="shop__last-mates"
+                aria-label={`${copy.history.with}：${mates.map((m) => m.name).join('、')}`}
+              >
+                {mates.slice(0, 4).map((m) => (
+                  <Avatar key={m.id} member={m} size={22} />
+                ))}
+                {mates.length > 4 && <i>+{mates.length - 4}</i>}
+              </span>
+            ) : (
+              <span className="shop__last-alone">
+                <theme.Glyph name="alone" size={20} />
+                {copy.history.alone}
+              </span>
+            )}
+          </>
+        ) : (
+          '還沒在這家起駕過'
+        )}
+      </span>
+    </li>
   );
 }

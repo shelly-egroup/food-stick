@@ -407,69 +407,15 @@
   filter: drop-shadow(0 0 3px rgba(155, 123, 255, 0.9));
 }
 
-/* ---------- 發組隊邀請：左邊「抽到之後要大家回覆」的小開關，右邊發紅帖（放出貓頭鷹） ---------- */
+/* ---------- 發組隊邀請：發紅帖（放出貓頭鷹）；已經開好的一餐是「再遞紅帖」 ---------- */
 .crew__send {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 10px 12px;
   padding-top: 12px;
   border-top: 1px dashed var(--rule-2);
-}
-.crew__confirm {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 40px;
-  padding: 0 0 0 46px;
-  border: 0;
-  background: none;
-  font-family: var(--f-serif);
-  font-weight: 700;
-  font-size: var(--t-sm);
-  letter-spacing: 0.04em;
-  color: var(--ink-2);
-  text-align: left;
-}
-.crew__confirm::before,
-.crew__confirm::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-}
-.crew__confirm::before {
-  left: 0;
-  width: 38px;
-  height: 22px;
-  margin-top: -11px;
-  border: 1.5px solid var(--ink);
-  border-radius: 2px;
-  background: var(--paper-lo);
-  transition: background 0.2s;
-}
-.crew__confirm::after {
-  left: 4px;
-  width: 14px;
-  height: 14px;
-  margin-top: -7px;
-  border: 1.5px solid var(--ink);
-  background: var(--paper-hi);
-  transition: transform 0.3s var(--ease-spring);
-}
-.crew__confirm[aria-checked='true'] {
-  color: var(--ink);
-}
-.crew__confirm[aria-checked='true']::before {
-  background: var(--jade);
-}
-.crew__confirm[aria-checked='true']::after {
-  transform: translateX(16px);
-}
-[data-theme='magic'] .crew__confirm::before,
-[data-theme='magic'] .crew__confirm::after {
-  border-radius: 999px;
 }
 .crew__send-btn {
   gap: 8px;
@@ -487,12 +433,6 @@
     rotate: -12deg;
   }
 }
-.crew__send-hint {
-  margin-top: -4px;
-  font-size: var(--t-xs);
-  line-height: 1.6;
-  color: var(--ink-3);
-}
 /* 飛出去的紅帖（信）：掛在最上層，飛到每個人頭上就消失 */
 .crew-flyer {
   position: fixed;
@@ -504,7 +444,13 @@
   filter: drop-shadow(2px 3px 0 rgba(38, 33, 29, 0.2));
 }
 
-/* ---------- 已經發出邀請：大家的回覆即時更新 ---------- */
+/* ---------- 已經開好的一餐：大家的回覆即時更新 ---------- */
+.crew__gather-acts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-left: auto;
+}
 .crew--gather {
   gap: 14px;
 }
@@ -536,7 +482,8 @@
   letter-spacing: 0.08em;
   text-wrap: balance;
 }
-.crew__gather-head span {
+/* 只管標題底下那一行；裡面的回覆標籤（要去、還沒回）用自己的顏色，不然鈷藍底上會變成深字看不清 */
+.crew__gather-head p > span {
   font-size: var(--t-xs);
   font-weight: 500;
   color: var(--ink-2);
@@ -546,7 +493,6 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  margin-left: auto;
   min-height: 38px;
   padding: 0 12px 0 8px;
   border: 1.5px dashed var(--rule-strong);

@@ -1,0 +1,333 @@
+/* ---------- 候選：首頁上的一排籤（牌） ---------- */
+.cands {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+.cands__hint {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--f-kai);
+  font-size: var(--t-sm);
+  letter-spacing: 0.04em;
+  color: var(--ink-2);
+}
+.cands__count {
+  display: grid;
+  place-items: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 4px;
+  font-family: var(--f-serif);
+  font-weight: 900;
+  font-size: 0.8rem;
+  color: var(--accent-ink);
+  background: var(--accent);
+  border: 1.4px solid var(--ink);
+  border-radius: 4px;
+  rotate: -6deg;
+}
+.cands__row {
+  list-style: none;
+  margin: 0;
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+}
+.cands__row::-webkit-scrollbar {
+  display: none;
+}
+.cands__row li {
+  flex: none;
+  scroll-snap-align: start;
+}
+.cand {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  cursor: pointer;
+  font: inherit;
+  transform-origin: 50% 100%;
+  transition:
+    transform 0.3s var(--ease-spring),
+    box-shadow 0.3s;
+}
+.cand:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+.cand__new {
+  position: absolute;
+  top: -12px;
+  right: -12px;
+  padding: 2px 7px;
+  font-family: var(--f-serif);
+  font-size: 0.66rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  color: var(--ink);
+  background: var(--marigold);
+  border: 1.3px solid var(--ink);
+  border-radius: 999px;
+  rotate: 10deg;
+  animation: cand-pop 0.45s 0.5s var(--ease-spring) both;
+}
+.cand__by {
+  position: absolute;
+  right: -9px;
+  bottom: -9px;
+  display: grid;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px var(--paper-hi);
+}
+.cand__seal {
+  position: absolute;
+  left: 50%;
+  bottom: -22px;
+  translate: -50% 0;
+  display: grid;
+  animation: cand-stamp 0.4s var(--ease-spring) both;
+}
+@keyframes cand-pop {
+  from {
+    opacity: 0;
+    scale: 0.3;
+  }
+}
+@keyframes cand-stamp {
+  from {
+    opacity: 0;
+    scale: 2.4;
+    rotate: -30deg;
+  }
+}
+
+/* 廟宇：朱紅桌巾的供桌上，一支支竹籤立著，籤頭朱紅、店名直書 */
+.cands--temple .cands__row {
+  padding: 30px 14px 32px;
+  background: var(--vermilion);
+  border: 1.5px solid var(--ink);
+  box-shadow:
+    inset 0 0 0 4px var(--vermilion),
+    inset 0 0 0 5.5px var(--marigold),
+    4px 4px 0 var(--ink);
+}
+.cands--temple .cand {
+  gap: 6px;
+  width: 50px;
+  min-height: 172px;
+  padding: 0 0 14px;
+  border: 1.5px solid var(--ink);
+  border-radius: 26px 26px 6px 6px;
+  /* 竹節在籤尾，不會劃過店名 */
+  background:
+    linear-gradient(
+      to bottom,
+      transparent 0 calc(100% - 12px),
+      var(--wood) calc(100% - 12px) calc(100% - 10px),
+      transparent calc(100% - 10px)
+    ),
+    var(--bamboo);
+  color: var(--ink);
+  box-shadow: 3px 3px 0 var(--ink);
+  animation: stick-drop 0.65s calc(var(--i) * 70ms) var(--ease-spring) both;
+}
+.cands--temple .cand__tip {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 30px;
+  border-radius: 24px 24px 0 0;
+  border-bottom: 1.5px solid var(--ink);
+  color: var(--paper-hi);
+  background: var(--vermilion);
+}
+.cands--temple .cand__no {
+  writing-mode: vertical-rl;
+  font-family: var(--f-serif);
+  font-weight: 700;
+  font-size: 0.66rem;
+  letter-spacing: 0.12em;
+  color: var(--vermilion-lo);
+}
+.cands--temple .cand__name {
+  writing-mode: vertical-rl;
+  max-height: 6.6em;
+  overflow: hidden;
+  font-family: var(--f-classic);
+  font-weight: 900;
+  font-size: 1.02rem;
+  line-height: 1.05;
+  letter-spacing: 0.1em;
+}
+.cands--temple .cand.is-latest {
+  transform: translateY(-9px) rotate(-3deg);
+  box-shadow: 5px 6px 0 var(--ink);
+}
+/* 有滑鼠才在指到時抬起來（手機點完 hover 會黏住） */
+@media (hover: hover) {
+  .cands--temple .cand:hover {
+    transform: translateY(-9px) rotate(-3deg);
+    box-shadow: 5px 6px 0 var(--ink);
+  }
+}
+.cands--temple .cand.is-chosen {
+  box-shadow:
+    3px 3px 0 var(--ink),
+    0 0 0 3px var(--marigold);
+}
+@keyframes stick-drop {
+  from {
+    opacity: 0;
+    transform: translateY(-46px) rotate(-14deg);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(5px) rotate(3deg);
+  }
+}
+
+/* 魔法：深藍天鵝絨上攤開的一排預言牌，燙金框、店名在牌心 */
+.cands--magic .cands__count {
+  border-radius: 50%;
+  rotate: 0deg;
+  color: var(--ink);
+  background: var(--marigold);
+}
+.cands--magic .cands__row {
+  padding: 30px 14px 32px;
+  border: 1.5px solid var(--ink);
+  border-radius: 16px;
+  background:
+    radial-gradient(1.4px 1.4px at 12% 22%, #fff 50%, transparent 52%),
+    radial-gradient(1.2px 1.2px at 38% 78%, #fffbe8 50%, transparent 52%),
+    radial-gradient(1.6px 1.6px at 64% 16%, #ffe9a8 50%, transparent 52%),
+    radial-gradient(1.1px 1.1px at 86% 64%, #fff 50%, transparent 52%), linear-gradient(160deg, #1f2556, #2c2468);
+  box-shadow:
+    inset 0 0 0 4px #232a5f,
+    inset 0 0 0 5px rgba(242, 185, 64, 0.7),
+    4px 4px 0 var(--ink);
+}
+.cands--magic .cand {
+  gap: 5px;
+  width: 80px;
+  min-height: 112px;
+  padding: 10px 6px 12px;
+  border: 1.5px solid var(--ink);
+  border-radius: 9px;
+  color: #f8efdc;
+  background: linear-gradient(170deg, #3a4fa0, #45399a);
+  box-shadow:
+    inset 0 0 0 3px #3a3f92,
+    inset 0 0 0 4px var(--marigold),
+    3px 3px 0 var(--ink);
+  animation: card-deal 0.7s calc(var(--i) * 80ms) var(--ease-spring) both;
+}
+.cands--magic .cand__tip {
+  color: var(--marigold);
+}
+.cands--magic .cand__no {
+  font-family: var(--f-serif);
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+  /* 小字放在藍紫牌面上：用亮一階的金，才看得清 */
+  color: #ffd77a;
+}
+.cands--magic .cand__name {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-family: var(--f-serif);
+  font-weight: 900;
+  font-size: 0.86rem;
+  line-height: 1.28;
+  text-align: center;
+}
+.cands--magic .cand.is-latest {
+  transform: translateY(-9px);
+  box-shadow:
+    inset 0 0 0 3px #3a3f92,
+    inset 0 0 0 4px var(--marigold),
+    4px 6px 0 var(--ink),
+    0 0 22px rgba(242, 185, 64, 0.55);
+}
+@media (hover: hover) {
+  .cands--magic .cand:hover {
+    transform: translateY(-9px);
+    box-shadow:
+      inset 0 0 0 3px #3a3f92,
+      inset 0 0 0 4px var(--marigold),
+      4px 6px 0 var(--ink),
+      0 0 22px rgba(242, 185, 64, 0.55);
+  }
+}
+.cands--magic .cand__new {
+  color: #1f2556;
+}
+@keyframes card-deal {
+  from {
+    opacity: 0;
+    transform: translate(-34px, -12px) rotate(-18deg) scale(0.7);
+  }
+  65% {
+    opacity: 1;
+    transform: translate(3px, 2px) rotate(3deg) scale(1.03);
+  }
+}
+
+/* 籤卡現在翻開的那一支：外面一圈虛線框 */
+.cand.is-active {
+  outline: 2.5px dashed var(--marigold);
+  outline-offset: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cand,
+  .cand__new,
+  .cand__seal {
+    animation: none;
+    transition: none;
+  }
+}
+
+/* 預言牌比較窄：頁數、店名太長要換行時，兩行排得一樣長（不會剩一個字掉到下一行） */
+.cands--magic .cand__no,
+.cands--magic .cand__name {
+  text-wrap: balance;
+}
+
+/* 食籤簿裡攤開來看的：不能點，不抬起來 */
+.cand.is-still {
+  cursor: default;
+}
+/* 說過去不了的那支：褪色，底下蓋一張「去不了」 */
+.cand.is-skipped {
+  filter: grayscale(0.85);
+  opacity: 0.62;
+}
+.cand__skip {
+  position: absolute;
+  left: 50%;
+  bottom: -12px;
+  translate: -50% 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 7px;
+  font-family: var(--f-serif);
+  font-size: 0.64rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  color: var(--paper-hi);
+  background: var(--ink);
+  border-radius: 999px;
+  rotate: -6deg;
+}

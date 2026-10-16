@@ -11,7 +11,7 @@ import './ShopCard.css';
 
 /**
  * 書皮只用三種深色，配燙金：
- * 夜幕藍＝飯、麵、便當（正餐），古林綠＝小吃、輕食、早午餐，星雲紫＝異國與其他。
+ * 夜幕藍＝飯、麵、便當（正餐），古林綠＝小吃、輕食、早午餐、飲料，星雲紫＝異國、甜點與其他。
  */
 const NIGHT = '#2b3b78';
 const FOREST = '#1f5d57';
@@ -23,6 +23,8 @@ const COVER: Record<CategoryId, string> = {
   snack: FOREST,
   light: FOREST,
   brunch: FOREST,
+  drink: FOREST,
+  dessert: NEBULA,
   world: NEBULA,
   other: NEBULA,
 };

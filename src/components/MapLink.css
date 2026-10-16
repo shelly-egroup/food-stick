@@ -1,0 +1,88 @@
+/* 帶我去：地圖標記＋兩行字＋箭頭的小卡 */
+.map-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: calc(100% - var(--offset));
+  padding: 8px 12px 8px 8px;
+  background: var(--paper-hi);
+  border: 1.5px solid var(--ink);
+  box-shadow: var(--offset) var(--offset) 0 var(--celadon);
+  color: var(--ink);
+  text-decoration: none;
+  transition:
+    transform 0.15s var(--ease-out),
+    box-shadow 0.15s var(--ease-out);
+}
+.map-link__pin {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  background: var(--accent);
+  border: 1.5px solid var(--ink);
+  color: var(--paper-hi);
+}
+.map-link__text {
+  display: grid;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+}
+.map-link__text b {
+  font-family: var(--f-display);
+  font-weight: 900;
+  font-size: 1.02rem;
+  letter-spacing: 0.16em;
+}
+.map-link__text small {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 10px;
+  font-size: var(--t-xs);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--ink-2);
+}
+.map-link__go {
+  display: grid;
+  flex: none;
+  transition: transform 0.25s var(--ease-spring);
+}
+@media (hover: hover) {
+  .map-link:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: calc(var(--offset) + 1px) calc(var(--offset) + 1px) 0 var(--celadon);
+  }
+  .map-link:hover .map-link__go {
+    transform: translateX(4px);
+  }
+}
+.map-link:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--celadon);
+}
+/* 魔法：圓角、地圖標記是一顆發光的圓 */
+[data-theme='magic'] .map-link {
+  border-radius: 14px;
+}
+[data-theme='magic'] .map-link__pin {
+  border-radius: 50%;
+  box-shadow: 0 0 12px rgba(155, 123, 255, 0.45);
+}
+.map-link__text small > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  white-space: nowrap;
+}
+.map-link__text small svg {
+  color: var(--accent);
+}
+.map-link__name {
+  font-weight: 700;
+  color: var(--ink);
+}

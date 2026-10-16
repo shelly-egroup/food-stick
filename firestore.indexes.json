@@ -1,12 +1,58 @@
 {
   "indexes": [
     {
-      "collectionGroup": "outings",
+      "collectionGroup": "meals",
       "queryScope": "COLLECTION",
       "fields": [
         {
           "fieldPath": "party",
           "arrayConfig": "CONTAINS"
+        },
+        {
+          "fieldPath": "endsAt",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "meals",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "date",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "meals",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "going",
+          "arrayConfig": "CONTAINS"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "meals",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "going",
+          "arrayConfig": "CONTAINS"
+        },
+        {
+          "fieldPath": "decision.rid",
+          "order": "ASCENDING"
         },
         {
           "fieldPath": "createdAt",

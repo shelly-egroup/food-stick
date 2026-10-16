@@ -51,8 +51,13 @@ export function MeSheet({ open, onClose, onSignOut }: { open: boolean; onClose: 
           <Avatar member={me} size={60} ring />
           <div className="me__who">
             <b>{me.name}</b>
-            <span>
-              <em>{likes}</em> 家愛店・<em>{blocks}</em> 家不吃
+            <span className="me__stats">
+              <span>
+                <em>{likes}</em> 家愛店
+              </span>
+              <span>
+                <em>{blocks}</em> 家不吃
+              </span>
             </span>
           </div>
         </div>

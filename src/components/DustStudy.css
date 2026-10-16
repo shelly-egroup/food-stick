@@ -362,25 +362,122 @@
 .study.has-chosen .study__row {
   z-index: 3;
 }
+/* 選中一本時，書架整層拉到熄燈的暗幕（.study__shade）上面、不切邊：只有其他書變暗，選中那本才亮得出來 */
+.study.has-chosen .study__cavity {
+  z-index: 6;
+  overflow: visible;
+}
 .study.has-chosen .study__book:not(.is-chosen) {
-  filter: brightness(0.42) saturate(0.6);
+  filter: brightness(0.6) saturate(0.7);
 }
+/* 選中的那本：跟整個書房一樣是平塗墨線，不發光——從書架抽出半截、歪一下，書頂吊一張「就這本」的小紙牌 */
 .study__book.is-chosen {
-  translate: 0 calc(-12 * var(--u));
-  box-shadow:
-    0 0 0 2px var(--marigold),
-    0 0 calc(24 * var(--u)) calc(6 * var(--u)) rgba(242, 185, 64, 0.75);
-  animation: chosen-glow 0.9s ease-in-out infinite alternate;
+  translate: 0 calc(-26 * var(--u));
+  rotate: -4deg;
+  transition:
+    translate 0.5s var(--ease-spring),
+    rotate 0.5s var(--ease-spring);
 }
-@keyframes chosen-glow {
-  to {
-    box-shadow:
-      0 0 0 2px #fff3c4,
-      0 0 calc(34 * var(--u)) calc(10 * var(--u)) rgba(242, 185, 64, 0.95);
+.study__tag {
+  position: absolute;
+  left: 50%;
+  top: calc(-30 * var(--u));
+  z-index: 3;
+  padding: calc(3 * var(--u)) calc(5 * var(--u));
+  font-family: var(--f-display);
+  font-weight: 900;
+  font-size: calc(9 * var(--u));
+  line-height: 1;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  color: var(--ink);
+  background: var(--paper-hi);
+  border: 1.4px solid var(--ink);
+  border-radius: 2px;
+  box-shadow: 2px 2px 0 var(--marigold);
+  translate: -50% 0;
+  transform-origin: 50% calc(-10 * var(--u));
+  opacity: 0;
+  pointer-events: none;
+}
+/* 吊紙牌的細線 */
+.study__tag::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  width: 1.2px;
+  height: calc(10 * var(--u));
+  background: var(--ink);
+}
+.study__book.is-chosen .study__tag {
+  opacity: 1;
+  rotate: 6deg;
+  animation: tag-swing 1.4s var(--ease-out) both;
+}
+@keyframes tag-swing {
+  0% {
+    opacity: 0;
+    rotate: -40deg;
+  }
+  30% {
+    opacity: 1;
+    rotate: 22deg;
+  }
+  55% {
+    rotate: -8deg;
+  }
+  75% {
+    rotate: 10deg;
+  }
+  100% {
+    rotate: 6deg;
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .study__book.is-chosen {
+  .study__book.is-chosen .study__tag {
     animation: none;
+  }
+}
+
+/* 貓頭鷹打盹：頭上飄著 Zzz，呼吸慢一點 */
+.study__zzz text {
+  font-family: var(--f-display);
+  font-weight: 900;
+  font-size: 10px;
+  fill: var(--paper-hi);
+  stroke: var(--ink);
+  stroke-width: 0.8px;
+  paint-order: stroke;
+  opacity: 0;
+  animation: owl-zzz 2.7s calc(var(--i) * 0.9s) ease-in-out infinite;
+}
+@keyframes owl-zzz {
+  0% {
+    opacity: 0;
+    translate: 0 4px;
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    translate: 8px -12px;
+  }
+}
+.study__owl .owl.is-asleep .owl__body {
+  animation-duration: 4.6s;
+}
+/* 書轉著飄出書架時，不要被書架的框切掉 */
+.study__cavity.is-float {
+  overflow: visible;
+}
+.study__cavity.is-float .study__row {
+  z-index: 4;
+}
+@media (prefers-reduced-motion: reduce) {
+  .study__zzz text {
+    animation: none;
+    opacity: 1;
   }
 }

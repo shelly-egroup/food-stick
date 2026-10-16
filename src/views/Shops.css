@@ -215,11 +215,10 @@
     gap: 34px 18px;
   }
   .shops__tools {
-    grid-template-columns: minmax(300px, 420px) minmax(0, 1fr);
-    align-items: center;
+    gap: 12px;
   }
-  .shops__status {
-    grid-column: 1 / -1;
+  .shops__find {
+    max-width: 640px;
   }
 }
 @media (min-width: 960px) {

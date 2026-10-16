@@ -7,7 +7,7 @@ import { useAppData } from '@/lib/appData';
 import { addRestaurant, updateRestaurant, type RestaurantInput } from '@/lib/store';
 import { clack } from '@/lib/sound';
 import { PRICES, type Restaurant } from '@/lib/types';
-import { CategoryFilter, WalkFilter } from '@/components/CategoryFilter';
+import { CategoryFilter, FilterRow, ROW_ICONS, WalkFilter } from '@/components/CategoryFilter';
 import { Icon } from '@/components/Icon';
 import { useTheme } from '@/themes';
 import './ShopForm.css';
@@ -138,14 +138,12 @@ export function ShopForm({
           )}
         </div>
 
-        <div className="field">
-          <span className="label">類型</span>
+        <FilterRow icon={ROW_ICONS.category} title="類型">
           <CategoryFilter single label="類型" selected={[v.category]} onToggle={(id) => setV({ ...v, category: id })} />
-        </div>
+        </FilterRow>
 
-        <fieldset className="field">
-          <legend className="label">價位</legend>
-          <div className="form__chips">
+        <FilterRow icon={ROW_ICONS.price} title="價位">
+          <div className="form__chips" role="radiogroup" aria-label="價位">
             {PRICES.map((p) => (
               <button
                 key={p.v}
@@ -159,12 +157,11 @@ export function ShopForm({
               </button>
             ))}
           </div>
-        </fieldset>
+        </FilterRow>
 
-        <div className="field">
-          <span className="label">從公司走過去</span>
+        <FilterRow icon={ROW_ICONS.walk} title="步行" hint="從公司走過去">
           <WalkFilter single label="從公司走過去" selected={[v.walk]} onToggle={(w) => setV({ ...v, walk: w })} />
-        </div>
+        </FilterRow>
 
         <div className="form__toggle">
           <span>

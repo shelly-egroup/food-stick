@@ -1,0 +1,974 @@
+/* ---------- 食籤簿（冒險日誌） ---------- */
+.ledger {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 26px var(--gutter) 56px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 30px;
+}
+
+/* 封面：題簽、說明、這個月的三個小統計 */
+.ledger__cover {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  gap: 16px;
+  padding: 26px 26px 22px;
+  color: var(--paper-hi);
+  border: 1.5px solid var(--ink);
+  animation: cover-open 0.7s var(--ease-out) both;
+}
+.ledger__label {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.ledger__glyph {
+  display: grid;
+  place-items: center;
+  width: 76px;
+  height: 76px;
+  flex: none;
+  background: var(--paper-hi);
+  border: 1.5px solid var(--ink);
+  box-shadow: 4px 4px 0 var(--ink);
+  rotate: -4deg;
+  padding: 0;
+  color: inherit;
+  cursor: pointer;
+  animation: cover-seal 0.5s 0.45s var(--ease-spring) both;
+}
+.ledger__glyph:active {
+  scale: 0.94;
+}
+
+/* ---------- 彩蛋：點一下封面小圖翻出一句幹話，再點換一句 ---------- */
+.ledger__egg {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  max-width: 34em;
+  margin: 0;
+  padding: 12px 16px;
+}
+.ledger__egg > span {
+  display: grid;
+  gap: 4px;
+}
+/* 翻出來的那句也是按鈕：點一下換下一句 */
+button.ledger__egg {
+  width: 100%;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.ledger__egg-more {
+  justify-self: end;
+  font-family: var(--f-serif);
+  font-size: 0.7rem;
+  font-style: normal;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  opacity: 0.6;
+}
+.ledger__egg small {
+  font-family: var(--f-serif);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  opacity: 0.85;
+}
+.ledger__egg b {
+  font-family: var(--f-kai);
+  font-size: 1.12rem;
+  font-weight: 700;
+  line-height: 1.5;
+  letter-spacing: 0.06em;
+}
+.ledger__egg-seal {
+  flex: none;
+  animation: egg-stamp 0.4s 0.15s var(--ease-spring) both;
+}
+@keyframes egg-stamp {
+  from {
+    opacity: 0;
+    scale: 2.4;
+    rotate: -30deg;
+  }
+}
+/* 廟宇：從簿子裡抽出一張黃曆紙，米黃底、朱紅字，像撕下來那樣往下一抖 */
+.ledger--temple .ledger__egg {
+  color: var(--vermilion-lo);
+  background: repeating-linear-gradient(to bottom, transparent 0 27px, rgba(200, 60, 40, 0.18) 27px 28px), #fbf1d6;
+  border: 1.5px solid var(--ink);
+  box-shadow: 4px 4px 0 var(--ink);
+  transform-origin: 50% 0;
+  animation: almanac-drop 0.6s var(--ease-spring) both;
+}
+@keyframes almanac-drop {
+  from {
+    opacity: 0;
+    transform: translateY(-18px) rotate(-3deg) scaleY(0.4);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(3px) rotate(1deg) scaleY(1.04);
+  }
+}
+/* 魔法：隱形墨水，字從模糊的金光裡慢慢浮出來，兩顆流星劃過 */
+.ledger--magic .ledger__egg {
+  position: relative;
+  overflow: hidden;
+  color: var(--marigold);
+  background: rgba(20, 22, 60, 0.45);
+  border: 1px dashed rgba(242, 185, 64, 0.7);
+  border-radius: 12px;
+}
+.ledger--magic .ledger__egg b {
+  color: #fff6d8;
+  animation: ink-reveal 1.2s var(--ease-out) both;
+}
+.ledger--magic .ledger__egg::before,
+.ledger--magic .ledger__egg::after {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: 70%;
+  width: 70px;
+  height: 1.6px;
+  background: linear-gradient(90deg, #fff6d8, transparent);
+  rotate: 150deg;
+  animation: egg-meteor 0.9s 0.2s ease-in both;
+}
+.ledger--magic .ledger__egg::after {
+  left: 40%;
+  animation-delay: 0.65s;
+}
+@keyframes ink-reveal {
+  from {
+    opacity: 0;
+    filter: blur(6px);
+    letter-spacing: 0.3em;
+    text-shadow: 0 0 18px var(--marigold);
+  }
+}
+@keyframes egg-meteor {
+  from {
+    opacity: 1;
+    translate: 0 0;
+  }
+  to {
+    opacity: 0;
+    translate: -160px 90px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ledger__egg,
+  .ledger__egg b,
+  .ledger__egg-seal,
+  .ledger__egg::before,
+  .ledger__egg::after {
+    animation: none !important;
+  }
+}
+.ledger__cover .eyebrow {
+  color: currentColor;
+  opacity: 0.86;
+}
+.ledger__title {
+  margin: 2px 0 0;
+  font-size: clamp(2.5rem, 8vw, 4rem);
+  line-height: 1;
+  letter-spacing: 0.14em;
+}
+.ledger__lede {
+  max-width: 34em;
+  font-family: var(--f-kai);
+  font-size: 1.04rem;
+  line-height: 1.85;
+  letter-spacing: 0.04em;
+}
+.ledger__stats {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.ledger__stats li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: 8px;
+  padding: 10px 12px;
+  color: var(--ink);
+  background: var(--paper-hi);
+  border: 1.5px solid var(--ink);
+  animation: rise-in 0.45s calc(0.5s + var(--n, 0) * 0.1s) var(--ease-out) both;
+}
+.ledger__stats li:nth-child(2) {
+  --n: 1;
+}
+.ledger__stats li:nth-child(3) {
+  --n: 2;
+}
+.ledger__stats li > :first-child {
+  grid-row: span 2;
+  color: var(--accent);
+}
+.ledger__stats b {
+  font-family: var(--f-display);
+  font-weight: 900;
+  font-size: 1.5rem;
+  line-height: 1.1;
+}
+.ledger__stats .ledger__stat-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 1.05rem;
+}
+.ledger__stats span {
+  font-family: var(--f-serif);
+  font-size: var(--t-xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--ink-3);
+}
+@keyframes cover-open {
+  from {
+    opacity: 0;
+    transform: perspective(900px) rotateY(-14deg) translateX(-18px);
+    transform-origin: 0 50%;
+  }
+}
+@keyframes cover-seal {
+  from {
+    opacity: 0;
+    transform: scale(2.2) rotate(-24deg);
+  }
+}
+
+/* 廟宇：朱紅封面、金色雙框，右邊一排金線穿釘 */
+.ledger--temple .ledger__cover {
+  background: var(--vermilion);
+  box-shadow:
+    inset 0 0 0 6px var(--vermilion),
+    inset 0 0 0 7.5px var(--marigold),
+    10px 10px 0 var(--ink);
+  padding-right: 54px;
+}
+.ledger--temple .ledger__cover::after {
+  content: '';
+  position: absolute;
+  top: 18px;
+  bottom: 18px;
+  right: 20px;
+  width: 14px;
+  background:
+    repeating-linear-gradient(to bottom, transparent 0 18px, var(--marigold) 18px 21px, transparent 21px 36px),
+    linear-gradient(var(--vermilion-lo), var(--vermilion-lo)) center / 2px 100% no-repeat;
+}
+.ledger--temple .ledger__glyph {
+  background: var(--paper-hi);
+}
+
+/* 魔法：夜空藍的日誌封面、燙金框、右邊一顆星扣（跟貓頭鷹的信、預言牌同一個藍） */
+.ledger--magic .ledger__cover {
+  border-radius: 6px 18px 18px 6px;
+  background:
+    radial-gradient(circle at 88% 18%, rgba(242, 185, 64, 0.95) 0 1.4px, transparent 2px),
+    radial-gradient(circle at 70% 82%, rgba(255, 255, 255, 0.8) 0 1px, transparent 1.6px),
+    radial-gradient(circle at 46% 12%, rgba(255, 255, 255, 0.7) 0 1px, transparent 1.6px),
+    linear-gradient(135deg, #2c3e7a, #4a3d9e);
+  box-shadow:
+    inset 0 0 0 6px #33417f,
+    inset 0 0 0 7.5px var(--marigold),
+    10px 10px 0 var(--ink),
+    0 16px 40px rgba(74, 61, 158, 0.3);
+  padding-right: 58px;
+}
+.ledger--magic .ledger__cover::after {
+  content: '✦';
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  translate: 0 -50%;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 54px;
+  font-size: 1.2rem;
+  color: var(--ink);
+  background: var(--marigold);
+  border: 1.5px solid var(--ink);
+  border-radius: 8px;
+}
+.ledger--magic .ledger__glyph {
+  border-radius: 50%;
+  background: #f5e9cc;
+  box-shadow:
+    4px 4px 0 var(--ink),
+    0 0 22px rgba(242, 185, 64, 0.55);
+}
+.ledger--magic .ledger__title {
+  color: var(--marigold);
+}
+.ledger--magic .ledger__stats li {
+  border-radius: 12px;
+  background: #f8efdc;
+}
+
+/* ---------- 一天一頁 ---------- */
+.ledger__days {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  border: 1.5px solid var(--ink);
+}
+.ledger__day {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  border-bottom: 1.5px solid var(--ink);
+}
+.ledger__day:last-child {
+  border-bottom: 0;
+}
+.ledger__date {
+  padding: 18px 0 18px 14px;
+}
+/* 頁首的日期章：捲到那一頁才蓋下去，跟著那一天往下捲 */
+.ledger__date .date-stamp {
+  position: sticky;
+  top: calc(var(--bar-h) + var(--safe-t) + 14px);
+}
+.ledger__day:not(.is-in) .date-stamp {
+  opacity: 0;
+}
+.ledger__day.is-in .date-stamp {
+  animation: date-stamp-press 0.55s var(--ease-spring) both;
+}
+.ledger__meals {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+}
+
+/* 廟宇：白紙上淡淡的朱絲欄 */
+.ledger--temple .ledger__days {
+  background: repeating-linear-gradient(90deg, transparent 0 46px, rgba(200, 67, 42, 0.1) 46px 47px), var(--paper-hi);
+  box-shadow: 8px 8px 0 var(--accent-tint);
+}
+/* 魔法：羊皮紙、淡淡的星點 */
+.ledger--magic .ledger__days {
+  border-radius: 14px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 18% 12%, rgba(155, 123, 255, 0.18) 0 1.2px, transparent 2px) 0 0 / 120px 120px,
+    radial-gradient(circle at 72% 64%, rgba(242, 185, 64, 0.22) 0 1px, transparent 1.8px) 0 0 / 90px 90px,
+    linear-gradient(170deg, #f8efdc, #f1e3c4);
+  box-shadow:
+    8px 8px 0 var(--accent-tint),
+    0 16px 40px rgba(91, 63, 140, 0.12);
+}
+
+/* ---------- 一餐 ---------- */
+.entry {
+  display: grid;
+  gap: 8px;
+  padding: 18px 20px 18px 14px;
+  border-bottom: 1px dashed var(--rule-strong);
+}
+.entry:last-child {
+  border-bottom: 0;
+}
+.ledger__day:not(.is-in) .entry {
+  opacity: 0;
+}
+.ledger__day.is-in .entry {
+  animation: entry-in 0.6s calc(0.25s + var(--i) * 0.12s) var(--ease-out) both;
+}
+@keyframes entry-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+.entry__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+}
+.entry__slot {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 10px 2px 7px;
+  font-family: var(--f-serif);
+  font-weight: 700;
+  font-size: var(--t-xs);
+  letter-spacing: 0.1em;
+  border: 1.3px solid var(--ink);
+  background: var(--paper);
+}
+.entry__slot svg {
+  color: var(--accent);
+}
+.entry__time {
+  font-family: var(--f-latin);
+  font-size: var(--t-sm);
+  font-weight: 700;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+.entry__result {
+  margin-left: auto;
+  padding: 2px 10px;
+  font-family: var(--f-display);
+  font-weight: 900;
+  font-size: var(--t-xs);
+  letter-spacing: 0.16em;
+  color: var(--accent-ink);
+  background: var(--accent);
+  border: 1.3px solid var(--ink);
+  rotate: 2deg;
+}
+.entry.is-none .entry__result,
+.entry.is-cancelled .entry__result {
+  color: var(--ink-2);
+  background: var(--paper-lo);
+}
+.entry.is-live .entry__result {
+  color: var(--accent);
+  background: var(--paper-hi);
+  border-style: dashed;
+  rotate: 0deg;
+}
+.entry__shop {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 2px 0 0;
+  font-size: clamp(1.4rem, 5vw, 1.85rem);
+  line-height: 1.2;
+  letter-spacing: 0.06em;
+}
+.entry__shop svg {
+  color: var(--accent);
+}
+.entry__shop.is-empty,
+.entry.is-cancelled .entry__shop {
+  color: var(--ink-3);
+}
+.entry.is-cancelled .entry__shop {
+  text-decoration: line-through 2px var(--accent);
+}
+.entry__seal {
+  display: inline-grid;
+  place-items: center;
+  padding: 3px 6px;
+  font-family: var(--f-display);
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  color: var(--paper-hi);
+  background: var(--vermilion);
+  border: 1.3px solid var(--ink);
+  rotate: -8deg;
+}
+.entry__lot {
+  margin-top: -2px;
+}
+/* 籤詩：一行一行寫出來 */
+.entry__verse {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px 18px;
+  padding: 10px 14px;
+  font-family: var(--f-kai);
+  font-size: 1.05rem;
+  letter-spacing: 0.14em;
+  border-block: 1px dashed var(--rule-2);
+}
+.ledger__day.is-in .entry__verse span {
+  animation: ink-write 0.5s calc(0.55s + var(--i) * 0.12s + var(--k) * 0.11s) ease-out both;
+}
+@keyframes ink-write {
+  from {
+    clip-path: inset(0 100% 0 0);
+    opacity: 0.3;
+  }
+}
+.entry__verdict {
+  font-family: var(--f-serif);
+  font-size: var(--t-sm);
+  line-height: 1.7;
+  color: var(--ink-2);
+}
+.entry__verdict b {
+  margin-right: 8px;
+  color: var(--accent);
+  letter-spacing: 0.14em;
+}
+.entry__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  font-size: var(--t-sm);
+}
+.entry__with,
+.entry__by {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--f-serif);
+}
+.entry__with b {
+  letter-spacing: 0.1em;
+}
+.entry__faces {
+  display: inline-flex;
+  align-items: center;
+}
+.entry__faces > * + * {
+  margin-left: -6px;
+}
+.entry__faces i {
+  margin-left: 4px;
+  font-style: normal;
+  font-size: var(--t-xs);
+  color: var(--ink-3);
+}
+.entry__by {
+  color: var(--ink-2);
+}
+.entry__map {
+  max-width: 340px;
+  margin-top: 2px;
+}
+/* 求過的籤：起駕的那支蓋章、去不了的劃掉 */
+.entry__tried summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  font-family: var(--f-serif);
+  font-weight: 700;
+  font-size: var(--t-sm);
+  letter-spacing: 0.08em;
+  color: var(--ink-2);
+  cursor: pointer;
+  list-style: none;
+}
+.entry__tried summary::-webkit-details-marker {
+  display: none;
+}
+.entry__tried summary::after {
+  content: '＋';
+  font-size: 0.8rem;
+  color: var(--accent);
+}
+.entry__tried[open] summary::after {
+  content: '－';
+}
+.entry__tried .cands {
+  margin-top: 12px;
+}
+[data-theme='magic'] .entry__slot,
+[data-theme='magic'] .entry__result {
+  border-radius: 999px;
+}
+[data-theme='magic'] .entry__seal {
+  color: var(--ink);
+  background: var(--marigold);
+  border-radius: 999px;
+}
+[data-theme='magic'] .entry__verse {
+  border: 0;
+  border-radius: 10px;
+  background: rgba(155, 123, 255, 0.08);
+  color: #3a2f6e;
+}
+
+/* ---------- 底下：翻下一頁 ---------- */
+.ledger__foot {
+  display: grid;
+  justify-items: center;
+}
+.ledger__more {
+  gap: 8px;
+  min-width: 12em;
+}
+.ledger__end {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--f-kai);
+  font-size: var(--t-md);
+  letter-spacing: 0.12em;
+  color: var(--ink-3);
+}
+.ledger__empty {
+  display: grid;
+  justify-items: center;
+  gap: 16px;
+  padding: 10px 0 20px;
+}
+
+/* ---------- 手機 ---------- */
+@media (max-width: 640px) {
+  .ledger__cover {
+    padding: 20px 46px 18px 18px;
+  }
+  .ledger__glyph {
+    width: 62px;
+    height: 62px;
+  }
+  .ledger__stats {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ledger__day {
+    grid-template-columns: 70px minmax(0, 1fr);
+  }
+  .ledger__date {
+    padding: 16px 0 16px 8px;
+  }
+  .ledger__date .date-stamp {
+    width: 56px;
+    height: 56px;
+  }
+  .entry {
+    padding: 16px 14px 16px 10px;
+  }
+  .entry__verse {
+    grid-template-columns: 1fr;
+    padding: 8px 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ledger__cover,
+  .ledger__glyph,
+  .ledger__stats li,
+  .ledger__day .entry,
+  .ledger__day .date-stamp,
+  .ledger__day .entry__verse span {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+}
+
+/* 數字章：廟宇是方形朱印（白字），魔法是發光的金色星印 */
+.num-seal {
+  display: inline-grid;
+  place-items: center;
+  min-width: 38px;
+  height: 38px;
+  padding: 0 6px;
+  font-family: var(--f-display);
+  font-weight: 900;
+  font-size: 1.2rem;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--paper-hi);
+  background: var(--vermilion);
+  border: 1.5px solid var(--ink);
+  border-radius: 3px;
+  box-shadow:
+    inset 0 0 0 3px var(--vermilion),
+    inset 0 0 0 4.5px var(--paper-hi);
+  rotate: -5deg;
+}
+.ledger--magic .num-seal {
+  color: var(--ink);
+  background: radial-gradient(circle at 35% 30%, #ffe9a8, var(--marigold) 60%, #d89a2a);
+  border-radius: 50%;
+  box-shadow: 0 0 14px rgba(242, 185, 64, 0.6);
+  rotate: 0deg;
+}
+.ledger__stats li > .num-seal {
+  color: var(--paper-hi);
+}
+.ledger--magic .ledger__stats li > .num-seal {
+  color: var(--ink);
+}
+/* 魔法的數字是一顆小星球：輕輕地上下飄 */
+.num-planet {
+  flex: none;
+  overflow: visible;
+  filter: drop-shadow(0 0 8px rgba(242, 185, 64, 0.45));
+  animation: ledger-planet-float 5s ease-in-out infinite;
+}
+.ledger__stats li:nth-child(2) .num-planet {
+  animation-delay: -2.5s;
+}
+@keyframes ledger-planet-float {
+  50% {
+    translate: 0 -2px;
+    rotate: -4deg;
+  }
+}
+
+/* ---------- 魔法封面上的夜空：右上角的星座、偶爾劃過的流星（都在文字後面） ---------- */
+.ledger__sky {
+  position: absolute;
+  inset: 8px;
+  z-index: -1;
+  overflow: hidden;
+  border-radius: 4px 14px 14px 4px;
+  pointer-events: none;
+}
+.ledger__constellation {
+  position: absolute;
+  top: 10px;
+  right: 56px;
+  opacity: 0.9;
+}
+.ledger__star {
+  fill: #fff6d8;
+  animation: star-twinkle 3.2s calc(var(--i) * -0.45s) ease-in-out infinite;
+}
+@keyframes star-twinkle {
+  50% {
+    opacity: 0.35;
+  }
+}
+.ledger__meteor {
+  position: absolute;
+  top: 6%;
+  right: 12%;
+  width: 130px;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #fffbe8, rgba(255, 233, 168, 0.55) 35%, transparent);
+  box-shadow: 0 0 6px rgba(255, 251, 232, 0.8);
+  rotate: -31deg;
+  opacity: 0;
+  animation: meteor 11s 1.6s linear infinite;
+}
+.ledger__meteor--late {
+  top: 22%;
+  right: 34%;
+  width: 90px;
+  animation-duration: 17s;
+  animation-delay: 7s;
+}
+@keyframes meteor {
+  0% {
+    translate: 0 0;
+    opacity: 0;
+  }
+  1% {
+    opacity: 1;
+  }
+  7% {
+    translate: -260px 156px;
+    opacity: 0;
+  }
+  100% {
+    translate: -260px 156px;
+    opacity: 0;
+  }
+}
+/* 手機：標題右邊只剩一小塊空位，星座縮小貼在右上角 */
+@media (max-width: 560px) {
+  .ledger__constellation {
+    top: 2px;
+    right: 4px;
+    width: 72px;
+    height: 40px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .num-planet,
+  .ledger__star,
+  .ledger__meteor {
+    animation: none;
+  }
+}
+
+/* ---------- 四個分頁：簿（全部）、收（別人揪我的）、發（我揪大家的）、獨（我一個人的） ---------- */
+.ledger__tab--all {
+  --sec: var(--vermilion-lo);
+}
+.ledger__tab--inbox {
+  --sec: var(--vermilion);
+}
+.ledger__tab--sent {
+  --sec: #c98f1c;
+}
+.ledger__tab--solo {
+  --sec: var(--jade);
+}
+.ledger--magic .ledger__tab--all {
+  --sec: #2c3e7a;
+}
+.ledger--magic .ledger__tab--inbox {
+  --sec: #4a3d9e;
+}
+.ledger--magic .ledger__tab--sent {
+  --sec: var(--cobalt);
+}
+.ledger--magic .ledger__tab--solo {
+  --sec: #1f7a70;
+}
+.ledger__tabs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: -8px;
+}
+.ledger__tab {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 58px;
+  padding: 6px 8px;
+  border: 1.5px solid var(--ink);
+  background: var(--paper-hi);
+  box-shadow: 3px 3px 0 var(--rule-2);
+  font-family: var(--f-serif);
+  font-weight: 700;
+  font-size: 0.98rem;
+  letter-spacing: 0.16em;
+  color: var(--ink-3);
+  cursor: pointer;
+  transition:
+    transform 0.25s var(--ease-spring),
+    box-shadow 0.25s var(--ease-out),
+    color 0.2s,
+    background 0.2s;
+}
+.ledger__tab:active {
+  transform: translate(1px, 1px);
+}
+.ledger__tab.is-on {
+  color: var(--sec);
+  background: color-mix(in srgb, var(--sec) 8%, var(--paper-hi));
+  box-shadow: 5px 5px 0 var(--sec);
+  transform: translate(-2px, -2px);
+}
+.ledger__tab .ledger__mark {
+  rotate: -6deg;
+  transition:
+    filter 0.25s,
+    rotate 0.3s var(--ease-spring);
+}
+.ledger__tab:not(.is-on) .ledger__mark {
+  filter: grayscale(1) opacity(0.45);
+  rotate: 0deg;
+}
+.ledger__tab.is-on .ledger__mark {
+  animation: ledger-mark 0.4s var(--ease-spring) both;
+}
+@keyframes ledger-mark {
+  from {
+    transform: scale(1.8) rotate(-20deg);
+  }
+}
+.ledger__tab-count {
+  position: absolute;
+  top: -9px;
+  right: -9px;
+  display: grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  background: var(--sec);
+  color: var(--paper-hi);
+  font-family: var(--f-display);
+  font-size: 0.78rem;
+  letter-spacing: 0;
+}
+.ledger--magic .ledger__tab {
+  border-radius: 14px;
+}
+@media (max-width: 640px) {
+  .ledger__tabs {
+    gap: 8px;
+  }
+  .ledger__tab {
+    flex-direction: column;
+    gap: 2px;
+    min-height: 66px;
+    letter-spacing: 0.06em;
+    font-size: 0.86rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ledger__mark {
+    animation: none !important;
+  }
+}
+
+.entry__tried-n {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 4px;
+  font-family: var(--f-display);
+  font-size: 0.74rem;
+  color: var(--paper-hi);
+  background: var(--accent);
+  border: 1.2px solid var(--ink);
+}
+.ledger--magic .entry__tried-n {
+  color: var(--ink);
+  background: var(--marigold);
+  border-radius: 50%;
+}
+
+/* ---------- 彩蛋：封面標題的字可以點、日期章可以重蓋、星座可以點亮 ---------- */
+.ledger__title {
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.ledger__title span {
+  display: inline-block;
+}
+.ledger__date {
+  cursor: pointer;
+}
+.ledger__constellation {
+  pointer-events: auto;
+  cursor: pointer;
+}
+.ledger__constellation .ledger__star {
+  transform-box: fill-box;
+}
+/* 點出來的流星：只劃一次 */
+.ledger__meteor--now {
+  animation: meteor-now 0.9s linear both;
+}
+@keyframes meteor-now {
+  0% {
+    translate: 0 0;
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  100% {
+    translate: -260px 150px;
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ledger__meteor--now {
+    display: none;
+  }
+}

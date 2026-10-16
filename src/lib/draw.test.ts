@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { candidates, drawOne, pickWeighted } from './draw';
-import type { Member, Restaurant } from './types';
+import { candidates, cleanFilters, drawOne, pickWeighted } from './draw';
+import type { Member, Restaurant, Walk } from './types';
 
 const shop = (id: string, over: Partial<Restaurant> = {}): Restaurant => ({
   id,
@@ -21,11 +21,10 @@ const person = (id: string, likes: string[] = [], blocks: string[] = []): Member
   name: id,
   photoURL: '',
   crews: [],
-  today: null,
   likes,
   blocks,
 });
-const none = { categories: [], prices: [] };
+const none = { categories: [], prices: [], walks: [] };
 
 describe('candidates', () => {
   it('排除任何一個人不吃的店', () => {
@@ -100,7 +99,7 @@ describe('candidates', () => {
         shop('c'),
       ],
       party: [person('me')],
-      filters: { categories: ['noodle'], prices: [2] },
+      filters: { categories: ['noodle'], prices: [2], walks: [] },
       recent: [],
     });
     assert.deepEqual(
@@ -111,7 +110,7 @@ describe('candidates', () => {
 
   it('依步行時間篩選；沒選步行就不限', () => {
     const restaurants = [shop('a', { walk: 5 }), shop('b', { walk: 15 }), shop('c', { walk: 20 })];
-    const pick = (walks?: (5 | 10 | 15 | 20)[]) =>
+    const pick = (walks: Walk[]) =>
       candidates({
         restaurants,
         party: [person('me')],
@@ -120,7 +119,31 @@ describe('candidates', () => {
       }).map((c) => c.restaurant.id);
     assert.deepEqual(pick([5, 15]), ['a', 'b']);
     assert.deepEqual(pick([]), ['a', 'b', 'c']);
-    assert.deepEqual(pick(undefined), ['a', 'b', 'c']);
+  });
+});
+
+describe('cleanFilters', () => {
+  it('丟掉表裡已經沒有的值，留下認得的', () => {
+    assert.deepEqual(cleanFilters({ categories: ['rice', 'pizza'], prices: [2, 9], walks: [30, 15] }), {
+      categories: ['rice'],
+      prices: [2],
+      walks: [15],
+    });
+  });
+
+  it('舊版存的沒有 walks，當成不限', () => {
+    assert.deepEqual(cleanFilters({ categories: ['noodle'], prices: [] }), {
+      categories: ['noodle'],
+      prices: [],
+      walks: [],
+    });
+  });
+
+  it('存壞了的資料當成沒有篩選', () => {
+    const empty = { categories: [], prices: [], walks: [] };
+    assert.deepEqual(cleanFilters(null), empty);
+    assert.deepEqual(cleanFilters('rice'), empty);
+    assert.deepEqual(cleanFilters({ categories: 'rice', prices: null, walks: [{}] }), empty);
   });
 });
 

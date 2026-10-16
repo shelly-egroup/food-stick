@@ -443,6 +443,33 @@ function FaceDownTarot() {
   );
 }
 
+function DimHeartCircle() {
+  return (
+    <>
+      <ellipse cx="100" cy="119" rx="60" ry="4" fill={INK} opacity="0.12" />
+      <ellipse cx="100" cy="98" rx="62" ry="16" fill="none" stroke="#9b7bff" strokeWidth="1.4" strokeDasharray="5 4" />
+      <ellipse cx="100" cy="98" rx="44" ry="10" fill="none" stroke="var(--marigold)" strokeWidth="1" opacity="0.6" />
+      <g className="vg-dim">
+        <path
+          d="M100 84 C 86 72, 70 60, 78 46 C 84 36, 96 38, 100 48 C 104 38, 116 36, 122 46 C 130 60, 114 72, 100 84 Z"
+          fill="#f4c6d6"
+          stroke={INK}
+          strokeWidth="1.6"
+          strokeLinejoin="round"
+        />
+      </g>
+      <g className="vg-quill">
+        <path d="M150 104 L170 56" stroke="#8b5b36" strokeWidth="4" strokeLinecap="round" />
+        <path d={SPARK(171, 52, 6)} fill="var(--marigold)" stroke={INK} strokeWidth="0.8" />
+      </g>
+      <g className="vg-twinkle" fill="var(--marigold)" stroke={INK} strokeWidth="0.8">
+        <path d={SPARK(44, 40, 4.4)} />
+        <path d={SPARK(60, 92, 3)} style={{ animationDelay: '1.1s' }} />
+      </g>
+    </>
+  );
+}
+
 function EmptyWindow() {
   return (
     <>
@@ -495,33 +522,6 @@ function IdlePerch() {
   );
 }
 
-function DimHeartCircle() {
-  return (
-    <>
-      <ellipse cx="100" cy="119" rx="60" ry="4" fill={INK} opacity="0.12" />
-      <ellipse cx="100" cy="98" rx="62" ry="16" fill="none" stroke="#9b7bff" strokeWidth="1.4" strokeDasharray="5 4" />
-      <ellipse cx="100" cy="98" rx="44" ry="10" fill="none" stroke="var(--marigold)" strokeWidth="1" opacity="0.6" />
-      <g className="vg-dim">
-        <path
-          d="M100 84 C 86 72, 70 60, 78 46 C 84 36, 96 38, 100 48 C 104 38, 116 36, 122 46 C 130 60, 114 72, 100 84 Z"
-          fill="#f4c6d6"
-          stroke={INK}
-          strokeWidth="1.6"
-          strokeLinejoin="round"
-        />
-      </g>
-      <g className="vg-quill">
-        <path d="M150 104 L170 56" stroke="#8b5b36" strokeWidth="4" strokeLinecap="round" />
-        <path d={SPARK(171, 52, 6)} fill="var(--marigold)" stroke={INK} strokeWidth="0.8" />
-      </g>
-      <g className="vg-twinkle" fill="var(--marigold)" stroke={INK} strokeWidth="0.8">
-        <path d={SPARK(44, 40, 4.4)} />
-        <path d={SPARK(60, 92, 3)} style={{ animationDelay: '1.1s' }} />
-      </g>
-    </>
-  );
-}
-
 function SleepingBall() {
   return (
     <>
@@ -551,6 +551,56 @@ function SleepingBall() {
   );
 }
 
+/** 歷史還是空的：攤開的夜空藍冒險日誌，頁上只有淡淡的星圖格線，羽毛筆浮在上面等著寫第一頁 */
+function BlankJournal() {
+  return (
+    <>
+      <ellipse cx="100" cy="118" rx="82" ry="4" fill={INK} opacity="0.12" />
+      {/* 封面與扣環 */}
+      <path
+        d="M18 98 L22 30 Q61 22 100 30 Q139 22 178 30 L182 98 Q139 90 100 98 Q61 90 18 98 Z"
+        fill="#3a4fa0"
+        stroke={INK}
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+      />
+      <rect x="178" y="54" width="11" height="18" rx="3" fill="var(--marigold)" stroke={INK} strokeWidth="1.2" />
+      {/* 兩頁 */}
+      <path d="M25 95 L29 35 Q64 28 98 36 L98 95 Q62 88 25 95 Z" fill="#f5e9cc" stroke={INK} strokeWidth="1.3" />
+      <path d="M175 95 L171 35 Q136 28 102 36 L102 95 Q138 88 175 95 Z" fill="#f5e9cc" stroke={INK} strokeWidth="1.3" />
+      <path d="M100 34 V98" stroke={INK} strokeWidth="1.1" />
+      {/* 左頁：還沒點亮的星圖 */}
+      <g stroke="#c9b48a" strokeWidth="0.9" fill="none" strokeDasharray="2 3">
+        <circle cx="62" cy="64" r="20" />
+        <circle cx="62" cy="64" r="10" />
+        <path d="M42 64 H82 M62 44 V84" />
+      </g>
+      {/* 右頁：空白的橫線 */}
+      <g stroke="#c9b48a" strokeWidth="1" strokeDasharray="2 4">
+        <path d="M112 50 H160 M112 62 H160 M112 74 H160 M112 86 H148" />
+      </g>
+      {/* 羽毛筆與墨水瓶 */}
+      <path d="M146 100 h20 l-3 13 h-14 Z" fill="var(--cobalt)" stroke={INK} strokeWidth="1.4" strokeLinejoin="round" />
+      <rect x="151" y="95" width="10" height="6" fill="#2c3e78" stroke={INK} strokeWidth="1.2" />
+      <g className="vg-quill">
+        <path
+          d="M124 84 C 130 64, 142 48, 160 36 C 156 52, 146 70, 128 82 Z"
+          fill="var(--paper-hi)"
+          stroke={INK}
+          strokeWidth="1.3"
+          strokeLinejoin="round"
+        />
+        <path d="M124 84 L 156 40" stroke={INK} strokeWidth="1" fill="none" />
+      </g>
+      <g className="vg-twinkle" fill="var(--marigold)" stroke={INK} strokeWidth="0.8">
+        <path d={SPARK(62, 64, 4.4)} />
+        <path d={SPARK(28, 18, 4.5)} style={{ animationDelay: '0.8s' }} />
+        <path d={SPARK(176, 16, 3.6)} style={{ animationDelay: '1.5s' }} />
+      </g>
+    </>
+  );
+}
+
 export function Vignette({ kind, title, hint }: VignetteProps) {
   const scenes: Record<VignetteProps['kind'], [ReactNode, string, string]> = {
     'crew-empty': [<Table key="a" />, copy.crew.emptyTitle, copy.crew.emptyHint],
@@ -560,9 +610,10 @@ export function Vignette({ kind, title, hint }: VignetteProps) {
     'shops-none': [<PuzzledOwl key="a" />, '', ''],
     'ranks-empty': [<DarkChart key="a" />, copy.ranks.emptyTitle, copy.ranks.emptyHint],
     'herald-empty': [<SleepyOwl key="a" />, copy.herald.emptyTitle, copy.herald.emptyHint],
-    'herald-inbox': [<EmptyWindow key="a" />, copy.herald.none.inbox.title, copy.herald.none.inbox.hint],
-    'herald-sent': [<IdlePerch key="a" />, copy.herald.none.sent.title, copy.herald.none.sent.hint],
-    'herald-solo': [<SleepingBall key="a" />, copy.herald.none.solo.title, copy.herald.none.solo.hint],
+    'history-empty': [<BlankJournal key="a" />, copy.history.emptyTitle, copy.history.emptyHint],
+    'history-inbox': [<EmptyWindow key="a" />, copy.history.none.inbox.title, copy.history.none.inbox.hint],
+    'history-sent': [<IdlePerch key="a" />, copy.history.none.sent.title, copy.history.none.sent.hint],
+    'history-solo': [<SleepingBall key="a" />, copy.history.none.solo.title, copy.history.none.solo.hint],
     'titles-empty': [<FaceDownTarot key="a" />, copy.ranks.titlesEmpty.title, copy.ranks.titlesEmpty.hint],
     'fans-empty': [<DimHeartCircle key="a" />, copy.shops.fansEmpty.title, copy.shops.fansEmpty.hint],
   };

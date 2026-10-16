@@ -57,8 +57,16 @@
   border-radius: 50%;
 }
 .note__by {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 8px;
   flex: 1;
   min-width: 0;
+}
+.note__by b {
+  font-weight: inherit;
+  color: var(--ink);
 }
 /* 拿掉自己的紙條：兩個字的小按鈕（取下、抹去），不用 ✕ */
 .note__del {

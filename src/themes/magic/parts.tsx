@@ -127,17 +127,20 @@ export function Owl({
   s = 1,
   onPoke,
   outfit = 'none',
+  asleep = false,
 }: {
   x: number;
   y: number;
   s?: number;
   onPoke?: () => void;
   outfit?: OwlOutfit;
+  /** 睡著：眼睛閉成兩道彎、不眨眼 */
+  asleep?: boolean;
 }) {
   return (
     <g
       transform={`translate(${x} ${y}) scale(${s})`}
-      className="owl"
+      className={`owl${asleep ? ' is-asleep' : ''}`}
       onClick={onPoke}
       role={onPoke ? 'button' : undefined}
       aria-label={onPoke ? '貓頭鷹' : undefined}
@@ -202,7 +205,17 @@ export function Owl({
               strokeWidth="1.3"
               strokeLinecap="round"
             />
-            <g className="owl__eyes">
+            {asleep && (
+              <path
+                className="owl__lids"
+                d="M-14 -40.5 Q -8 -35.5 -2 -40.5 M2 -40.5 Q 8 -35.5 14 -40.5"
+                fill="none"
+                stroke={INK}
+                strokeWidth="1.8"
+                strokeLinecap="round"
+              />
+            )}
+            <g className="owl__eyes" display={asleep ? 'none' : undefined}>
               <circle cx="-8" cy="-40" r="7" fill="var(--marigold)" stroke={INK} strokeWidth="1.3" />
               <circle cx="8" cy="-40" r="7" fill="var(--marigold)" stroke={INK} strokeWidth="1.3" />
               <circle cx="-7.5" cy="-40" r="3.4" fill={INK} />
