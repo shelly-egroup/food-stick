@@ -406,6 +406,64 @@ describe('餐單', () => {
     );
   });
 
+  it('起駕後、這餐結束前，要去的人可以改去候選裡的別張', async () => {
+    const decided = (over: Record<string, unknown> = {}) =>
+      seed({
+        answers: { bob: 'in', carl: 'out' },
+        picks: [pickOf('amy'), pickOf('amy', 'r2')],
+        cands: ['r1', 'r2'],
+        status: 'decided',
+        decision: { rid: 'r1', by: 'amy', at: Timestamp.now() },
+        ...over,
+      });
+    const change = (uid: string, rid: string) =>
+      updateDoc(ref(uid), {
+        decision: { rid, by: uid, at: serverTimestamp() },
+        status: 'decided',
+        updatedAt: serverTimestamp(),
+      });
+    await decided();
+    await assertFails(change('bob', 'r1')); // 同一張不算改
+    await assertFails(change('bob', 'r9')); // 不在候選裡
+    await assertFails(change('carl', 'r2')); // 說不去的人
+    await assertFails(change('boss', 'r2')); // 沒被揪的人
+    await assertSucceeds(change('bob', 'r2'));
+    await assertSucceeds(change('amy', 'r1')); // 改回來也行，只要跟現在的不同
+    // 還沒回覆的人不能改
+    await decided({ answers: { bob: 'in' } });
+    await assertFails(change('carl', 'r2'));
+    // 這餐結束了就不能改
+    await decided({ endsAt: Timestamp.fromMillis(Date.now() - 1000) });
+    await assertFails(change('bob', 'r2'));
+    // 第一次起駕照舊
+    await seed({ picks: [pickOf('amy'), pickOf('amy', 'r2')], cands: ['r1', 'r2'] });
+    await assertSucceeds(change('bob', 'r2'));
+  });
+
+  it('這家去不了：可以帶原因（人太多、沒開、賣完、不想吃），也可以不帶；別的原因或多的欄位不行', async () => {
+    const skipWith = async (entry: Record<string, unknown>) => {
+      await seed({ picks: [pickOf('amy'), pickOf('amy', 'r2')], cands: ['r1', 'r2'], rerollsLeft: 0 });
+      return updateDoc(ref('bob'), {
+        skips: [{ rid: 'r2', by: 'bob', at: Timestamp.now(), ...entry }],
+        picks: (await stored()).picks,
+        cands: ['r1'],
+        rerollsLeft: 3,
+        decision: null,
+        status: 'open',
+        updatedAt: serverTimestamp(),
+      });
+    };
+    for (const why of ['crowded', 'closed', 'soldout', 'mood']) {
+      await assertSucceeds(skipWith({ why }));
+    }
+    await assertSucceeds(skipWith({})); // 舊寫法沒有原因
+    await assertFails(skipWith({ why: 'rain' }));
+    await assertFails(skipWith({ why: '' }));
+    await assertFails(skipWith({ why: 1 }));
+    await assertFails(skipWith({ note: '排太長' }));
+    await assertFails(skipWith({ why: 'crowded', note: '排太長' }));
+  });
+
   it('這家去不了：起駕後也能按，補抽一家，重抽次數回到原本的數字', async () => {
     await seed({
       picks: [pickOf('amy'), pickOf('amy', 'r2')],
