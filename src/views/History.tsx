@@ -1,6 +1,15 @@
 'use client';
 
-import { useEffect, useId, useMemo, useRef, useState, type CSSProperties, type MouseEvent } from 'react';
+import {
+  useEffect,
+  useEffectEvent,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type MouseEvent,
+} from 'react';
 import gsap from 'gsap';
 import Link from 'next/link';
 import { createPortal } from 'react-dom';
@@ -30,6 +39,7 @@ import {
 import { reducedMotion } from '@/lib/motion';
 import { paper, stamp, twinkle } from '@/lib/sound';
 import { setPref, useMealHistory } from '@/lib/store';
+import { askEgg } from '@/lib/egg';
 import { useNow } from '@/lib/useBrowser';
 import { readingOf } from '@/lib/verse';
 import { categoryOf, type Member } from '@/lib/types';
@@ -144,10 +154,28 @@ export function History() {
 
   const empty = !hist.loading && shownList.length === 0;
 
-  // 彩蛋：封面的小圖一秒內連點三下，翻出一句幹話（每次隨機，再點三下收回去）
-  const [egg, setEgg] = useState<number | null>(null);
+  // 彩蛋：第一次點一下封面的小圖就翻出一句；翻出來之後，要一秒內連點三下才換下一句。
+  // 先用 AI（gpt-oss-120b）現寫的；背景先備好一句，點的時候沒備好就用準備好的句子（每次隨機、不連續重複）
+  const [egg, setEgg] = useState<{ text: string; n: number } | null>(null);
   const lastEgg = useRef(-1);
   const taps = useRef<number[]>([]);
+  const aiNext = useRef<{ theme: string; text: string } | null>(null);
+  const aiBusy = useRef(false);
+  const fetchEgg = () => {
+    if (aiBusy.current || aiNext.current?.theme === theme.id) return;
+    aiBusy.current = true;
+    const t = theme.id;
+    void askEgg(t).then((text) => {
+      aiBusy.current = false;
+      if (text) aiNext.current = { theme: t, text };
+    });
+  };
+  // 一進來就先備好一句
+  const prefetch = useEffectEvent(fetchEgg);
+  useEffect(() => {
+    const tm = setTimeout(prefetch, 1200);
+    return () => clearTimeout(tm);
+  }, [theme.id]);
   const cover = useRef<HTMLElement>(null);
   const magic = theme.id === 'magic';
   /** 魔法封面上劃過幾顆流星（臨時加進夜空，劃完就拿掉） */
@@ -164,11 +192,13 @@ export function History() {
       sky.appendChild(m);
     }
   };
-  const tapEgg = (e: MouseEvent<HTMLButtonElement>) => {
+  const glyph = useRef<HTMLButtonElement>(null);
+  // 點封面小圖、或點已經翻出來的那句話，都算數
+  const tapEgg = () => {
     // 每點一下都有反應：簿子抖一抖、翻一頁（日誌轉一圈、閃一下），才會想再多點幾下
-    if (!reducedMotion())
+    if (!reducedMotion() && glyph.current)
       gsap.fromTo(
-        e.currentTarget,
+        glyph.current,
         // 小圖本身用 CSS 的 rotate 歪著 -4°，這裡的旋轉是疊在上面的，從 0 回到 0
         { rotate: 0 },
         magic
@@ -180,23 +210,34 @@ export function History() {
             }
           : { keyframes: { rotate: [0, -10, 12, -5, 0] }, duration: 0.5, ease: 'sine.inOut', clearProps: 'transform' },
       );
-    if (magic) twinkle(taps.current.length + 2);
-    else paper(0.12);
-    const t = Date.now();
-    taps.current = [...taps.current.filter((x) => t - x < 1000), t];
-    if (taps.current.length < 3) return;
+    if (!magic) paper(0.12);
+    // 已經翻出來了：一秒內連點滿三下才換
+    if (egg !== null) {
+      const t = Date.now();
+      taps.current = [...taps.current.filter((x) => t - x < 1000), t];
+      if (taps.current.length < 3) {
+        if (magic) twinkle(taps.current.length + 2);
+        return;
+      }
+    }
     taps.current = [];
-    if (egg !== null) return setEgg(null);
-    // 每次隨機一句幹話，不跟上一次一樣
-    const n = copy.history.egg.lines.length;
-    const last = lastEgg.current;
-    const roll = Math.floor(Math.random() * (last < 0 ? n : n - 1));
-    const next = last < 0 || roll < last ? roll : roll + 1;
-    lastEgg.current = next;
-    setEgg(next);
+    // 有備好的 AI 句子就用；沒有就隨機一句準備好的，不跟上一次一樣。用掉了就再備下一句
+    const ai = aiNext.current?.theme === theme.id ? aiNext.current.text : null;
+    aiNext.current = null;
+    let text = ai;
+    if (!text) {
+      const lines = copy.history.egg.lines;
+      const last = lastEgg.current;
+      const roll = Math.floor(Math.random() * (last < 0 ? lines.length : lines.length - 1));
+      const next = last < 0 || roll < last ? roll : roll + 1;
+      lastEgg.current = next;
+      text = lines[next];
+    }
+    setEgg((e) => ({ text, n: (e?.n ?? 0) + 1 }));
+    fetchEgg();
     if (magic) {
       twinkle(9);
-      meteors(6);
+      meteors(egg === null ? 6 : 2);
     } else stamp();
   };
   /** 點大標題：字一個一個跳起來（廟宇像毛筆字被吹動，魔法像咒語發光） */
@@ -246,8 +287,8 @@ export function History() {
       <header className="ledger__cover" ref={cover}>
         {magic && <NightSky onTap={tapSky} />}
         <div className="ledger__label">
-          {/* 彩蛋：連點這顆小圖三下 */}
-          <button type="button" className="ledger__glyph" onClick={tapEgg} aria-label={copy.history.title}>
+          {/* 彩蛋：點這顆小圖翻出一句幹話 */}
+          <button type="button" ref={glyph} className="ledger__glyph" onClick={tapEgg} aria-label={copy.history.title}>
             <theme.Glyph name="ledger" size={52} />
           </button>
           <div>
@@ -262,13 +303,14 @@ export function History() {
           </div>
         </div>
         {egg !== null ? (
-          <p key={egg} className="ledger__egg" aria-live="polite">
+          <button type="button" key={egg.n} className="ledger__egg" onClick={tapEgg} aria-live="polite">
             <Seal text={copy.history.egg.seal} size={40} rotate={-8} className="ledger__egg-seal" />
             <span>
               <small>{copy.history.egg.title}</small>
-              <b>{copy.history.egg.lines[egg]}</b>
+              <b>{egg.text}</b>
+              <i className="ledger__egg-more">連點三下換一句</i>
             </span>
-          </p>
+          </button>
         ) : (
           <p className="ledger__lede">{copy.history.lede}</p>
         )}

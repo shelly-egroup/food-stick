@@ -138,3 +138,43 @@
     transition: none;
   }
 }
+
+/* 加進常用的自己寫餐別：跟內建的排在一起，右上角一顆小 × 可以拿掉 */
+.meal-slot-saved {
+  position: relative;
+  display: grid;
+  min-width: 0;
+}
+.meal-slot__forget {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  color: var(--paper-hi);
+  background: var(--ink);
+  border: 1.4px solid var(--paper-hi);
+  border-radius: 50%;
+  cursor: pointer;
+  rotate: 45deg;
+}
+.meal-slot__forget svg {
+  color: currentColor;
+}
+/* 自己寫完：問要不要加進常用 */
+.meal-slot-ask__hint {
+  margin: 0 0 16px;
+  font-family: var(--f-kai);
+  font-size: var(--t-sm);
+  line-height: 1.7;
+  color: var(--ink-2);
+}
+.meal-slot-ask {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}

@@ -67,7 +67,7 @@ export function askMotion(silent = false): Promise<boolean> {
  * iOS 要使用者自己按首頁「開啟搖手機」的按鈕（或在設定裡打開）才問權限，
  * 不在點別的東西（例如廟貓）的時候突然跳出詢問。
  */
-export function useShake(onShake: () => void, active: boolean) {
+export function useShake(onShake: () => void, active: boolean, onHard?: () => void) {
   const supported = useShakeSupported();
   const askFirst = useBrowserValue(needsPermission, true);
   const [on] = useShakePref();
@@ -75,6 +75,7 @@ export function useShake(onShake: () => void, active: boolean) {
   const usable = supported && on;
   const enabled = usable && (!askFirst || permission === 'granted');
   const fire = useEffectEvent(onShake);
+  const fireHard = useEffectEvent(() => onHard?.());
 
   // 先不靠點擊試一次：這次瀏覽已經同意過就直接通過，沒有的話等使用者按按鈕
   useEffect(() => {
@@ -86,6 +87,7 @@ export function useShake(onShake: () => void, active: boolean) {
     if (!enabled || !active) return;
     let last = { x: 0, y: 0, z: 0 };
     let lastHit = 0;
+    let lastHard = 0;
     let streak = 0;
     const onMotion = (e: DeviceMotionEvent) => {
       const a = e.accelerationIncludingGravity;
@@ -93,6 +95,11 @@ export function useShake(onShake: () => void, active: boolean) {
       const d = Math.abs(a.x - last.x) + Math.abs(a.y - last.y) + Math.abs(a.z - last.z);
       last = { x: a.x, y: a.y, z: a.z };
       const now = Date.now();
+      // 搖得特別大力（彩蛋：神明頭暈），四秒內只說一次
+      if (d > 70 && now - lastHard > 4000) {
+        lastHard = now;
+        fireHard();
+      }
       if (d > 28) {
         streak += 1;
         if (streak >= 3 && now - lastHit > 2000) {

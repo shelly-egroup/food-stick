@@ -656,3 +656,31 @@
   opacity: 0;
   visibility: hidden;
 }
+
+/* 收起中：按鈕區、箭頭、小點、虧人的話整個淡出。按了起駕之後資料才回來、這時才長出來的
+   （例如「出發囉！冒險開始」）也一起藏住，不會留在畫面中間最後才消失 */
+/* 箭頭、小點自己已經有 opacity 的 transition，這裡只補按鈕區和虧人的話 */
+.oracle__actions,
+.oracle__tease {
+  transition: opacity 0.15s ease;
+}
+.oracle.is-leaving .oracle__actions,
+.oracle.is-leaving .oracle__nav,
+.oracle.is-leaving .oracle__deck,
+.oracle.is-leaving .oracle__tease {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* 小彩蛋的吐槽：跟虧人的話同一種對話框，籤卡展開好了才冒出來（左右切過來的就快一點） */
+.oracle__quip {
+  animation-delay: 1.75s;
+}
+.oracle__quip.is-swap {
+  animation-delay: 0.5s;
+}
+/* 壓線：定案那一行最右邊斜斜蓋一個空心章 */
+.oracle__close {
+  flex: none;
+  margin-left: -4px;
+}

@@ -17,6 +17,8 @@ import {
   needsMe,
   showsLive,
   keptToday,
+  momentOf,
+  repeatOf,
   stateOf,
   taipeiDate,
   tallyOf,
@@ -257,5 +259,34 @@ describe('首頁的那一餐', () => {
     const yesterday = meal({ id: '2026-09-09_lunch_me', date: '2026-09-09' });
     const r = mealsFor([tea, yesterday], 'me', '2026-09-10', lunch, T0);
     assert.deepEqual(r, { live: null, done: null, own: null });
+  });
+});
+
+describe('彩蛋', () => {
+  const ate = (date: string, rid: string, going = ['me']) =>
+    meal({ date, going, party: going, status: 'decided', decision: { rid, by: 'me', at: at(0) } });
+
+  it('連續吃同一家：中間沒吃的日子不算斷，吃了別家才斷；這個月吃幾次另外算', () => {
+    const meals = [
+      ate('2026-10-15', 'a'),
+      ate('2026-10-14', 'a'),
+      ate('2026-10-10', 'a'),
+      ate('2026-10-09', 'b'),
+      ate('2026-10-08', 'a'),
+      ate('2026-09-30', 'a'),
+      ate('2026-10-13', 'a', ['zz']),
+    ];
+    assert.deepEqual(repeatOf(meals, 'me', 'a', '2026-10-16'), { streak: 3, month: 4 });
+    assert.deepEqual(repeatOf(meals, 'me', 'b', '2026-10-16'), { streak: 0, month: 1 });
+    // 今天的不算
+    assert.deepEqual(repeatOf([ate('2026-10-16', 'a')], 'me', 'a', '2026-10-16'), { streak: 0, month: 0 });
+  });
+
+  it('時段：宵夜（台北時間晚上十點到清晨五點）', () => {
+    assert.equal(momentOf(Date.parse('2026-10-16T12:30:00+08:00')), null);
+    assert.equal(momentOf(Date.parse('2026-10-16T21:59:00+08:00')), null);
+    assert.equal(momentOf(Date.parse('2026-10-15T23:10:00+08:00')), 'late');
+    assert.equal(momentOf(Date.parse('2026-10-16T02:00:00+08:00')), 'late');
+    assert.equal(momentOf(0), null);
   });
 });

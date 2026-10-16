@@ -57,6 +57,10 @@ export interface OracleProps {
   tease?: string;
   /** 已經起駕了，這張是改去別家：原本要去的那家。起駕鈕換成「改去這家」，底下一行小字 */
   switching?: string;
+  /** 小彩蛋：籤卡展開好了，上方冒出一句吐槽（連續吃同一家、這個月吃很多次）；虧人的話出現時讓位 */
+  quip?: string;
+  /** 用完最後一次才起駕：定案章旁邊多蓋一個「壓線」 */
+  closeCall?: boolean;
 }
 
 /** 左右滑多遠才算切到下一支 */
@@ -216,6 +220,13 @@ export function Oracle(p: OracleProps) {
         { opacity: 1, scale: 1, rotate: -8, duration: 0.32, ease: 'back.out(2.4)' },
         1.85,
       ).add(() => stamp(), 1.98);
+    if (el.querySelector('.oracle__close'))
+      tl.fromTo(
+        q('.oracle__close'),
+        { opacity: 0, scale: 2.4, rotate: 40 },
+        { opacity: 1, scale: 1, rotate: 12, duration: 0.3, ease: 'back.out(2.4)' },
+        2.3,
+      ).add(() => stamp(), 2.42);
     if (el.querySelector('.oracle__final-words b'))
       tl.fromTo(
         q('.oracle__final-words b'),
@@ -437,7 +448,13 @@ export function Oracle(p: OracleProps) {
   );
 
   return (
-    <div ref={root} className="oracle" role="dialog" aria-modal="true" aria-labelledby="oracle-name">
+    <div
+      ref={root}
+      className={`oracle${p.leaving ? ' is-leaving' : ''}`}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="oracle-name"
+    >
       {/* 不放關閉鈕：點籤卡外面、按 Esc 都會收起來 */}
       <div className="oracle__veil" onClick={p.busy ? undefined : p.onClose} />
       <div className="oracle__burst" aria-hidden="true" />
@@ -516,11 +533,19 @@ export function Oracle(p: OracleProps) {
           </article>
         </div>
 
-        {p.tease && (
+        {p.tease ? (
           <p className="oracle__tease" role="status">
             <theme.Glyph name="shake" size={26} />
             {p.tease}
           </p>
+        ) : (
+          p.quip &&
+          !p.leaving && (
+            <p className={`oracle__tease oracle__quip${p.swap ? ' is-swap' : ''}`} role="status">
+              <theme.Glyph name="herald" size={24} />
+              {p.quip}
+            </p>
+          )
         )}
         {deck && (
           // 第幾支：一排小點，現在這支拉長；也告訴讀螢幕的人
@@ -538,9 +563,19 @@ export function Oracle(p: OracleProps) {
             <p className="oracle__taunt oracle__taunt--final" aria-live="polite">
               <Seal text={copy.finalSeal} size={48} rotate={-8} className="oracle__final" label={copy.finalSeal} />
               <span className="oracle__final-words">
-                <span>{copy.meal.depart}</span>
+                <span>{p.closeCall ? copy.quip.close : copy.meal.depart}</span>
                 <b>{r.name}</b>
               </span>
+              {p.closeCall && (
+                <Seal
+                  text={copy.quip.closeSeal}
+                  size={38}
+                  rotate={12}
+                  variant="outline"
+                  className="oracle__close"
+                  label={copy.quip.closeSeal}
+                />
+              )}
             </p>
           ) : (
             p.canDecide && (

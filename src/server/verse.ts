@@ -4,11 +4,19 @@
 import { toTraditional } from './s2t';
 
 const ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions';
-/** 先用的模型在前面；可以用環境變數 GROQ_MODELS（逗號分隔）換掉 */
-export const MODELS = (process.env.GROQ_MODELS || 'qwen/qwen3.8-27b,openai/gpt-oss-120b')
-  .split(',')
-  .map((s) => s.trim())
-  .filter(Boolean);
+const list = (v: string) =>
+  v
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+/**
+ * 廟宇的籤詩和魔法的預言用不同的模型：籤詩先用 qwen、預言先用 gpt-oss，各自寫不出來再換另一個。
+ * 先用的在前面；可以用環境變數 GROQ_MODELS_TEMPLE、GROQ_MODELS_MAGIC（逗號分隔）分別換掉
+ */
+export const MODELS: Record<VerseInput['theme'], string[]> = {
+  temple: list(process.env.GROQ_MODELS_TEMPLE || 'qwen/qwen3.8-27b,openai/gpt-oss-120b'),
+  magic: list(process.env.GROQ_MODELS_MAGIC || 'openai/gpt-oss-120b,qwen/qwen3.8-27b'),
+};
 /** 單次請求最多等多久 */
 const TIMEOUT_MS = 6000;
 
@@ -157,8 +165,16 @@ export function cleanVerse(obj: unknown): Verse | null {
   return { lines, verdict };
 }
 
-/** 打一次 Groq；JSON 驗證失敗時，模型寫出來的東西放在 failed_generation，也拿來試試看 */
-async function ask(model: string, key: string, prompt: { system: string; user: string }): Promise<Verse> {
+/**
+ * 打一次 Groq，要它回一個 JSON 物件，交給 clean 檢查整理；不合格就丟錯。
+ * JSON 驗證失敗時，模型寫出來的東西放在 failed_generation，也拿來試試看。籤詩、封面彩蛋共用。
+ */
+export async function askGroq<T>(
+  model: string,
+  key: string,
+  prompt: { system: string; user: string },
+  clean: (obj: unknown) => T | null,
+): Promise<T> {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
   try {
@@ -184,16 +200,16 @@ async function ask(model: string, key: string, prompt: { system: string; user: s
     });
     const json = await res.json().catch(() => null);
     const text = res.ok ? json?.choices?.[0]?.message?.content : json?.error?.failed_generation;
-    const verse = cleanVerse(looseJson(text));
-    if (!verse) throw new Error(res.ok ? 'invalid verse' : `groq ${res.status}`);
-    return verse;
+    const out = clean(looseJson(text));
+    if (!out) throw new Error(res.ok ? 'invalid output' : `groq ${res.status}`);
+    return out;
   } finally {
     clearTimeout(timer);
   }
 }
 
 /** 一組請求裡，誰先回來而且合格就用誰；全部失敗才算失敗 */
-function firstGood(tasks: Promise<Verse>[]): Promise<Verse | null> {
+export function firstGood<T>(tasks: Promise<T>[]): Promise<T | null> {
   return new Promise((resolve) => {
     let left = tasks.length;
     if (!left) resolve(null);
@@ -207,13 +223,13 @@ function firstGood(tasks: Promise<Verse>[]): Promise<Verse | null> {
 }
 
 /**
- * 寫一支籤：每個模型都同時用所有的 key 各發一次（任一把 key 額度用完或出錯都不影響），
+ * 寫一支籤（預言）：照主題選模型（籤詩先 qwen、預言先 gpt-oss）。每個模型都同時用所有的 key 各發一次（任一把 key 額度用完或出錯都不影響），
  * 取第一個合格的；這個模型全部失敗才換下一個模型。全部失敗回傳 null。
  */
-export async function writeVerse(input: VerseInput, keys: string[], models = MODELS) {
+export async function writeVerse(input: VerseInput, keys: string[], models = MODELS[input.theme]) {
   const prompt = buildPrompt(input);
   for (const model of models) {
-    const verse = await firstGood(keys.map((k) => ask(model, k, prompt)));
+    const verse = await firstGood(keys.map((k) => askGroq(model, k, prompt, cleanVerse)));
     if (verse) return { ...verse, model };
   }
   return null;

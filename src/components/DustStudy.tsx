@@ -88,11 +88,11 @@ const spark = (x: number, y: number, r: number) => {
 const ORB = { x: 34, y: 352 };
 const MOTES = 18;
 const OWL = { x: 300, y: 132, s: 0.64 };
-/** 貓頭鷹除了書架還會去停的地方（腳底座標）：窗台、吊燈頂、梯子 */
-const SPOTS: { x: number; y: number; lamp?: boolean }[] = [
-  { x: 166, y: 140 },
+/** 貓頭鷹會飛去停的地方（腳底座標）：吊燈頂、梯子、左下角書堆上的水晶球頂 */
+const SPOTS: { x: number; y: number; lamp?: boolean; orb?: boolean }[] = [
   { x: 108, y: 45, lamp: true },
   { x: 334, y: 236 },
+  { x: 34, y: 336, orb: true },
 ];
 /** 飛回來之後多久沒人理就睡著 */
 const OWL_NAP_MS = 12000;
@@ -326,7 +326,7 @@ export function DustStudy({
     const home = { x: 0, y: 0 };
 
     const r = roll();
-    // 睡醒一定會飛（去窗台、吊燈、梯子，或飛出去再回來）；醒著的時候也可能只是跳一跳、歪頭
+    // 睡醒一定會飛（去吊燈、梯子、水晶球，或飛出去再回來）；醒著的時候也可能只是跳一跳、歪頭
     const plan = wasAsleep
       ? r < 0.8
         ? 'spot'
@@ -340,7 +340,7 @@ export function DustStudy({
             : 'tilt';
 
     if (plan === 'spot') {
-      // 飛去別的地方停一下（窗台、吊燈、梯子），左右張望就飛回來；吊燈會被壓得晃一晃
+      // 飛去別的地方停一下（吊燈、梯子、水晶球），左右張望就飛回來；吊燈會被壓得晃一晃、水晶球會亮一下
       // 戴著巫師帽就不去吊燈：帽尖會被畫面上緣切掉
       const spots = SPOTS.filter((x) => !(x.lamp && hat));
       const spot = spots[Math.floor(roll() * spots.length)];
@@ -359,6 +359,21 @@ export function DustStudy({
           { keyframes: { rotation: [6, -4, 2.5, -1, 0] }, duration: 1.6, ease: 'sine.out' },
           'perch',
         );
+      if (spot.orb)
+        // 停到水晶球上：球被壓得一亮、晃一下
+        tl.add(() => twinkle(8), 'perch')
+          .fromTo(
+            q('.study__orb .crystal'),
+            { scale: 1 },
+            { scale: 1.14, duration: 0.16, yoyo: true, repeat: 3, ease: 'sine.inOut', svgOrigin: `${ORB.x} ${ORB.y}` },
+            'perch',
+          )
+          .fromTo(
+            q('.study__orb-glow'),
+            { scale: 1 },
+            { scale: 2, duration: 0.35, yoyo: true, repeat: 1, ease: 'power2.out', svgOrigin: `${ORB.x} ${ORB.y}` },
+            'perch',
+          );
       tl.to(face, { x: -3, duration: 0.2 }, 'perch+=0.15')
         .to(face, { x: 3, duration: 0.24 }, 'perch+=0.55')
         .to(face, { x: 0, duration: 0.2 }, 'perch+=0.95')

@@ -43,7 +43,7 @@
   scale: 0.94;
 }
 
-/* ---------- 彩蛋：連點封面小圖三下翻出今天的一句 ---------- */
+/* ---------- 彩蛋：點一下封面小圖翻出一句幹話，再點換一句 ---------- */
 .ledger__egg {
   display: flex;
   align-items: center;
@@ -55,6 +55,22 @@
 .ledger__egg > span {
   display: grid;
   gap: 4px;
+}
+/* 翻出來的那句也是按鈕：點一下換下一句 */
+button.ledger__egg {
+  width: 100%;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.ledger__egg-more {
+  justify-self: end;
+  font-family: var(--f-serif);
+  font-size: 0.7rem;
+  font-style: normal;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  opacity: 0.6;
 }
 .ledger__egg small {
   font-family: var(--f-serif);

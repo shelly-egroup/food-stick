@@ -2,6 +2,7 @@
 
 import { useEffect, useEffectEvent, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import gsap from 'gsap';
 import { Oracle } from '@/components/Oracle';
 import { UnsealCard } from '@/components/UnsealCard';
 import { Candidates } from '@/components/Candidates';
@@ -37,6 +38,8 @@ import {
   isLive,
   candidatesOf,
   latestOf,
+  momentOf,
+  repeatOf,
   mealIdOf,
   mealsFor,
   modeOf,
@@ -72,7 +75,7 @@ import {
 } from '@/lib/types';
 import { reducedMotion, sleep } from '@/lib/motion';
 import { usePersisted } from '@/lib/usePersisted';
-import { useNow } from '@/lib/useBrowser';
+import { useBrowserValue, useNow } from '@/lib/useBrowser';
 import { useTheme, type Reading, type StageHandle } from '@/themes';
 import './Home.css';
 
@@ -133,6 +136,17 @@ interface Shown {
   /** 在籤卡上左右切過來的：從哪一側滑進來 */
   swap?: 1 | -1;
 }
+
+/** 開發時強制切到某個彩蛋時段（只有 npm run dev 系列會讀） */
+const readDevMoment = (): 'late' | null => {
+  if (process.env.NODE_ENV !== 'development') return null;
+  try {
+    const v = localStorage.getItem('lunchstick:dev-moment');
+    return v === 'late' ? v : null;
+  } catch {
+    return null;
+  }
+};
 
 export function Home() {
   const { me, members, memberMap, restaurants, restaurantMap, meals, ready } = useAppData();
@@ -391,10 +405,25 @@ export function Home() {
     }
   }
 
-  const shake = useShake(() => {
-    if (phase !== 'idle') return;
-    onStage();
-  }, phase === 'idle');
+  // 搖太大力：籤筒（水晶球）晃一下，神明（水晶球）說頭暈
+  const dizzy = () => {
+    toast(copy.quip.hard, copy.acceptSeal);
+    const el = stageEl.current;
+    if (el && !reducedMotion())
+      gsap.fromTo(
+        el,
+        { x: 0, rotate: 0 },
+        { keyframes: { x: [-10, 9, -7, 5, -2, 0], rotate: [-1.2, 1, -0.6, 0.4, 0] }, duration: 0.6, ease: 'sine.out' },
+      );
+  };
+  const shake = useShake(
+    () => {
+      if (phase !== 'idle') return;
+      onStage();
+    },
+    phase === 'idle',
+    dizzy,
+  );
 
   const startDraw = (pick?: string) => {
     if (phase !== 'idle') return;
@@ -413,6 +442,24 @@ export function Home() {
 
   // 籤卡對應的那一餐（現在的狀態）
   const resultMeal = result ? (meals.find((m) => m.id === result.mealId) ?? null) : null;
+  // 小彩蛋的時段：宵夜。開發時可以用 localStorage 的 lunchstick:dev-moment（late）直接切換來看，正式網站不讀
+  const devMoment = useBrowserValue(readDevMoment, null);
+  const moment = devMoment ?? momentOf(t);
+  const lateToast = useEffectEvent(() => {
+    const key = `lunchstick:late:${today}`;
+    try {
+      if (sessionStorage.getItem(key)) return;
+      sessionStorage.setItem(key, '1');
+    } catch {
+      /* 存不了就照樣說一次 */
+    }
+    toast(copy.quip.late, copy.quip.lateSeal);
+  });
+  useEffect(() => {
+    if (moment !== 'late') return;
+    const tm = setTimeout(lateToast, 1600);
+    return () => clearTimeout(tm);
+  }, [moment]);
   // 籤卡翻開時（例如同一餐的人抽了、同步翻開），開著的報馬仔通知先收起來，不要擋在籤卡前面
   const resultKey = result?.key;
   const closeHerald = useEffectEvent(() => hideHerald());
@@ -434,6 +481,18 @@ export function Home() {
     : resultMeal && !resultLive && !isChosen
       ? copy.meal.ended
       : undefined;
+  // 小彩蛋：連續好幾天吃同一家、這個月吃很多次就吐槽一句
+  const repeat = result ? repeatOf(meals, me.id, result.r.id, today) : null;
+  const quip = !repeat
+    ? undefined
+    : repeat.streak >= 2
+      ? copy.quip.streak(repeat.streak + 1)
+      : repeat.month >= 4
+        ? copy.quip.month(repeat.month + 1)
+        : undefined;
+  // 用完最後一次重抽才起駕：定案章旁邊蓋「壓線」
+  const closeCall =
+    isChosen && !!resultMeal && resultMeal.rerolls > 0 && resultMeal.rerollsLeft === 0 && resultMeal.picks.length > 1;
   /** 供桌（預言牌陣）彈窗攤開的那一餐：籤卡開著就是籤卡那一餐 */
   const altar = resultMeal ?? shown;
   // 供桌上有好幾支：籤卡上直接左右切到旁邊那支，不用回到供桌彈窗
@@ -606,7 +665,7 @@ export function Home() {
   }, []);
 
   return (
-    <div className="home">
+    <div className={`home${moment ? ` is-${moment}` : ''}`}>
       <section
         ref={stageEl}
         className={`stage${entering ? ' stage--enter' : ''}${phase === 'drawing' ? ' stage--busy' : ''}${finished ? ' stage--spent' : ''}`}
@@ -933,6 +992,8 @@ export function Home() {
           spent={result.spent}
           swap={result.swap}
           tease={tease}
+          quip={quip}
+          closeCall={closeCall}
           deck={deck.length > 1 && deckAt >= 0 ? { at: deckAt, total: deck.length, onStep: stepDeck } : undefined}
           note={note}
           busy={phase !== 'revealed'}

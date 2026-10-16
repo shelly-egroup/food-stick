@@ -640,3 +640,50 @@ button.dock__shake:active {
   white-space: nowrap;
   text-overflow: ellipsis;
 }
+
+/* ---------- 小彩蛋：宵夜時段，廟宇的燈籠暗下來、魔法的貓頭鷹想睡 ---------- */
+.home.is-late .lantern-sway {
+  filter: brightness(0.6) saturate(0.75);
+}
+.home.is-late .lantern-glow {
+  opacity: 0.06;
+}
+.home.is-late .owl-run .owl__eyes {
+  animation: owl-sleepy 4s ease-in-out infinite;
+}
+.home.is-late .owl-run .owl__face {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: owl-yawn 7s ease-in-out infinite;
+}
+@keyframes owl-sleepy {
+  0%,
+  100% {
+    transform: scaleY(0.45);
+  }
+  45% {
+    transform: scaleY(0.2);
+  }
+  60% {
+    transform: scaleY(0.55);
+  }
+}
+@keyframes owl-yawn {
+  0%,
+  70%,
+  100% {
+    transform: none;
+  }
+  78% {
+    transform: translateY(-2px) rotate(-6deg) scaleY(1.06);
+  }
+  88% {
+    transform: translateY(-1px) rotate(4deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .home.is-late .owl-run .owl__eyes,
+  .home.is-late .owl-run .owl__face {
+    animation: none;
+  }
+}

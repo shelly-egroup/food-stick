@@ -54,6 +54,14 @@ export const DEFAULT_SLOT: Slot = { key: 'lunch', label: '午餐' };
 
 export const isSlotKey = (v: unknown): v is SlotKey => SLOTS.some((s) => s.key === v);
 
+/** 手機裡存著的一個餐別（可能是舊資料、被改過）：整理成合法的 Slot，不合法回傳 null */
+export function slotFrom(v: unknown): Slot | null {
+  const o = v as { key?: unknown; label?: unknown } | null;
+  if (!o || typeof o.label !== 'string') return null;
+  if (isSlotKey(o.key)) return { key: o.key, label: SLOTS.find((s) => s.key === o.key)!.label };
+  return o.key === 'custom' ? customSlot(o.label) : null;
+}
+
 /** 自己打的餐別：拿掉空白和單號用不了的符號，最多 8 個字；剛好是內建的名字就用內建的 */
 export function customSlot(text: string): Slot | null {
   const label = [...text.replace(/[\s/\\.#[\]_]/g, '')].slice(0, SLOT_MAX).join('');
@@ -76,6 +84,27 @@ const TAIPEI = new Intl.DateTimeFormat('en-CA', {
 });
 /** 台北時間的日期（YYYY-MM-DD）：同一天、同一餐只有一張單，就是看這個 */
 export const taipeiDate = (t: number | Date) => TAIPEI.format(t);
+
+const CLOCK = new Intl.DateTimeFormat('en-US', {
+  timeZone: 'Asia/Taipei',
+  weekday: 'short',
+  hour: 'numeric',
+  hourCycle: 'h23',
+});
+const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+/** 台北時間的星期幾（0 是星期日）和幾點 */
+export function taipeiClock(t: number) {
+  const parts = CLOCK.formatToParts(t);
+  const day = WEEKDAYS.indexOf(parts.find((p) => p.type === 'weekday')?.value ?? '');
+  const hour = Number(parts.find((p) => p.type === 'hour')?.value ?? 0) % 24;
+  return { day, hour };
+}
+/** 彩蛋的時段：宵夜（晚上 10 點到清晨 5 點） */
+export function momentOf(t: number): 'late' | null {
+  if (!t) return null;
+  const { hour } = taipeiClock(t);
+  return hour >= 22 || hour < 5 ? 'late' : null;
+}
 
 /** 開單後幾小時結束 */
 export const MEAL_HOURS = 3;
@@ -306,3 +335,20 @@ export function mealsFor(meals: Meal[], uid: string, date: string, slot: Slot, n
 
 /** 起駕過的餐（排行榜、常一起吃的人、最近吃過的店都看這個） */
 export const decided = (meals: Meal[]) => meals.filter((m) => m.status === 'decided' && !!m.decision);
+
+/**
+ * 這家店我最近吃了幾次（今天以前、我有去、起駕的）：
+ * streak 是一路往前算、連續幾天都吃它（沒吃午餐的日子，例如週末，跳過不算斷）；month 是這個月吃了幾次。
+ */
+export function repeatOf(meals: Meal[], uid: string, rid: string, today: string) {
+  const mine = decided(meals).filter((m) => m.date < today && m.going.includes(uid));
+  const byDay = new Map<string, string[]>();
+  mine.forEach((m) => byDay.set(m.date, [...(byDay.get(m.date) ?? []), m.decision!.rid]));
+  let streak = 0;
+  for (const day of [...byDay.keys()].sort().reverse()) {
+    if (!byDay.get(day)!.includes(rid)) break;
+    streak += 1;
+  }
+  const month = mine.filter((m) => m.date.startsWith(today.slice(0, 7)) && m.decision!.rid === rid).length;
+  return { streak, month };
+}

@@ -47,6 +47,19 @@ export interface ThemeCopy {
   taunts: string[][];
   /** 重抽次數用完（籤卡上取代重抽鈕的那句話） */
   noMore: string;
+  /**
+   * 小彩蛋的話：連續好幾天吃同一家（streak）、這個月吃很多次（month）、用完最後一次才起駕（close、closeSeal 兩字章）、
+   * 宵夜時段打開網站（late、lateSeal）、搖手機搖太大力（hard）
+   */
+  quip: {
+    streak: (n: number) => string;
+    month: (n: number) => string;
+    close: string;
+    closeSeal: string;
+    late: string;
+    lateSeal: string;
+    hard: string;
+  };
   /** 篩選摘要：價位沒選或全選（不限價位）時的說法：香油錢無上限、法力無上限 */
   priceAny: string;
   /** 籤卡上次數用完時的第二行：有好幾支可以左右翻、只剩這一支 */
@@ -242,7 +255,7 @@ export interface ThemeCopy {
     marks: Record<HistoryTab, string>;
     tabs: Record<HistoryTab, string>;
     none: Record<Exclude<HistoryTab, 'all'>, { title: string; hint: string }>;
-    /** 彩蛋：連點封面的小圖三下翻出一句幹話（廟宇是黃曆宜忌，魔法是隱形墨水），每次隨機、不連續重複 */
+    /** 彩蛋：點一下封面的小圖翻出一句幹話（廟宇是黃曆宜忌，魔法是隱形墨水），再點換一句，每次隨機、不連續重複 */
     egg: { title: string; seal: string; lines: readonly string[] };
   };
   /**
