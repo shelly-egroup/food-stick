@@ -618,3 +618,25 @@ button.dock__shake:active {
 [data-theme='magic'] .stage__band i {
   display: none;
 }
+
+/* 次數用完：大按鈕上面一行小字（最後顯現／最後一支），底下是店名 */
+.dock__cta-words {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  text-align: left;
+  line-height: 1.15;
+}
+.dock__cta-words small {
+  font-family: var(--f-serif);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  opacity: 0.85;
+}
+.dock__cta-words b {
+  overflow: hidden;
+  font-weight: 900;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}

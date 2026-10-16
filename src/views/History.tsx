@@ -144,8 +144,9 @@ export function History() {
 
   const empty = !hist.loading && shownList.length === 0;
 
-  // 彩蛋：封面的小圖一秒內連點三下，翻出今天的一句（同一天同一句，再點三下收回去）
+  // 彩蛋：封面的小圖一秒內連點三下，翻出一句幹話（每次隨機，再點三下收回去）
   const [egg, setEgg] = useState<number | null>(null);
+  const lastEgg = useRef(-1);
   const taps = useRef<number[]>([]);
   const cover = useRef<HTMLElement>(null);
   const magic = theme.id === 'magic';
@@ -186,8 +187,13 @@ export function History() {
     if (taps.current.length < 3) return;
     taps.current = [];
     if (egg !== null) return setEgg(null);
-    const day = Number(taipeiDate(t).replaceAll('-', ''));
-    setEgg((day * 7 + me.id.length) % copy.history.egg.lines.length);
+    // 每次隨機一句幹話，不跟上一次一樣
+    const n = copy.history.egg.lines.length;
+    const last = lastEgg.current;
+    const roll = Math.floor(Math.random() * (last < 0 ? n : n - 1));
+    const next = last < 0 || roll < last ? roll : roll + 1;
+    lastEgg.current = next;
+    setEgg(next);
     if (magic) {
       twinkle(9);
       meteors(6);

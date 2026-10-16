@@ -817,10 +817,14 @@ export function Home() {
           <button
             type="button"
             className="btn btn--zhu btn--lg btn--block dock__cta dock__cta--final"
-            onClick={() => setCandsOpen(true)}
+            onClick={() => openPick(shown, latest.rid)}
           >
+            {/* 次數用完：預設就是最後抽到的那張，直接翻開；想看其他候選用旁邊的「看預言牌陣」 */}
             <theme.Glyph name="depart" size={30} />
-            {copy.pickFromCands}
+            <span className="dock__cta-words">
+              <small>{copy.meal.lookLatest}</small>
+              <b>{latest.name}</b>
+            </span>
           </button>
         ) : (
           <button

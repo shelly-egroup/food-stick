@@ -191,6 +191,7 @@ export function Oracle(p: OracleProps) {
         1.42,
       )
       .fromTo(q('.card__foot > *'), { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.35, stagger: 0.08 }, 1.45)
+
       // 整排按鈕先藏著：資料晚一點才到才長出來的（例如「這家去不了」）也跟著這一拍出場，不會先跳出來
       .fromTo(
         q('.oracle__actions'),
@@ -204,6 +205,9 @@ export function Oracle(p: OracleProps) {
         { opacity: 1, y: 0, duration: 0.35, stagger: 0.06, ease: 'back.out(1.6)' },
         1.55,
       );
+    // 左右切換的箭頭、底下那排小點：展開的這段先藏著（資料晚到才長出來的也一樣），展開好了才一起淡入
+    el.classList.add('is-opening');
+    tl.add(() => el.classList.remove('is-opening'), 1.4);
     // 起駕的那一支：定案章落下、店名慢慢收攏（還沒起駕的籤卡沒有這兩樣，不要叫 GSAP 白找）
     if (el.querySelector('.oracle__final'))
       tl.fromTo(
@@ -219,7 +223,10 @@ export function Oracle(p: OracleProps) {
         { opacity: 1, y: 0, letterSpacing: '0.16em', duration: 0.5, ease: 'power3.out' },
         2.1,
       );
-    return () => void tl.kill();
+    return () => {
+      tl.kill();
+      el.classList.remove('is-opening');
+    };
     // 換一支籤就重新展開
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [r.id, f.number]);
@@ -235,7 +242,7 @@ export function Oracle(p: OracleProps) {
     const q = gsap.utils.selector(el);
     paper(0.3);
     const tl = gsap.timeline({ onComplete: p.onClosed });
-    tl.to(q('.oracle__actions > *'), { opacity: 0, y: 10, duration: 0.15 })
+    tl.to(q('.oracle__actions > *, .oracle__nav, .oracle__deck, .oracle__tease'), { opacity: 0, y: 10, duration: 0.15 })
       .to(q('.card'), { clipPath: 'inset(0% 0% 100% 0%)', y: -30, duration: 0.36, ease: 'power2.in' }, 0.05)
       .to(q('.oracle__burst'), { opacity: 0, scale: 0.6, duration: 0.3 }, 0.05)
       .to(q('.oracle__veil'), { opacity: 0, duration: 0.3 }, 0.18);

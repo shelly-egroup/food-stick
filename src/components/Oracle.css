@@ -421,7 +421,8 @@
   cursor: pointer;
   transition:
     transform 0.2s var(--ease-spring),
-    opacity 0.2s;
+    opacity 0.3s,
+    visibility 0.3s;
 }
 .oracle__nav--prev {
   left: -21px;
@@ -521,7 +522,7 @@
   border-radius: 999px;
   box-shadow: 3px 3px 0 var(--accent);
   translate: -50% 0;
-  animation: tease-pop 0.45s var(--ease-spring) both;
+  animation: tease-pop 0.45s var(--ease-spring) backwards;
 }
 .oracle__tease::after {
   content: '';
@@ -550,9 +551,10 @@
 }
 
 /* 籤卡展開之後才長出來的按鈕（資料晚到）：淡入，不要突然跳出來 */
+/* fill 用 backwards：淡入完就放手，收起籤卡時 GSAP 才淡得掉（both 會一直蓋住，字留在畫面中間） */
 .oracle__extra > *,
 .oracle__actions > .oracle__taunt {
-  animation: rise-in 0.35s var(--ease-out) both;
+  animation: rise-in 0.35s var(--ease-out) backwards;
 }
 @media (prefers-reduced-motion: reduce) {
   .oracle__extra > *,
@@ -641,4 +643,16 @@
   .skipwhy__opt {
     animation: none;
   }
+}
+
+/* 箭頭、小點：籤卡展開的這段（.is-opening）先藏著，展開好了才淡入；資料晚到才長出來的也一樣 */
+.oracle__deck {
+  transition:
+    opacity 0.3s var(--ease-out),
+    visibility 0.3s;
+}
+.oracle.is-opening .oracle__deck,
+.oracle.is-opening .oracle__nav {
+  opacity: 0;
+  visibility: hidden;
 }

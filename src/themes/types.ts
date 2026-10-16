@@ -49,8 +49,6 @@ export interface ThemeCopy {
   noMore: string;
   /** 篩選摘要：價位沒選或全選（不限價位）時的說法：香油錢無上限、法力無上限 */
   priceAny: string;
-  /** 次數用完之後：提醒從候選挑一支起駕 */
-  pickFromCands: string;
   /** 籤卡上次數用完時的第二行：有好幾支可以左右翻、只剩這一支 */
   pickSwipe: string;
   pickOnly: string;
@@ -167,6 +165,8 @@ export interface ThemeCopy {
     notified: (n: number) => string;
     /** 起駕之後首頁的大按鈕：「看定案：巷口牛肉麵」 */
     look: (shop: string) => string;
+    /** 次數用完、還沒起駕：首頁大按鈕直接翻開最後抽到的那張（通常就是它，候選只是給大家挑）；按鈕上一行小字 */
+    lookLatest: string;
     /** 還能重抽幾次 */
     left: (n: number) => string;
     /** 候選：標題、說明、剛抽到的那一支的小字、看全部的按鈕 */
@@ -242,7 +242,7 @@ export interface ThemeCopy {
     marks: Record<HistoryTab, string>;
     tabs: Record<HistoryTab, string>;
     none: Record<Exclude<HistoryTab, 'all'>, { title: string; hint: string }>;
-    /** 彩蛋：連點封面的小圖三下翻出今天的一句（廟宇是黃曆宜忌，魔法是隱形墨水），同一天同一句 */
+    /** 彩蛋：連點封面的小圖三下翻出一句幹話（廟宇是黃曆宜忌，魔法是隱形墨水），每次隨機、不連續重複 */
     egg: { title: string; seal: string; lines: readonly string[] };
   };
   /**

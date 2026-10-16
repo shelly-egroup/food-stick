@@ -261,10 +261,6 @@ export function DustStudy({
       .add(() => paper(0.15), '-=0.3');
   };
 
-  /** 拍翅膀：跟施法頁同一隻、同一種拍法（.owl-run.is-flying，翅膀以肩膀為軸），拍 dur 秒 */
-  const flap = (tl: gsap.core.Timeline, owl: Element, at: number, dur: number) =>
-    tl.add(() => owl.classList.add('is-flying'), at).add(() => owl.classList.remove('is-flying'), at + dur);
-
   const pokeOwl = () => {
     const el = root.current;
     if (!el || busy.current.owl) return;
@@ -274,141 +270,142 @@ export function DustStudy({
     if (reducedMotion()) return napLater();
     busy.current.owl = true;
     const q = gsap.utils.selector(el);
-    const owl = q('.study__owl')[0];
+    // run：整隻的位移（外層，沒有位置屬性）；body：身體那層，負責蹲、伸、傾斜、壓扁（以腳底為軸）
+    const run = q('.study__owl')[0];
+    const body = q('.study__owl .owl__hop')[0];
     const tl = gsap.timeline({
       onComplete: () => {
-        owl.classList.remove('is-flying');
-        // 飛完一定回到書櫃頂上：外層位移、旋轉、透明度都清掉
-        gsap.set(owl, { clearProps: 'transform,opacity' });
+        run.classList.remove('is-flying');
+        // 飛完一定回到書櫃頂上：位移、透明度、身體的變形都清掉
+        gsap.set(run, { clearProps: 'transform,opacity' });
+        gsap.set(body, { clearProps: 'transform' });
         busy.current.owl = false;
         napLater();
       },
     });
-    let t = 0;
+    gsap.set(body, { transformOrigin: '50% 100%' });
+
     if (wasAsleep) {
-      // 驚醒：Zzz 散掉、整隻彈起來、臉放大一下，咕一聲
+      // 驚醒：整隻彈起來、臉放大一下，咕一聲
       owlHoot(1.3);
-      tl.to(owl, { y: -14, duration: 0.16, ease: 'power2.out' }, 0)
-        .to(owl, { y: 0, duration: 0.3, ease: 'bounce.out' }, 0.16)
+      tl.to(run, { y: -14, duration: 0.16, ease: 'power2.out' })
+        .to(run, { y: 0, duration: 0.3, ease: 'bounce.out' })
         .fromTo(
           q('.study__owl .owl__face'),
           { scale: 0.86 },
           { scale: 1.12, duration: 0.18, yoyo: true, repeat: 1, transformOrigin: '50% 50%' },
           0.05,
-        );
-      t = 0.6;
+        )
+        .to({}, { duration: 0.1 });
     } else owlHoot(1.05);
 
-    const pivot = `${OWL.x} ${OWL.y}`;
-    // 落地：壓扁一下（壓裡面那層 .owl__hop；.owl 本身帶著位置屬性，不能動它，不然會懸在半空）
-    const land = (at: number) =>
-      tl.to(
-        q('.study__owl .owl__hop'),
-        { scaleY: 0.86, scaleX: 1.08, duration: 0.08, yoyo: true, repeat: 1, transformOrigin: '50% 100%' },
-        at,
-      );
-    /** 從 (x0, y0) 飛到 (x1, y1)（都是相對書櫃頂的位移），中間拱一個弧、身體往飛的方向斜 */
-    const fly = (at: number, x0: number, y0: number, x1: number, y1: number, dur = 1) => {
-      const peak = Math.min(y0, y1) - 40;
-      tl.add(() => flutter(Math.round(dur * 8)), at);
-      flap(tl, owl, at, dur);
-      tl.to(owl, { x: x1, duration: dur, ease: 'sine.inOut' }, at)
-        .to(owl, { y: peak, duration: dur / 2, ease: 'sine.out' }, at)
-        .to(owl, { y: y1, duration: dur / 2, ease: 'sine.in' }, at + dur / 2)
-        .to(owl, { rotate: x1 < x0 ? -10 : 10, duration: dur / 2, svgOrigin: pivot }, at)
-        .to(owl, { rotate: 0, duration: 0.25, svgOrigin: pivot }, at + dur);
-      land(at + dur);
-      return at + dur;
+    // 跟施法頁同一套飛法：蹲一下、伸展起飛、拍翅膀飛一道弧線（身體往飛的方向斜），落地壓扁再彈回來。
+    // 座標都是相對書櫃頂的位移；air：起點在空中（不用蹲）、land: false：停在空中（不壓扁、翅膀繼續拍）
+    let at = { x: 0, y: 0 };
+    const flyTo = (to: { x: number; y: number }, { air = false, land = true } = {}) => {
+      const d = Math.min(1.5, Math.max(0.8, Math.hypot(to.x - at.x, to.y - at.y) / 240));
+      const lean = to.x > at.x ? 10 : to.x < at.x ? -10 : 0;
+      // 弧線最高點：頭頂不要飛出畫面上緣
+      const peak = Math.max(Math.min(at.y, to.y) - 50, 46 - OWL.y);
+      if (!air) tl.to(body, { scaleY: 0.84, scaleX: 1.08, duration: 0.12 });
+      tl.add(() => {
+        run.classList.add('is-flying');
+        flutter(Math.round(d * 8));
+      })
+        .to(body, { scaleY: 1.06, scaleX: 0.96, rotation: lean, duration: 0.14 })
+        .to(run, { x: to.x, duration: d, ease: 'sine.inOut' }, '<')
+        .to(run, { y: peak, duration: d * 0.5, ease: 'sine.out' }, '<')
+        .to(run, { y: to.y, duration: d * 0.5, ease: 'sine.in' }, '>')
+        .to(body, { rotation: 0, scaleY: 1, scaleX: 1, duration: 0.2 }, '<');
+      if (land)
+        tl.add(() => run.classList.remove('is-flying'))
+          .to(body, { scaleY: 0.86, scaleX: 1.08, duration: 0.07 })
+          .to(body, { scaleY: 1, scaleX: 1, duration: 0.26, ease: 'back.out(3)' });
+      at = to;
     };
-    /** 停一下、左右張望 */
-    const lookAround = (at: number) =>
-      tl
-        .to(q('.study__owl .owl__face'), { x: -3, duration: 0.25 }, at + 0.3)
-        .to(q('.study__owl .owl__face'), { x: 3, duration: 0.3 }, at + 0.9)
-        .to(q('.study__owl .owl__face'), { x: 0, duration: 0.25 }, at + 1.5);
+    const home = { x: 0, y: 0 };
 
     const r = roll();
-    // 睡醒一定會飛；醒著的時候也可能只是跳一跳、歪頭
+    // 睡醒一定會飛（去窗台、吊燈、梯子，或飛出去再回來）；醒著的時候也可能只是跳一跳、歪頭
     const plan = wasAsleep
-      ? r < 0.4
-        ? 'book'
-        : r < 0.85
-          ? 'spot'
-          : 'away'
-      : r < 0.28
-        ? 'book'
-        : r < 0.56
-          ? 'spot'
-          : r < 0.72
-            ? 'away'
-            : r < 0.88
-              ? 'hop'
-              : 'tilt';
-    const books = q('.study__book') as HTMLElement[];
-    const book = books[Math.floor(roll() * books.length)];
+      ? r < 0.8
+        ? 'spot'
+        : 'away'
+      : r < 0.45
+        ? 'spot'
+        : r < 0.65
+          ? 'away'
+          : r < 0.85
+            ? 'hop'
+            : 'tilt';
 
-    if (plan === 'book' && book) {
-      // 飛去書架：停在那本書旁邊（往書架中間那一側），書轉著飄出來再轉回去，飛回書櫃頂
-      const sr = el.getBoundingClientRect();
-      const br = book.getBoundingClientRect();
-      const bx = ((br.left + br.width / 2 - sr.left) / sr.width) * W;
-      const bw = (br.width / sr.width) * W;
-      const by = ((br.top - sr.top) / sr.height) * H;
-      const side = bx < (CAVITY.x0 + CAVITY.x1) / 2 ? 1 : -1;
-      const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
-      const dx = clamp(bx + side * (bw / 2 + 16), CAVITY.x0 + 18, CAVITY.x1 - 18) - OWL.x;
-      const dy = clamp(by + 34, CAVITY.y0 + 48, CAVITY.y1 - 4) - OWL.y;
-      const there = fly(t, 0, 0, dx, dy);
-      const stay = 2.3;
-      flap(tl, owl, there, stay);
-      tl.to(owl, { y: dy - 6, duration: 0.38, yoyo: true, repeat: 5, ease: 'sine.inOut' }, there).add(
-        () => void floatBook(book),
-        there + 0.1,
-      );
-      fly(there + stay, dx, dy, 0, 0);
-    } else if (plan === 'spot' || (plan === 'book' && !book)) {
-      // 飛去別的地方停一下：窗台、吊燈（燈會被壓得晃一晃）、梯子
+    if (plan === 'spot') {
+      // 飛去別的地方停一下（窗台、吊燈、梯子），左右張望就飛回來；吊燈會被壓得晃一晃
       // 戴著巫師帽就不去吊燈：帽尖會被畫面上緣切掉
       const spots = SPOTS.filter((x) => !(x.lamp && hat));
       const spot = spots[Math.floor(roll() * spots.length)];
-      const dx = spot.x - OWL.x;
-      const dy = spot.y - OWL.y;
-      const there = fly(t, 0, 0, dx, dy);
+      flyTo({ x: spot.x - OWL.x, y: spot.y - OWL.y });
+      const face = q('.study__owl .owl__face');
+      tl.addLabel('perch');
       if (spot.lamp)
         tl.fromTo(
           q('.study__lamp'),
           { rotate: 0 },
-          { keyframes: { rotate: [7, -5, 3, -1.5, 0] }, duration: 1.8, ease: 'sine.out', svgOrigin: '108 0' },
-          there,
+          { keyframes: { rotate: [7, -5, 3, -1.5, 0] }, duration: 1.6, ease: 'sine.out', svgOrigin: '108 0' },
+          'perch',
         ).fromTo(
-          // 貓頭鷹跟著燈晃：晃裡面那層、以腳底為軸，外層（帶著位移）不動
-          q('.study__owl .owl__hop'),
-          { rotate: 0 },
-          { keyframes: { rotate: [6, -4, 2.5, -1, 0] }, duration: 1.8, ease: 'sine.out', transformOrigin: '50% 100%' },
-          there,
+          body,
+          { rotation: 0 },
+          { keyframes: { rotation: [6, -4, 2.5, -1, 0] }, duration: 1.6, ease: 'sine.out' },
+          'perch',
         );
-      lookAround(there);
-      fly(there + 2.1, dx, dy, 0, 0);
+      tl.to(face, { x: -3, duration: 0.2 }, 'perch+=0.15')
+        .to(face, { x: 3, duration: 0.24 }, 'perch+=0.55')
+        .to(face, { x: 0, duration: 0.2 }, 'perch+=0.95')
+        .to({}, { duration: 0.1 });
+      flyTo(home);
     } else if (plan === 'away') {
-      // 飛出畫面：過一陣子換一身打扮（或脫掉）飛回來
-      const out = { x: 170, y: -230 };
-      fly(t, 0, 0, out.x, out.y, 1.1);
-      tl.to(owl, { opacity: 0, duration: 0.2 }, t + 0.9)
-        .add(() => setHat((h) => !h), t + 1.6)
-        .set(owl, { x: -360, y: -200, opacity: 1 }, t + 3.6);
-      fly(t + 3.6, -360, -200, 0, 0, 1.4);
+      // 跟施法頁被惹毛時一樣：往右上角加速飛出畫面，過一下換一身打扮，從左上角減速飛回來
+      tl.to(body, { scaleY: 0.84, scaleX: 1.08, duration: 0.12 })
+        .add(() => {
+          run.classList.add('is-flying');
+          flutter(12);
+        })
+        .to(body, { scaleY: 1, scaleX: 1, rotation: 14, duration: 0.2 })
+        .to(run, { x: 200, duration: 1.1, ease: 'power2.in' }, '<')
+        .to(run, { y: -240, duration: 1.1, ease: 'power1.in' }, '<')
+        .set(run, { autoAlpha: 0 })
+        .add(() => run.classList.remove('is-flying'))
+        .add(() => setHat((h) => !h), '+=0.6')
+        .set(run, { x: -320, y: -200, autoAlpha: 1 }, '+=1.4')
+        .set(body, { rotation: 12 })
+        .add(() => {
+          run.classList.add('is-flying');
+          flutter(14);
+        })
+        .to(run, { x: 0, duration: 1.5, ease: 'power2.out' })
+        .to(run, { y: 0, duration: 1.5, ease: 'power1.inOut' }, '<')
+        .to(body, { rotation: 0, duration: 0.3 }, '-=0.4')
+        .add(() => run.classList.remove('is-flying'))
+        .to(body, { scaleY: 0.86, scaleX: 1.08, duration: 0.07 })
+        .to(body, { scaleY: 1, scaleX: 1, duration: 0.26, ease: 'back.out(3)' })
+        .add(() => owlHoot(1.1));
     } else if (plan === 'hop') {
-      flap(tl, owl, t, 0.5);
-      tl.to(owl, { y: -12, duration: 0.2, yoyo: true, repeat: 1, ease: 'power2.out' }, t).add(
-        () => setHat((h) => !h),
-        t + 0.2,
-      );
-      land(t + 0.4);
+      // 原地蹦兩下，蹦起來時換一下帽子
+      [-12, 12].forEach((dx, k) => {
+        tl.to(body, { scaleY: 0.86, duration: 0.08 })
+          .to(body, { scaleY: 1, duration: 0.1 })
+          .to(run, { x: dx, duration: 0.26, ease: 'power1.inOut' }, '<')
+          .to(run, { y: -16, duration: 0.13, ease: 'power2.out' }, '<')
+          .to(run, { y: 0, duration: 0.13, ease: 'power2.in' }, '>');
+        if (k === 0) tl.add(() => setHat((h) => !h), '<');
+      });
+      tl.to(run, { x: 0, duration: 0.2 });
     } else {
-      // 歪頭想一下
-      tl.to(owl, { rotate: -14, duration: 0.25, svgOrigin: pivot }, t)
-        .to(owl, { rotate: 10, duration: 0.3, svgOrigin: pivot }, t + 0.6)
-        .to(owl, { rotate: 0, duration: 0.3, ease: 'back.out(2)', svgOrigin: pivot }, t + 1.1);
+      // 歪頭想一下（斜身體那層，以腳底為軸）
+      tl.to(body, { rotation: -14, duration: 0.25 })
+        .to(body, { rotation: 10, duration: 0.3 }, '+=0.35')
+        .to(body, { rotation: 0, duration: 0.3, ease: 'back.out(2)' }, '+=0.2');
     }
   };
 
