@@ -48,6 +48,8 @@ const shops = [
   ['r14', '廟口蚵仔煎', 'snack', 1, 15, false],
   ['r15', '丼丼亭', 'rice', 3, 15, true],
   ['r16', '首爾拌飯', 'world', 2, 10, true],
+  ['r17', '巷尾手搖茶', 'drink', 1, 5, true],
+  ['r18', '綿綿雪花冰', 'dessert', 1, 10, true],
 ];
 
 const prefs = {
@@ -96,69 +98,105 @@ for (const [i, [id, name, category, price, walk, group]] of shops.entries()) {
   });
 }
 
-// 本月的抽籤紀錄：有定案的，也有被重抽的
-const dayOfMonth = new Date().getDate();
-const draws = [
-  ['r01', 'u-ming', 6],
-  ['r01', 'u-jie', 4],
-  ['r01', 'u-hua', 5],
-  ['r12', 'u-kai', 4],
-  ['r12', 'u-ming', 3],
-  ['r05', 'u-mei', 3],
-  ['r05', 'u-kai', 2],
-  ['r09', 'u-ting', 3],
-  ['r02', 'u-ming', 2],
-  ['r16', 'u-hua', 2],
-  ['r03', 'u-jie', 2],
-  ['r07', 'u-mei', 2],
-  ['r13', 'u-hua', 1],
-  ['r08', 'u-ming', 1],
-  ['r04', 'u-kai', 1],
+// 過去幾天的餐單（一餐一張）：自己吃的、揪團的、換過幾支才起駕的、說過去不了的、收回的、時間到沒定的。
+// 今天的不放，留給畫面上自己抽、自己揪
+const name = (rid) => shops.find((x) => x[0] === rid)[1];
+const TAIPEI = new Intl.DateTimeFormat('en-CA', {
+  timeZone: 'Asia/Taipei',
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+});
+const dateAgo = (d) => TAIPEI.format(new Date(now - d * 86400_000));
+const SLOTS = {
+  breakfast: { key: 'breakfast', label: '早餐' },
+  lunch: { key: 'lunch', label: '午餐' },
+  tea: { key: 'tea', label: '下午茶' },
+  dinner: { key: 'dinner', label: '晚餐' },
+};
+const pick = (rid, by, at, k) => ({
+  rid,
+  name: name(rid),
+  by,
+  at,
+  seed: 1000 + k * 37,
+  variant: '',
+  theme: k % 2 ? 'magic' : 'temple',
+  lines: [],
+  verdict: '',
+});
+
+/**
+ * d：幾天前；host：發起人；going：要去的人（含發起人）；party：被揪的所有人（預設就是 going）；
+ * tried：照順序抽過的店；skipped：其中說過去不了的；chosen：起駕的那一家（沒有就是沒定）
+ */
+const meals = [
+  { d: 1, host: 'u-ming', going: ['u-ming', 'u-jie', 'u-hua'], tried: ['r12', 'r05', 'r01'], chosen: 'r01' },
+  {
+    d: 1,
+    host: 'u-mei',
+    going: ['u-mei', 'u-ting'],
+    tried: ['r09', 'r07'],
+    skipped: ['r09'],
+    chosen: 'r07',
+    slot: 'tea',
+  },
+  { d: 2, host: 'u-ming', going: ['u-ming'], tried: ['r02'], chosen: 'r02' },
+  {
+    d: 2,
+    host: 'u-kai',
+    going: ['u-kai', 'u-ming'],
+    party: ['u-kai', 'u-ming', 'u-hua'],
+    tried: ['r12'],
+    chosen: 'r12',
+  },
+  { d: 3, host: 'u-ming', going: ['u-ming', 'u-jie', 'u-hua'], tried: ['r01'], chosen: 'r01' },
+  { d: 3, host: 'u-ting', going: ['u-ting'], tried: ['r06', 'r09'], chosen: 'r06', slot: 'dinner' },
+  { d: 4, host: 'u-ming', going: ['u-ming', 'u-kai'], tried: ['r14', 'r05', 'r12'], skipped: ['r14'], chosen: 'r12' },
+  { d: 4, host: 'u-mei', going: ['u-mei', 'u-ting'], tried: ['r05'], chosen: 'r05' },
+  { d: 5, host: 'u-jie', going: ['u-jie'], tried: ['r03', 'r15'], chosen: 'r15' },
+  { d: 5, host: 'u-ming', going: ['u-ming'], tried: ['r08'], chosen: 'r08', slot: 'breakfast' },
+  { d: 6, host: 'u-hua', going: ['u-hua', 'u-ming', 'u-jie'], tried: ['r16', 'r01'], chosen: 'r01' },
+  { d: 6, host: 'u-kai', going: ['u-kai'], tried: ['r04'], chosen: 'r04' },
+  { d: 7, host: 'u-ming', going: ['u-ming', 'u-jie'], tried: ['r10', 'r13'], chosen: null },
+  { d: 7, host: 'u-mei', going: ['u-mei'], tried: ['r16'], chosen: 'r16' },
+  { d: 8, host: 'u-ming', going: ['u-ming', 'u-hua'], tried: ['r11'], chosen: null, cancelled: true },
+  { d: 8, host: 'u-ting', going: ['u-ting', 'u-mei'], tried: ['r09'], chosen: 'r09', slot: 'tea' },
+  { d: 9, host: 'u-kai', going: ['u-kai', 'u-ming'], tried: ['r13', 'r12'], chosen: 'r12' },
+  { d: 10, host: 'u-jie', going: ['u-jie', 'u-ming'], tried: ['r01'], chosen: 'r01' },
 ];
 let n = 0;
-for (const [rid, uid, times] of draws) {
-  for (let k = 0; k < times; k++) {
-    const d = Math.min(dayOfMonth - 1, (n * 7 + k * 3) % 13);
-    await db.collection('draws').add({
-      rid,
-      uid,
-      mode: k % 2 ? 'group' : 'solo',
-      party: [uid],
-      createdAt: daysAgo(d, 11),
-      rerolled: false,
-    });
-    if (k % 3 === 0) {
-      await db.collection('draws').add({
-        rid: shops[(n + k) % shops.length][0],
-        uid,
-        mode: 'solo',
-        party: [uid],
-        createdAt: daysAgo(d, 11),
-        rerolled: true,
-      });
-    }
-    n++;
-  }
-}
-
-// 揪團的紀錄：小明常跟阿傑、阿華一起吃，也跟凱文吃過兩次；美美常揪婷婷
-const groups = [
-  ['r01', 'u-ming', ['u-ming', 'u-jie', 'u-hua'], 3],
-  ['r12', 'u-ming', ['u-ming', 'u-kai'], 2],
-  ['r05', 'u-mei', ['u-mei', 'u-ting'], 2],
-];
-for (const [rid, uid, party, times] of groups) {
-  for (let k = 0; k < times; k++) {
-    await db.collection('draws').add({
-      rid,
-      uid,
-      mode: 'group',
-      party,
-      createdAt: daysAgo(Math.min(dayOfMonth - 1, 1 + k * 3), 12),
-      rerolled: false,
-    });
-    n++;
-  }
+for (const [k, m] of meals.entries()) {
+  const slot = SLOTS[m.slot ?? 'lunch'];
+  const date = dateAgo(m.d);
+  const created = daysAgo(
+    m.d,
+    slot.key === 'breakfast' ? 8 : slot.key === 'tea' ? 15 : slot.key === 'dinner' ? 18 : 11,
+  );
+  const skipped = m.skipped ?? [];
+  const picks = m.tried.map((rid, i) => pick(rid, m.going[i % m.going.length], created, k + i));
+  const party = m.party ?? m.going;
+  await db.doc(`meals/${date}_${slot.key}_${m.host}`).set({
+    v: 1,
+    date,
+    slot,
+    host: m.host,
+    party,
+    answers: Object.fromEntries(party.filter((u) => u !== m.host).map((u) => [u, m.going.includes(u) ? 'in' : 'out'])),
+    going: m.going,
+    rerolls: 3,
+    rerollsLeft: Math.max(0, 3 - (m.tried.length - 1 - skipped.length)),
+    filters: { categories: [], prices: [], walks: [], prefer: 'favorites' },
+    picks,
+    cands: m.tried.filter((rid) => !skipped.includes(rid)),
+    skips: skipped.map((rid) => ({ rid, by: m.host, at: created })),
+    decision: m.chosen ? { rid: m.chosen, by: m.going[k % m.going.length], at: created } : null,
+    status: m.cancelled ? 'cancelled' : m.chosen ? 'decided' : 'open',
+    createdAt: created,
+    updatedAt: created,
+    endsAt: Timestamp.fromMillis(created.toMillis() + 3 * 3_600_000),
+  });
+  n++;
 }
 
 const notes = [
@@ -177,7 +215,5 @@ for (const [rid, uid, text, d] of notes) {
     .add({ uid, text, createdAt: Timestamp.fromMillis(now - d * 86400_000) });
 }
 
-console.log(
-  `示範資料已放好：${shops.length} 家店、${dev.accounts.length} 個帳號、${n} 筆定案紀錄、${notes.length} 張紙條`,
-);
+console.log(`示範資料已放好：${shops.length} 家店、${dev.accounts.length} 個帳號、${n} 張餐單、${notes.length} 張紙條`);
 process.exit(0);

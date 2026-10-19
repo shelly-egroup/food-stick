@@ -8,6 +8,7 @@ import { StageFloor, StageTop } from './Stage';
 import { Orb } from './Orb';
 import { Emblem } from './Emblem';
 import { CardSeal } from './CardSeal';
+import { DateStamp } from './DateStamp';
 import { LoveStamp } from './LoveStamp';
 import { LoveSlot } from './LoveSlot';
 import { StarChart } from './StarChart';
@@ -27,7 +28,7 @@ export const magic: Theme = {
   id: 'magic',
   copy,
   tabIcon: 'sparkle',
-  tabIcons: { shops: 'book', ranks: 'chart' },
+  tabIcons: { shops: 'book', history: 'journal', ranks: 'chart' },
   sound: sparkle,
   departFx,
   heraldSound: () => {
@@ -46,6 +47,7 @@ export const magic: Theme = {
   },
   Emblem,
   LoveStamp,
+  DateStamp,
   LoveSlot,
   Podium: StarChart,
   CrewBanner,

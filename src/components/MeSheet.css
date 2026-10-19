@@ -140,3 +140,9 @@
     animation: none;
   }
 }
+
+.me__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+}

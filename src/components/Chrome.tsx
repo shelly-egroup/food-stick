@@ -10,10 +10,11 @@ import { useTheme } from '@/themes';
 import type { Member } from '@/lib/types';
 import './Chrome.css';
 
-export type Route = 'home' | 'shops' | 'ranks';
+export type Route = 'home' | 'shops' | 'history' | 'ranks';
 
 export function routeOf(path: string | null): Route {
   if (path?.startsWith('/shops')) return 'shops';
+  if (path?.startsWith('/history')) return 'history';
   if (path?.startsWith('/ranks')) return 'ranks';
   return 'home';
 }
@@ -23,6 +24,7 @@ function useTabs(): { id: Route; href: string; label: string; icon: IconName }[]
   return [
     { id: 'home', href: '/', label: theme.copy.verb, icon: theme.tabIcon },
     { id: 'shops', href: '/shops/', label: '店家', icon: theme.tabIcons.shops },
+    { id: 'history', href: '/history/', label: theme.copy.history.title, icon: theme.tabIcons.history },
     { id: 'ranks', href: '/ranks/', label: theme.copy.ranks.title, icon: theme.tabIcons.ranks },
   ];
 }

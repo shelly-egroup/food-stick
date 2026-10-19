@@ -118,7 +118,8 @@ export function NoteCard({
         ) : (
           <>
             <span className="note__by">
-              {author.name}・{when}
+              <b>{author.name}</b>
+              <time>{when}</time>
             </span>
             {onDelete && (
               <button

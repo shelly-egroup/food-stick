@@ -1,10 +1,33 @@
-import type { CategoryId, Member, Price, Restaurant, Walk } from './types';
+import {
+  isCategoryId,
+  isPrice,
+  isWalk,
+  type CategoryId,
+  type Member,
+  type Price,
+  type Restaurant,
+  type Walk,
+} from './types';
 
 export interface DrawFilters {
   categories: CategoryId[];
   prices: Price[];
-  /** 之前存在手機裡的篩選沒有這一項，當成不限 */
-  walks?: Walk[];
+  walks: Walk[];
+}
+
+const only = <T>(v: unknown, ok: (x: unknown) => x is T): T[] => (Array.isArray(v) ? v.filter(ok) : []);
+
+/**
+ * 手機裡存的篩選：選項改過的話，舊的值已經不在表裡，留著會抽不到店、畫面上卻看不到選了什麼，所以丟掉；
+ * 舊版存的沒有 walks，當成不限
+ */
+export function cleanFilters(v: unknown): DrawFilters {
+  const f = (v ?? {}) as Partial<Record<keyof DrawFilters, unknown>>;
+  return {
+    categories: only(f.categories, isCategoryId),
+    prices: only(f.prices, isPrice),
+    walks: only(f.walks, isWalk),
+  };
 }
 
 /**
@@ -56,7 +79,7 @@ export function candidates({
     .filter((r) => !blocked.has(r.id))
     .filter((r) => filters.categories.length === 0 || filters.categories.includes(r.category))
     .filter((r) => filters.prices.length === 0 || filters.prices.includes(r.price))
-    .filter((r) => !filters.walks?.length || filters.walks.includes(r.walk))
+    .filter((r) => filters.walks.length === 0 || filters.walks.includes(r.walk))
     .filter((r) => !big || r.group)
     .filter((r) => !excluded.has(r.id))
     .map((restaurant) => {

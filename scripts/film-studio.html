@@ -1,0 +1,871 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <title>影片合成</title>
+    <!-- 只給 scripts/film.mjs 用：把錄好的手機畫面放進手機框，配字幕、片頭片尾、配樂，錄成一支影片 -->
+    <link rel="stylesheet" href="/node_modules/@fontsource/noto-serif-tc/700.css" />
+    <link rel="stylesheet" href="/node_modules/@fontsource/noto-serif-tc/900.css" />
+    <link rel="stylesheet" href="/node_modules/@fontsource/noto-sans-tc/500.css" />
+    <link rel="stylesheet" href="/node_modules/@fontsource/cormorant-garamond/600.css" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        background: #000;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="c" width="1920" height="1080"></canvas>
+    <script type="module">
+      const W = 1920;
+      const H = 1080;
+      const INTRO = 3.6;
+      const OUTRO = 4.2;
+      const plan = await (await fetch(new URLSearchParams(location.search).get('plan'))).json();
+
+      const THEMES = {
+        temple: {
+          bg: '#f3eadb',
+          bg2: '#eadcc4',
+          ink: '#2a2522',
+          sub: '#5d544b',
+          accent: '#c8402c',
+          gold: '#e3a335',
+          shadow: '#c8402c',
+          seal: '#c8402c',
+          sealInk: '#fbf7ef',
+          ring: '#e3a335',
+          dim: 'rgba(243,234,219,0.55)',
+        },
+        magic: {
+          bg: '#151b3f',
+          bg2: '#2c2768',
+          ink: '#f8f1df',
+          sub: '#cbc5ea',
+          accent: '#f2b940',
+          gold: '#f2b940',
+          shadow: '#3a68ad',
+          seal: '#3a68ad',
+          sealInk: '#fbf7ef',
+          ring: '#f2b940',
+          dim: 'rgba(21,27,63,0.55)',
+        },
+      };
+      const C = THEMES[plan.theme];
+      const cv = document.getElementById('c');
+      const g = cv.getContext('2d');
+
+      /* ---------- 字型、影片 ---------- */
+      const words = [plan.title, plan.label, plan.outro, '食在難選起義', ...plan.marks.flatMap((m) => [m.title, m.sub])]
+        .concat(plan.actors.map((a) => a.name))
+        .join('');
+      await Promise.all([
+        document.fonts.load('900 80px "Noto Serif TC"', words),
+        document.fonts.load('700 40px "Noto Serif TC"', words),
+        document.fonts.load('500 34px "Noto Sans TC"', words),
+        document.fonts.load('600 40px "Cormorant Garamond"', '0123456789/STEP'),
+      ]);
+      /** 一支手機的畫面：螢幕串流存下的一格格 JPEG，照時間挑一格畫；往後幾秒先解碼好 */
+      class Track {
+        constructor(a) {
+          Object.assign(this, a);
+          this.cache = new Map();
+          this.busy = 0;
+          this.shown = null;
+        }
+        idx(G) {
+          let lo = 0;
+          let hi = this.frames.length - 1;
+          let r = -1;
+          while (lo <= hi) {
+            const m = (lo + hi) >> 1;
+            if (this.frames[m][0] <= G) {
+              r = m;
+              lo = m + 1;
+            } else hi = m - 1;
+          }
+          return r;
+        }
+        prefetch(G, ahead) {
+          const i0 = Math.max(0, this.idx(G));
+          for (const [i, bm] of this.cache)
+            if (i < i0 - 1 && bm !== this.shown) {
+              bm?.close();
+              this.cache.delete(i);
+            }
+          for (let i = i0; i < this.frames.length && this.frames[i][0] <= G + ahead && this.busy < 12; i++) {
+            if (this.cache.has(i)) continue;
+            this.cache.set(i, null);
+            this.busy++;
+            fetch(`${this.dir}/${this.frames[i][1]}`)
+              .then((r) => r.blob())
+              .then((b) => createImageBitmap(b))
+              .then((bm) => (this.cache.has(i) ? this.cache.set(i, bm) : bm.close()))
+              .catch(() => this.cache.delete(i))
+              .finally(() => this.busy--);
+          }
+        }
+        ready(G) {
+          const i = this.idx(G);
+          return i < 0 || !!this.cache.get(i);
+        }
+        image(G) {
+          const i0 = this.idx(G);
+          for (let i = i0; i >= 0 && i > i0 - 40; i--) {
+            const bm = this.cache.get(i);
+            if (bm) return (this.shown = bm);
+          }
+          return this.shown;
+        }
+      }
+      const vids = plan.actors.map((a) => new Track(a));
+      const start = Math.max(0, plan.marks[0].t - 0.4);
+      const end = plan.end;
+
+      /* ---------- 小工具 ---------- */
+      const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+      const ease = (x) => 1 - Math.pow(1 - clamp(x), 3);
+      const back = (x) => {
+        x = clamp(x);
+        const c1 = 1.9;
+        return 1 + (c1 + 1) * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2);
+      };
+      const font = (w, px, fam = 'Noto Serif TC') => `${w} ${px}px "${fam}"`;
+      const NO_START = '，。、：；！？」』）%';
+      /** 中文斷行：一個字一個字量，標點不放行首 */
+      function wrap(text, max) {
+        const lines = [];
+        let line = '';
+        for (const ch of text) {
+          if (g.measureText(line + ch).width > max && line && !NO_START.includes(ch)) {
+            lines.push(line);
+            line = ch;
+          } else line += ch;
+        }
+        if (line) lines.push(line);
+        return lines;
+      }
+      function seal(x, y, size, rot, alpha = 1) {
+        g.save();
+        g.globalAlpha = alpha;
+        g.translate(x, y);
+        g.rotate(rot);
+        g.fillStyle = C.ink;
+        g.fillRect(-size / 2 + size * 0.08, -size / 2 + size * 0.08, size, size);
+        g.fillStyle = C.seal;
+        g.fillRect(-size / 2, -size / 2, size, size);
+        g.strokeStyle = C.sealInk;
+        g.lineWidth = size * 0.04;
+        g.strokeRect(-size / 2 + size * 0.09, -size / 2 + size * 0.09, size * 0.82, size * 0.82);
+        g.fillStyle = C.sealInk;
+        g.font = font(900, size * 0.62);
+        g.textAlign = 'center';
+        g.textBaseline = 'middle';
+        g.fillText('食', 0, size * 0.04);
+        g.restore();
+      }
+      function pill(text, x, y, opts = {}) {
+        g.save();
+        g.font = opts.font ?? font(700, 26);
+        const w = g.measureText(text).width + 40;
+        const h = opts.h ?? 46;
+        g.fillStyle = opts.fill ?? 'transparent';
+        g.strokeStyle = opts.stroke ?? C.ink;
+        g.lineWidth = 2.5;
+        g.beginPath();
+        g.roundRect(opts.center ? x - w / 2 : x, y - h / 2, w, h, h / 2);
+        if (opts.fill) g.fill();
+        g.stroke();
+        g.fillStyle = opts.color ?? C.ink;
+        g.textAlign = 'center';
+        g.textBaseline = 'middle';
+        g.fillText(text, opts.center ? x : x + w / 2, y + 2);
+        g.restore();
+        return w;
+      }
+
+      /* ---------- 背景 ---------- */
+      const grain = document.createElement('canvas');
+      grain.width = grain.height = 256;
+      {
+        const gg = grain.getContext('2d');
+        const img = gg.createImageData(256, 256);
+        for (let i = 0; i < img.data.length; i += 4) {
+          const v = Math.random() * 255;
+          img.data[i] = img.data[i + 1] = img.data[i + 2] = v;
+          img.data[i + 3] = 10;
+        }
+        gg.putImageData(img, 0, 0);
+      }
+      const grainPat = g.createPattern(grain, 'repeat');
+      const stars = Array.from({ length: 170 }, () => ({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        r: Math.random() * 1.8 + 0.4,
+        p: Math.random() * Math.PI * 2,
+        s: Math.random() * 1.5 + 0.5,
+      }));
+      function background(t, cx) {
+        if (plan.theme === 'temple') {
+          g.fillStyle = C.bg;
+          g.fillRect(0, 0, W, H);
+          // 金色光芒慢慢轉
+          g.save();
+          g.translate(cx, H / 2);
+          g.rotate(t * 0.025);
+          for (let i = 0; i < 28; i++) {
+            g.rotate((Math.PI * 2) / 28);
+            g.fillStyle = i % 2 ? 'rgba(227,163,53,0.10)' : 'rgba(200,64,44,0.035)';
+            g.beginPath();
+            g.moveTo(0, 0);
+            g.lineTo(1400, -70);
+            g.lineTo(1400, 70);
+            g.closePath();
+            g.fill();
+          }
+          g.restore();
+          g.fillStyle = 'rgba(227,163,53,0.22)';
+          g.beginPath();
+          g.arc(cx, H / 2, 470, 0, Math.PI * 2);
+          g.fill();
+          g.strokeStyle = 'rgba(42,37,34,0.18)';
+          g.lineWidth = 2;
+          g.beginPath();
+          g.arc(cx, H / 2, 500, 0, Math.PI * 2);
+          g.stroke();
+          // 上方的朱紅橫樑
+          g.fillStyle = C.ink;
+          g.fillRect(0, 0, W, 14);
+          g.fillStyle = C.accent;
+          g.fillRect(0, 14, W, 8);
+          g.fillStyle = C.ink;
+          g.fillRect(0, H - 10, W, 10);
+        } else {
+          const lg = g.createLinearGradient(0, 0, W, H);
+          lg.addColorStop(0, C.bg);
+          lg.addColorStop(1, C.bg2);
+          g.fillStyle = lg;
+          g.fillRect(0, 0, W, H);
+          const rg = g.createRadialGradient(cx, H / 2, 40, cx, H / 2, 620);
+          rg.addColorStop(0, 'rgba(124,104,232,0.55)');
+          rg.addColorStop(1, 'rgba(124,104,232,0)');
+          g.fillStyle = rg;
+          g.fillRect(0, 0, W, H);
+          for (const s of stars) {
+            g.globalAlpha = 0.25 + 0.75 * Math.abs(Math.sin(t * s.s + s.p));
+            g.fillStyle = s.r > 1.8 ? C.gold : '#fff';
+            g.beginPath();
+            g.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+            g.fill();
+          }
+          g.globalAlpha = 1;
+          g.strokeStyle = 'rgba(242,185,64,0.35)';
+          g.setLineDash([4, 10]);
+          g.lineWidth = 2;
+          g.beginPath();
+          g.arc(cx, H / 2, 510, 0, Math.PI * 2);
+          g.stroke();
+          g.setLineDash([]);
+        }
+        g.fillStyle = grainPat;
+        g.fillRect(0, 0, W, H);
+      }
+
+      /* ---------- 手機 ---------- */
+      const SOLO = vids.length === 1;
+      const SCREEN_H = SOLO ? 900 : 850;
+      const SCREEN_W = Math.round((SCREEN_H * 780) / 1688);
+      const BEZEL = 15;
+      const phoneX = SOLO ? [1390] : [1215, 1680];
+      const look = vids.map(() => ({ k: 1 }));
+      function phone(vd, i, focus, G) {
+        const want = focus == null || focus === vd.id ? 1 : 0;
+        look[i].k += (want - look[i].k) * 0.12;
+        const k = look[i].k;
+        const s = 0.95 + 0.05 * k;
+        const fw = SCREEN_W + BEZEL * 2;
+        const fh = SCREEN_H + BEZEL * 2;
+        g.save();
+        g.translate(phoneX[i], H / 2 - (SOLO ? 0 : 22));
+        g.scale(s, s);
+        // 招牌的硬陰影
+        g.fillStyle = C.shadow;
+        g.beginPath();
+        g.roundRect(-fw / 2 + 16, -fh / 2 + 16, fw, fh, 58);
+        g.fill();
+        g.fillStyle = '#16120f';
+        g.beginPath();
+        g.roundRect(-fw / 2, -fh / 2, fw, fh, 58);
+        g.fill();
+        g.save();
+        g.beginPath();
+        g.roundRect(-SCREEN_W / 2, -SCREEN_H / 2, SCREEN_W, SCREEN_H, 44);
+        g.clip();
+        const img = vd.image(G);
+        if (img) g.drawImage(img, -SCREEN_W / 2, -SCREEN_H / 2, SCREEN_W, SCREEN_H);
+        else {
+          g.fillStyle = '#f7f1e6';
+          g.fillRect(-SCREEN_W / 2, -SCREEN_H / 2, SCREEN_W, SCREEN_H);
+        }
+        if (k < 0.999) {
+          g.fillStyle = C.dim;
+          g.globalAlpha = 1 - k;
+          g.fillRect(-SCREEN_W / 2, -SCREEN_H / 2, SCREEN_W, SCREEN_H);
+          g.globalAlpha = 1;
+        }
+        g.restore();
+        // 聽筒
+        g.fillStyle = '#16120f';
+        g.beginPath();
+        g.roundRect(-52, -SCREEN_H / 2 + 8, 104, 26, 13);
+        g.fill();
+        if (!SOLO && k > 0.02) {
+          g.globalAlpha = k;
+          g.strokeStyle = C.ring;
+          g.lineWidth = 6;
+          g.beginPath();
+          g.roundRect(-fw / 2 - 12, -fh / 2 - 12, fw + 24, fh + 24, 68);
+          g.stroke();
+          g.globalAlpha = 1;
+        }
+        g.restore();
+        if (!SOLO) {
+          const label = vd.host ? `${vd.name}（起義）` : vd.name;
+          pill(label, phoneX[i], H - 52, {
+            center: true,
+            fill: k > 0.5 ? C.accent : 'transparent',
+            stroke: plan.theme === 'magic' ? C.gold : C.ink,
+            color: k > 0.5 ? (plan.theme === 'magic' ? '#151b3f' : '#fbf7ef') : C.ink,
+            font: font(700, 28),
+          });
+        }
+      }
+
+      /* ---------- 字幕 ---------- */
+      const COL_X = SOLO ? 170 : 120;
+      const COL_W = SOLO ? 860 : 790;
+      function brand() {
+        seal(COL_X + 34, 92, 64, -0.08);
+        g.fillStyle = C.ink;
+        g.font = font(900, 44);
+        g.textBaseline = 'middle';
+        g.textAlign = 'left';
+        g.fillText('食在難選', COL_X + 88, 94);
+        const w = g.measureText('食在難選').width;
+        pill(plan.label, COL_X + 88 + w + 24, 94, {
+          stroke: plan.theme === 'magic' ? C.gold : C.accent,
+          color: plan.theme === 'magic' ? C.gold : C.accent,
+          font: font(700, 24),
+          h: 42,
+        });
+      }
+      function caption(i, age, out) {
+        const m = plan.marks[i];
+        const fade = out == null ? 1 : 1 - clamp(out / 0.22);
+        if (fade <= 0) return;
+        g.save();
+        g.globalAlpha = fade;
+        const yTop = 330;
+        // 第幾步：一顆方章
+        const a1 = ease(age / 0.35);
+        g.globalAlpha = fade * a1;
+        g.fillStyle = C.accent;
+        g.fillRect(COL_X, yTop - 36 + (1 - a1) * 16, 72, 72);
+        g.fillStyle = plan.theme === 'magic' ? '#151b3f' : '#fbf7ef';
+        g.font = font(600, 40, 'Cormorant Garamond');
+        g.textAlign = 'center';
+        g.textBaseline = 'middle';
+        g.fillText(String(i + 1).padStart(2, '0'), COL_X + 36, yTop + 2 + (1 - a1) * 16);
+        g.textAlign = 'left';
+        g.fillStyle = C.sub;
+        g.font = font(600, 30, 'Cormorant Garamond');
+        g.fillText(`/ ${String(plan.marks.length).padStart(2, '0')}`, COL_X + 90, yTop + 4);
+        g.textBaseline = 'alphabetic';
+        // 標題：一個字一個字浮上來
+        const size = SOLO ? 88 : 80;
+        g.font = font(900, size);
+        const lines = wrap(m.title, COL_W);
+        let y = yTop + 70 + size;
+        let n = 0;
+        for (const line of lines) {
+          let x = COL_X;
+          for (const ch of line) {
+            const p = ease((age - 0.08 - n * 0.035) / 0.42);
+            g.globalAlpha = fade * p;
+            g.fillStyle = C.ink;
+            g.fillText(ch, x, y + (1 - p) * 34);
+            x += g.measureText(ch).width + 4;
+            n++;
+          }
+          y += size * 1.18;
+        }
+        // 標題下一筆朱紅（金）色的筆劃
+        const lw = Math.min(COL_W, 220) * ease((age - 0.3) / 0.5);
+        g.globalAlpha = fade;
+        g.fillStyle = C.accent;
+        g.beginPath();
+        g.roundRect(COL_X, y - size * 0.62, lw, 10, 5);
+        g.fill();
+        // 說明
+        g.font = font(500, 38, 'Noto Sans TC');
+        const sub = wrap(m.sub, COL_W);
+        const p2 = ease((age - 0.42) / 0.5);
+        g.globalAlpha = fade * p2;
+        g.fillStyle = C.sub;
+        let sy = y + 18 + (1 - p2) * 18;
+        for (const l of sub) {
+          g.fillText(l, COL_X, sy);
+          sy += 60;
+        }
+        g.restore();
+      }
+      function progress(i) {
+        const y = H - 92;
+        for (let k = 0; k < plan.marks.length; k++) {
+          g.fillStyle = k <= i ? C.accent : 'transparent';
+          g.strokeStyle = k <= i ? C.accent : C.sub;
+          g.lineWidth = 2;
+          g.beginPath();
+          g.roundRect(COL_X + k * 30, y - 8, 18, 18, plan.theme === 'magic' ? 9 : 2);
+          if (k <= i) g.fill();
+          g.stroke();
+        }
+        g.fillStyle = C.sub;
+        g.font = font(700, 26);
+        g.textAlign = 'left';
+        g.textBaseline = 'middle';
+        g.fillText(plan.title, COL_X + plan.marks.length * 30 + 18, y + 2);
+      }
+
+      /* ---------- 片頭、片尾 ---------- */
+      function card(age, line1, line2, alpha) {
+        g.save();
+        g.globalAlpha = alpha;
+        background(age, W / 2);
+        const s = back((age - 0.25) / 0.45);
+        const sk = age < 0.25 ? 0 : 1;
+        seal(W / 2, 330, 170 * (2.2 - 1.2 * s), -0.1 + 0.04 * (1 - s), sk * alpha);
+        g.textAlign = 'center';
+        g.textBaseline = 'alphabetic';
+        const p1 = ease((age - 0.75) / 0.5);
+        g.globalAlpha = alpha * p1;
+        g.fillStyle = C.ink;
+        g.font = font(900, 124);
+        g.fillText(line1, W / 2, 610 + (1 - p1) * 30);
+        const p2 = ease((age - 1.15) / 0.5);
+        g.globalAlpha = alpha * p2;
+        g.fillStyle = C.sub;
+        g.font = font(700, 54);
+        g.fillText(line2, W / 2, 712 + (1 - p2) * 24);
+        const p3 = ease((age - 1.5) / 0.5);
+        g.globalAlpha = alpha * p3;
+        pill(plan.label, W / 2, 800, {
+          center: true,
+          stroke: plan.theme === 'magic' ? C.gold : C.accent,
+          color: plan.theme === 'magic' ? C.gold : C.accent,
+          font: font(700, 28),
+          h: 52,
+        });
+        g.restore();
+      }
+
+      /* ---------- 配樂：即時合成（廟宇是古箏、木魚、堂鼓；魔法是音樂盒、鐘聲、柔和的弦） ---------- */
+      const ac = new AudioContext({ sampleRate: 48000 });
+      await ac.resume();
+      const dest = ac.createMediaStreamDestination();
+      const mix = ac.createGain();
+      mix.connect(dest);
+      const music = makeMusic(plan.theme, ac, mix);
+      // 音量檢查：每兩秒印一次最大音量（film.mjs 開 FILM_DEBUG 才會顯示）
+      const meter = ac.createAnalyser();
+      meter.fftSize = 2048;
+      mix.connect(meter);
+      const buf = new Float32Array(meter.fftSize);
+      let peak = 0;
+      setInterval(() => {
+        meter.getFloatTimeDomainData(buf);
+        for (const x of buf) peak = Math.max(peak, Math.abs(x));
+      }, 50);
+      setInterval(() => {
+        console.log(`[level] ${peak.toFixed(3)}`);
+        peak = 0;
+      }, 2000);
+
+      function makeMusic(theme, ac, out) {
+        const master = ac.createGain();
+        master.gain.value = 0;
+        const comp = ac.createDynamicsCompressor();
+        comp.threshold.value = -16;
+        comp.ratio.value = 3;
+        master.connect(comp).connect(out);
+        const ir = ac.createBuffer(2, ac.sampleRate * 2.8, ac.sampleRate);
+        for (let ch = 0; ch < 2; ch++) {
+          const d = ir.getChannelData(ch);
+          for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 2.4);
+        }
+        const rev = ac.createConvolver();
+        rev.buffer = ir;
+        const wet = ac.createGain();
+        wet.gain.value = theme === 'magic' ? 0.5 : 0.32;
+        rev.connect(wet).connect(master);
+        const bus = (node, send = 0.4) => {
+          node.connect(master);
+          const s = ac.createGain();
+          s.gain.value = send;
+          node.connect(s).connect(rev);
+        };
+        const hz = (m) => 440 * Math.pow(2, (m - 69) / 12);
+        const noise = ac.createBuffer(1, ac.sampleRate, ac.sampleRate);
+        noise.getChannelData(0).forEach((_, i, a) => (a[i] = Math.random() * 2 - 1));
+
+        function pluck(t, m, v, dur = 1.6) {
+          const o1 = ac.createOscillator();
+          const o2 = ac.createOscillator();
+          o1.type = 'triangle';
+          o2.type = 'sine';
+          o1.frequency.setValueAtTime(hz(m) * 1.012, t);
+          o1.frequency.exponentialRampToValueAtTime(hz(m), t + 0.06);
+          o2.frequency.value = hz(m) * 2;
+          const f = ac.createBiquadFilter();
+          f.type = 'lowpass';
+          f.frequency.setValueAtTime(4200, t);
+          f.frequency.exponentialRampToValueAtTime(900, t + dur);
+          const gn = ac.createGain();
+          const g2 = ac.createGain();
+          g2.gain.value = 0.28;
+          gn.gain.setValueAtTime(0.0001, t);
+          gn.gain.exponentialRampToValueAtTime(v, t + 0.004);
+          gn.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+          o1.connect(f);
+          o2.connect(g2).connect(f);
+          f.connect(gn);
+          bus(gn, 0.35);
+          o1.start(t);
+          o2.start(t);
+          o1.stop(t + dur + 0.05);
+          o2.stop(t + dur + 0.05);
+        }
+        function bell(t, m, v, dur = 1.4) {
+          [
+            [1, 1],
+            [3, 0.16],
+            [4.2, 0.06],
+          ].forEach(([mul, amp]) => {
+            const o = ac.createOscillator();
+            o.type = 'sine';
+            o.frequency.value = hz(m) * mul;
+            const gn = ac.createGain();
+            gn.gain.setValueAtTime(0.0001, t);
+            gn.gain.exponentialRampToValueAtTime(v * amp, t + 0.006);
+            gn.gain.exponentialRampToValueAtTime(0.0001, t + dur / mul ** 0.3);
+            o.connect(gn);
+            bus(gn, 0.55);
+            o.start(t);
+            o.stop(t + dur + 0.05);
+          });
+        }
+        function pad(t, ms, dur, v = 0.045) {
+          const f = ac.createBiquadFilter();
+          f.type = 'lowpass';
+          f.frequency.value = theme === 'magic' ? 1100 : 700;
+          const gn = ac.createGain();
+          gn.gain.setValueAtTime(0.0001, t);
+          gn.gain.linearRampToValueAtTime(v, t + 1.1);
+          gn.gain.setValueAtTime(v, t + dur - 0.6);
+          gn.gain.linearRampToValueAtTime(0.0001, t + dur + 0.9);
+          f.connect(gn);
+          bus(gn, 0.6);
+          ms.forEach((m) =>
+            [-7, 7].forEach((cents) => {
+              const o = ac.createOscillator();
+              o.type = 'sawtooth';
+              o.frequency.value = hz(m);
+              o.detune.value = cents;
+              o.connect(f);
+              o.start(t);
+              o.stop(t + dur + 1);
+            }),
+          );
+        }
+        function block(t, v) {
+          const o = ac.createOscillator();
+          o.frequency.setValueAtTime(1750, t);
+          o.frequency.exponentialRampToValueAtTime(1250, t + 0.03);
+          const gn = ac.createGain();
+          gn.gain.setValueAtTime(0.0001, t);
+          gn.gain.exponentialRampToValueAtTime(v, t + 0.002);
+          gn.gain.exponentialRampToValueAtTime(0.0001, t + 0.08);
+          o.connect(gn);
+          bus(gn, 0.2);
+          o.start(t);
+          o.stop(t + 0.1);
+        }
+        function drum(t, v) {
+          const o = ac.createOscillator();
+          o.frequency.setValueAtTime(120, t);
+          o.frequency.exponentialRampToValueAtTime(52, t + 0.28);
+          const gn = ac.createGain();
+          gn.gain.setValueAtTime(0.0001, t);
+          gn.gain.exponentialRampToValueAtTime(v, t + 0.004);
+          gn.gain.exponentialRampToValueAtTime(0.0001, t + 0.5);
+          o.connect(gn);
+          bus(gn, 0.15);
+          o.start(t);
+          o.stop(t + 0.55);
+        }
+        function shaker(t, v) {
+          const s = ac.createBufferSource();
+          s.buffer = noise;
+          const f = ac.createBiquadFilter();
+          f.type = 'highpass';
+          f.frequency.value = 7000;
+          const gn = ac.createGain();
+          gn.gain.setValueAtTime(0.0001, t);
+          gn.gain.exponentialRampToValueAtTime(v, t + 0.01);
+          gn.gain.exponentialRampToValueAtTime(0.0001, t + 0.07);
+          s.connect(f).connect(gn);
+          bus(gn, 0.1);
+          s.start(t, Math.random() * 0.5, 0.1);
+        }
+        function whoosh(t, v = 0.05) {
+          const s = ac.createBufferSource();
+          s.buffer = noise;
+          const f = ac.createBiquadFilter();
+          f.type = 'bandpass';
+          f.Q.value = 1.2;
+          f.frequency.setValueAtTime(380, t);
+          f.frequency.exponentialRampToValueAtTime(2600, t + 0.38);
+          const gn = ac.createGain();
+          gn.gain.setValueAtTime(0.0001, t);
+          gn.gain.exponentialRampToValueAtTime(v, t + 0.12);
+          gn.gain.exponentialRampToValueAtTime(0.0001, t + 0.42);
+          s.connect(f).connect(gn);
+          bus(gn, 0.3);
+          s.start(t, Math.random() * 0.4, 0.5);
+        }
+
+        // 曲子：八小節一循環
+        const _ = null;
+        const SONG =
+          theme === 'temple'
+            ? {
+                bpm: 96,
+                // D 宮調五聲：D E F# A B
+                mel: [
+                  [69, _, 71, 74, 76, _, 74, 71],
+                  [69, _, 66, _, 64, 66, 69, _],
+                  [71, _, 74, 76, 78, _, 76, 74],
+                  [76, _, 74, 71, 69, _, _, _],
+                  [74, _, 76, 78, 81, _, 78, 76],
+                  [74, _, 71, _, 69, 71, 74, _],
+                  [76, _, 74, 71, 69, _, 66, 64],
+                  [62, _, _, _, 62, 64, 66, 69],
+                ],
+                bass: [38, 35, 31, 33, 38, 35, 31, 33],
+                pads: [
+                  [50, 57],
+                  [47, 54],
+                  [43, 50],
+                  [45, 52],
+                ],
+              }
+            : {
+                bpm: 84,
+                // C 五聲音階，和弦 C、Am、F、G
+                mel: [
+                  [88, _, 86, 84, 79, _, _, _],
+                  [81, _, 84, 86, 88, _, _, _],
+                  [81, _, 79, 77, 76, _, _, _],
+                  [74, _, 76, 79, _, _, 74, _],
+                  [84, _, 88, 91, 88, _, 84, _],
+                  [81, _, 84, 88, 86, _, _, _],
+                  [77, _, 81, 84, 81, _, 79, _],
+                  [79, _, 76, 74, 72, _, _, _],
+                ],
+                bass: [36, 33, 29, 31, 36, 33, 29, 31],
+                pads: [
+                  [48, 55, 64],
+                  [45, 52, 60],
+                  [41, 48, 57],
+                  [43, 50, 59],
+                ],
+                arp: [
+                  [60, 67, 72, 76],
+                  [57, 64, 69, 72],
+                  [53, 60, 65, 69],
+                  [55, 62, 67, 71],
+                ],
+              };
+        const step = 60 / SONG.bpm / 2;
+        let next = ac.currentTime + 0.15;
+        let k = 0;
+        const timer = setInterval(() => {
+          while (next < ac.currentTime + 0.25) {
+            const bar = Math.floor(k / 8) % 8;
+            const s = k % 8;
+            const loop = Math.floor(k / 64);
+            const m = SONG.mel[bar][s];
+            if (theme === 'temple') {
+              if (m) pluck(next, m, 0.22 + (s === 0 ? 0.06 : 0));
+              if (loop > 0 && s % 2 === 0)
+                pluck(next, SONG.mel[bar][(s + 4) % 8] ? SONG.mel[bar][(s + 4) % 8] - 12 : 57, 0.06, 1);
+              if (s === 0) {
+                drum(next, 0.42);
+                pluck(next, SONG.bass[bar], 0.2, 2.4);
+                if (bar % 2 === 0) pad(next, SONG.pads[(bar / 2) % 4], step * 16);
+              }
+              if (s === 4) drum(next, 0.2);
+              if (s % 2 === 1) block(next, 0.05 + (s === 7 ? 0.03 : 0));
+            } else {
+              if (m) bell(next, m, 0.16);
+              const arp = SONG.arp[bar % 4];
+              bell(next, arp[[0, 1, 2, 3, 2, 1, 2, 3][s]] + 12, 0.045, 0.9);
+              if (s === 0) {
+                bell(next, SONG.bass[bar], 0.22, 2.6);
+                if (bar % 2 === 0) pad(next, SONG.pads[(bar / 2) % 4], step * 16, 0.04);
+                if (bar % 4 === 3) bell(next + step * 6, 96, 0.05, 2.4);
+              }
+              shaker(next, s % 2 ? 0.02 : 0.035);
+            }
+            next += step;
+            k++;
+          }
+        }, 40);
+        return {
+          in(t = ac.currentTime) {
+            master.gain.setValueAtTime(0.0001, t);
+            master.gain.exponentialRampToValueAtTime(0.85, t + 1.4);
+          },
+          out(sec) {
+            const t = ac.currentTime;
+            master.gain.cancelScheduledValues(t);
+            master.gain.setValueAtTime(master.gain.value, t);
+            master.gain.linearRampToValueAtTime(0.0001, t + sec);
+          },
+          stamp: () => drum(ac.currentTime + 0.01, 0.7),
+          whoosh: () => whoosh(ac.currentTime + 0.01),
+          stop: () => clearInterval(timer),
+        };
+      }
+
+      /* ---------- 錄影 ---------- */
+      const stream = cv.captureStream(30);
+      dest.stream.getAudioTracks().forEach((t) => stream.addTrack(t));
+      const mime =
+        [
+          'video/mp4;codecs=avc1.640028,mp4a.40.2',
+          'video/mp4;codecs=avc1,mp4a.40.2',
+          'video/webm;codecs=vp9,opus',
+          'video/webm;codecs=vp8,opus',
+        ]
+          .filter((m) => m.includes(new URLSearchParams(location.search).get('mime') ?? ''))
+          .find((m) => MediaRecorder.isTypeSupported(m)) ?? 'video/webm';
+      await window.__filmStart(mime);
+      const rec = new MediaRecorder(stream, {
+        mimeType: mime,
+        videoBitsPerSecond: 12_000_000,
+        audioBitsPerSecond: 192_000,
+      });
+      let sending = Promise.resolve();
+      rec.onerror = (e) => console.error(`錄影失敗：${e.error?.message ?? e}`);
+      rec.ondataavailable = (e) => {
+        console.log(`[rec] ${e.data.size}`);
+        if (!e.data.size) return;
+        sending = sending.then(
+          () =>
+            new Promise((r) => {
+              const fr = new FileReader();
+              // data URL 的格式本身有逗號（vp9,opus），要從 base64, 後面開始取
+              fr.onload = () => {
+                const url = String(fr.result);
+                r(window.__filmChunk(url.slice(url.indexOf('base64,') + 7)));
+              };
+              fr.readAsDataURL(e.data);
+            }),
+        );
+      };
+      const stopped = new Promise((r) => (rec.onstop = r));
+
+      /* ---------- 時間軸 ---------- */
+      let phase = 'intro';
+      let wall0 = performance.now();
+      let phaseAt = 0;
+      let mi = -1;
+      let markAt = 0;
+      let prev = null;
+      const focusOf = (i) => (i >= 0 ? plan.marks[i].focus : plan.marks[0].focus);
+      const centerX = SOLO ? phoneX[0] : (phoneX[0] + phoneX[1]) / 2;
+
+      // 片頭的時候先把第一句字幕之前的畫面解碼好（登入的那一段不播）
+      let G = start;
+      let lastT = null;
+      rec.start(1000);
+      music.in();
+      setTimeout(() => music.stamp(), 250);
+
+      function frame(now) {
+        const t = (now - wall0) / 1000;
+        const dt = lastT == null ? 0 : Math.min(0.1, t - lastT);
+        lastT = t;
+        const age = t - phaseAt;
+        const rate = plan.marks[Math.max(0, mi)].rate ?? 1;
+        if (phase === 'play') G = Math.min(end, G + dt * rate);
+        vids.forEach((vd) => vd.prefetch(G, 2.5 * rate));
+        if (phase === 'intro') {
+          background(t, centerX);
+          card(age, '食在難選', plan.title, 1);
+          if (age >= INTRO && vids.every((vd) => vd.ready(G))) {
+            phase = 'play';
+            phaseAt = t;
+          }
+        } else {
+          // 現在是第幾句
+          let i = mi;
+          while (i + 1 < plan.marks.length && G >= plan.marks[i + 1].t) i++;
+          if (i !== mi) {
+            prev = mi >= 0 ? { i: mi, at: t } : null;
+            mi = Math.max(0, i);
+            markAt = t;
+            if (i >= 1) music.whoosh();
+          }
+          if (phase === 'play' && G >= end) {
+            phase = 'outro';
+            phaseAt = t;
+            music.out(OUTRO - 0.4);
+            setTimeout(() => music.stamp(), 900);
+          }
+          background(t, centerX);
+          brand();
+          vids.forEach((vd, k) => phone(vd, k, focusOf(mi), G));
+          if (prev && t - prev.at < 0.25) caption(prev.i, 99, t - prev.at);
+          if (!prev || t - prev.at >= 0.2) caption(Math.max(0, mi), t - markAt - (prev ? 0.2 : 0));
+          progress(Math.max(0, mi));
+          // 片頭卡淡出
+          if (phase === 'play' && age < 0.5) card(INTRO + age, '食在難選', plan.title, 1 - ease(age / 0.5));
+          if (phase === 'outro') {
+            card(Math.max(0, age - 0.5), plan.outro, '食在難選', ease(age / 0.6));
+            if (age >= OUTRO) {
+              phase = 'done';
+              finish(t);
+              return;
+            }
+          }
+        }
+        requestAnimationFrame(frame);
+      }
+      async function finish(t) {
+        music.stop();
+        rec.stop();
+        await stopped;
+        await sending;
+        await window.__filmDone(t);
+      }
+      requestAnimationFrame(frame);
+    </script>
+  </body>
+</html>

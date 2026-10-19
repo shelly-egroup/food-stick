@@ -11,6 +11,8 @@ import { ColdBackdrop, Particles, ShelfBoard } from '@/components/ShelfScene';
 import { DustStudy } from '@/components/DustStudy';
 import { useToast } from '@/components/Toast';
 import { useAppData } from '@/lib/appData';
+import { decided, taipeiDate } from '@/lib/meal';
+import { useNow } from '@/lib/useBrowser';
 import { useTheme, type PodiumEntry } from '@/themes';
 import { deleteRestaurant, useLatestNotes } from '@/lib/store';
 import { reducedMotion } from '@/lib/motion';
@@ -50,7 +52,7 @@ function usePageMotion(page: number, run: (el: HTMLElement, dir: number) => gsap
 }
 
 export function Ranks() {
-  const { members, restaurants, restaurantMap, memberMap, draws, ready } = useAppData();
+  const { members, restaurants, restaurantMap, memberMap, meals, ready } = useAppData();
   const { theme } = useTheme();
   const { copy, Podium, Badge } = theme;
   const notes = useLatestNotes(true);
@@ -93,24 +95,23 @@ export function Ranks() {
     );
   };
 
-  const monthStart = useMemo(() => {
-    const d = new Date();
-    return new Date(d.getFullYear(), d.getMonth(), 1).getTime();
-  }, []);
+  // 這個月（台北時間）：餐單的日期是 YYYY-MM-DD，比前七個字就好
+  const thisMonth = taipeiDate(useNow()).slice(0, 7);
 
   const rows = useMemo(() => {
     const likes = new Map<string, number>();
     members.forEach((m) => m.likes.forEach((id) => likes.set(id, (likes.get(id) ?? 0) + 1)));
     const picked = new Map<string, number>();
-    draws
-      .filter((d) => !d.rerolled && (d.createdAt?.getTime() ?? 0) >= monthStart)
-      .forEach((d) => picked.set(d.rid, (picked.get(d.rid) ?? 0) + 1));
+    // 命定：這個月起駕過幾餐（一餐算一次，沒起駕、重抽掉的都不算）
+    decided(meals)
+      .filter((m) => m.date.startsWith(thisMonth))
+      .forEach((m) => picked.set(m.decision!.rid, (picked.get(m.decision!.rid) ?? 0) + 1));
     return restaurants
       .map((r) => ({ r, likes: likes.get(r.id) ?? 0, picked: picked.get(r.id) ?? 0 }))
       .sort((a, b) =>
         sort === 'likes' ? b.likes - a.likes || b.picked - a.picked : b.picked - a.picked || b.likes - a.likes,
       );
-  }, [members, restaurants, draws, monthStart, sort]);
+  }, [members, restaurants, meals, thisMonth, sort]);
 
   const valueOf = (x: (typeof rows)[number]) => (sort === 'likes' ? x.likes : x.picked);
   const top: PodiumEntry[] = rows.slice(0, 3).map((x) => ({ r: x.r, value: valueOf(x) }));
@@ -341,7 +342,7 @@ export function Ranks() {
               {month}
               {copy.ranks.announce}
             </b>
-            <span aria-hidden="true">・</span>
+            <i className="sub-sep" aria-hidden="true" />
             {sort === 'likes' ? '依大家的愛店數排名' : `依本月${copy.verb}定案的次數排名`}
           </p>
         </div>

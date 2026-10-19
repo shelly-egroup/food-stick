@@ -34,10 +34,11 @@ function subscribe(cb: () => void) {
   };
 }
 
-function parse<T>(raw: string | null, initial: T): T {
+function parse<T>(raw: string | null, initial: T, clean?: (v: unknown) => T): T {
   if (raw === null) return initial;
   try {
-    return JSON.parse(raw) as T;
+    const v: unknown = JSON.parse(raw);
+    return clean ? clean(v) : (v as T);
   } catch {
     return initial;
   }
@@ -46,21 +47,22 @@ function parse<T>(raw: string | null, initial: T): T {
 /**
  * 記在這台裝置上的偏好（例如上次選的篩選條件）。用法跟 useState 一樣。
  * initial 要是穩定的值（寫在元件外面的常數），預先產生的頁面會先用它。
+ * clean：存著的可能是舊版的資料，讀出來先整理過再用；一樣要寫在元件外面。
  */
-export function usePersisted<T>(key: string, initial: T) {
+export function usePersisted<T>(key: string, initial: T, clean?: (v: unknown) => T) {
   const raw = useSyncExternalStore(
     subscribe,
     () => read(key),
     () => null,
   );
-  const value = useMemo(() => parse(raw, initial), [raw, initial]);
+  const value = useMemo(() => parse(raw, initial, clean), [raw, initial, clean]);
   const set = useCallback(
     (next: T | ((prev: T) => T)) => {
-      const prev = parse(read(key), initial);
+      const prev = parse(read(key), initial, clean);
       const v = typeof next === 'function' ? (next as (p: T) => T)(prev) : next;
       write(key, JSON.stringify(v));
     },
-    [key, initial],
+    [key, initial, clean],
   );
   return [value, set] as const;
 }

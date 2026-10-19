@@ -271,6 +271,112 @@ export function Glyph({ name, size = 22 }: GlyphProps) {
           />
         </g>
       )}
+      {name === 'closed' && (
+        <>
+          {/* 這家去不了：拱形的魔法門被一把發光的金鎖鎖住 */}
+          <path d="M5 21V10a7 7 0 0 1 14 0v11Z" fill="#45399a" stroke={INK} strokeWidth="1.4" strokeLinejoin="round" />
+          <path d="M12 3v18" stroke={INK} strokeWidth="1" opacity="0.5" />
+          <g className="glyph__lock">
+            <path d="M9.6 13.4v-1.6a2.4 2.4 0 0 1 4.8 0v1.6" fill="none" stroke="var(--marigold)" strokeWidth="1.4" />
+            <rect
+              x="8.6"
+              y="13.2"
+              width="6.8"
+              height="5.4"
+              rx="1"
+              fill="var(--marigold)"
+              stroke={INK}
+              strokeWidth="1.2"
+            />
+            <circle cx="12" cy="15.6" r="0.9" fill={INK} />
+          </g>
+          <path d="M3 21.4h18" stroke={INK} strokeWidth="1.4" strokeLinecap="round" />
+        </>
+      )}
+      {name === 'ledger' && (
+        <>
+          {/* 冒險日誌：夜空藍的日誌、金色扣環、封面一顆星 */}
+          <rect x="4.6" y="3.2" width="13.6" height="17.8" rx="1.6" fill="#3a4fa0" stroke={INK} strokeWidth="1.4" />
+          <path d="M7.2 3.2v17.8" stroke={INK} strokeWidth="1" opacity="0.6" />
+          <rect
+            x="17.4"
+            y="9.4"
+            width="3.2"
+            height="5.2"
+            rx="1"
+            fill="var(--marigold)"
+            stroke={INK}
+            strokeWidth="1.1"
+          />
+          <path d={STAR} transform="translate(12.6 12) scale(0.8)" fill="var(--marigold)" />
+        </>
+      )}
+      {name === 'empty' && (
+        <>
+          {/* 還沒有：一顆空空的水晶球，裡面浮著一個問號 */}
+          <path d="M7 20.6h10l-1.4-3.2H8.4Z" fill="var(--wood)" stroke={INK} strokeWidth="1.3" strokeLinejoin="round" />
+          <circle cx="12" cy="10.4" r="7" fill="#ece5ff" stroke={INK} strokeWidth="1.4" />
+          <path
+            className="glyph__ask"
+            d="M10 8.6a2 2 0 1 1 2.6 1.9c-.6.2-.6.6-.6 1.3M12 14v.1"
+            fill="none"
+            stroke="#4a3d9e"
+            strokeWidth="1.4"
+            strokeLinecap="round"
+          />
+          <path d="M8.2 7.4a4.6 4.6 0 0 1 2.4-2.2" stroke="#fff" strokeWidth="1.4" strokeLinecap="round" />
+        </>
+      )}
+      {name === 'alone' && (
+        <>
+          {/* 一個人：一根獨自亮著的蠟燭，旁邊一顆小星 */}
+          <rect x="9.6" y="10" width="4.8" height="10" rx="1" fill="#f8efdc" stroke={INK} strokeWidth="1.3" />
+          <path d="M12 10V8.6" stroke={INK} strokeWidth="1.1" />
+          <path
+            className="glyph__flame"
+            d="M12 3.2c1.8 2 1.8 3.7 0 5.3-1.8-1.6-1.8-3.3 0-5.3Z"
+            fill="var(--marigold)"
+            stroke={INK}
+            strokeWidth="1"
+          />
+          <path d="M6.6 21h10.8" stroke={INK} strokeWidth="1.4" strokeLinecap="round" />
+          <path d="M18.6 5.2l.5 1.2 1.2.5-1.2.5-.5 1.2-.5-1.2-1.2-.5 1.2-.5Z" fill="var(--marigold)" />
+        </>
+      )}
+      {name === 'altar' && (
+        <>
+          {/* 預言牌陣：三張預言牌攤成扇形，中間那張翻開、一顆金星 */}
+          <g transform="rotate(-18 12 20)">
+            <rect x="7.6" y="4.2" width="8.8" height="13.6" rx="1.4" fill="#2f4a9a" stroke={INK} strokeWidth="1.2" />
+            <rect
+              x="9"
+              y="5.6"
+              width="6"
+              height="10.8"
+              rx="0.8"
+              fill="none"
+              stroke="var(--marigold)"
+              strokeWidth="0.8"
+            />
+          </g>
+          <g transform="rotate(18 12 20)">
+            <rect x="7.6" y="4.2" width="8.8" height="13.6" rx="1.4" fill="#2f4a9a" stroke={INK} strokeWidth="1.2" />
+            <rect
+              x="9"
+              y="5.6"
+              width="6"
+              height="10.8"
+              rx="0.8"
+              fill="none"
+              stroke="var(--marigold)"
+              strokeWidth="0.8"
+            />
+          </g>
+          <rect x="7.4" y="3" width="9.2" height="14.6" rx="1.4" fill="#45399a" stroke={INK} strokeWidth="1.3" />
+          <path d={STAR} transform="translate(12 10.3) scale(0.85)" fill="var(--marigold)" />
+          <path d="M3.4 21.2h17.2" stroke={INK} strokeWidth="1.4" strokeLinecap="round" />
+        </>
+      )}
       {name === 'shake' && (
         <>
           <g className="glyph__ball">

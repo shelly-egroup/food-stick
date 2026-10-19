@@ -1,7 +1,10 @@
 'use client';
 
+import type { Reading, Theme } from '@/themes';
 import { fb } from './firebase';
-import { categoryOf, priceOf, walkOf, type Restaurant } from './types';
+import type { MealPick } from './meal';
+import { seeded } from './random';
+import { categoryOf, priceOf, walkOf, type DrawMode, type Restaurant } from './types';
 
 /** AI 寫的四句籤詩與一句解籤 */
 export interface Verse {
@@ -56,4 +59,15 @@ export async function askVerse(input: {
   } finally {
     clearTimeout(timer);
   }
+}
+
+/**
+ * 餐單上的一支籤要怎麼攤開：籤號、籤等用種子照「看的人」的主題寫；
+ * AI 寫的四句是照抽的人當下的主題寫的，主題一樣才換上（不一樣就用網站原本的籤詩，風格不會混在一起）。
+ */
+export function readingOf(theme: Theme, r: Restaurant, pick: MealPick, mode: DrawMode): Reading {
+  const base = theme.read(r, mode, pick.variant || undefined, seeded(pick.seed));
+  return pick.theme === theme.id && pick.lines.length === 4 && pick.verdict
+    ? { ...base, lines: pick.lines as Reading['lines'], verdict: pick.verdict }
+    : base;
 }

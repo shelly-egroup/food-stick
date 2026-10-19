@@ -1,3 +1,4 @@
+import type { SkipWhy } from '@/lib/meal';
 import type { ComponentType, ForwardRefExoticComponent, RefAttributes } from 'react';
 import type gsap from 'gsap';
 import type { IconName } from '@/components/Icon';
@@ -46,11 +47,30 @@ export interface ThemeCopy {
   taunts: string[][];
   /** 重抽次數用完（籤卡上取代重抽鈕的那句話） */
   noMore: string;
-  /** 次數用完之後：籤卡上落下的定案章（兩個字）、首頁大按鈕（點了重新攤開今天的最終結果）、封住籤筒（水晶球）的那張封條 */
+  /**
+   * 小彩蛋的話：連續好幾天吃同一家（streak）、這個月吃很多次（month）、用完最後一次才起駕（close、closeSeal 兩字章）、
+   * 宵夜時段打開網站（late、lateSeal）、搖手機搖太大力（hard）
+   */
+  quip: {
+    streak: (n: number) => string;
+    month: (n: number) => string;
+    close: string;
+    closeSeal: string;
+    late: string;
+    lateSeal: string;
+    hard: string;
+  };
+  /** 篩選摘要：價位沒選或全選（不限價位）時的說法：香油錢無上限、法力無上限 */
+  priceAny: string;
+  /** 籤卡上次數用完時的第二行：有好幾支可以左右翻、只剩這一支 */
+  pickSwipe: string;
+  pickOnly: string;
+  /** 起駕的不是最後抽到的那支（回頭挑候選）：隨機虧一句 */
+  backPick: string[];
+  /** 定案章（兩個字）：起駕的那一支、首頁封住籤筒（水晶球）的封條、歷史 */
   finalSeal: string;
-  finalCta: string;
+  /** 首頁封條上的大字（前面另有一塊餐別小牌）：「神明已定」 */
   finalBand: string;
-  finalObey: string;
   /** 愛店按鈕：還沒按、按下後，以及按鈕上的小字說明 */
   likeStamp: string;
   likedLabel: string;
@@ -87,13 +107,13 @@ export interface ThemeCopy {
     /** 按了解散之後，再按一次才算數的按鈕字，與旁邊的一句提醒 */
     disbandAsk: string;
     disbandHint: string;
-    /** 發組隊邀請：按鈕、發出去之後的標題、收回；抽到之後要不要大家回覆的開關與說明；大家回覆的統計 */
+    /** 發組隊邀請：按鈕、發出去之後的標題、收回（取消這一餐）；再揪人的按鈕；大家回覆的統計 */
     send: string;
     sent: string;
     recall: string;
-    confirm: string;
-    confirmHint: string;
-    tally: (go: number, wait: number, pass: number) => string;
+    add: string;
+    addCta: (n: number) => string;
+    tally: (going: number, wait: number, out: number) => string;
     /** 加入別人的團之後，首頁團面板的標題與「不跟了」的按鈕 */
     member: (host: string) => string;
     leave: string;
@@ -126,63 +146,117 @@ export interface ThemeCopy {
     settingHint: string;
   };
   /**
-   * 即時揪團：先發組隊邀請，大家回覆要不要加入；發起人抽到一家，大家看到同一支籤；最後出發。
-   * 被揪的人在報馬仔（貓頭鷹信差）裡看到這些，用的是這裡的字
+   * 一餐（自己吃、揪團吃都是）：揪人、抽籤、候選、起駕、去不了。
+   * 首頁、籤卡、報馬仔（貓頭鷹）的卡片都用這裡的字；slot 是餐別（午餐、下午茶…）
    */
-  outing: {
+  meal: {
     /** 「小明 揪你一起吃午餐」 */
-    invited: (host: string) => string;
-    /** 回覆組隊邀請：加入、這次不了、改變心意 */
+    invited: (host: string, slot: string) => string;
+    /** 自己發起的、自己一個人的 */
+    mine: (slot: string) => string;
+    solo: (slot: string) => string;
+    /** 回覆：要去、這次不了、改變心意；說這次不了之後的一句 */
     join: string;
     skip: string;
     rejoin: string;
-    /** 說這次不了之後的一句：「你說這次不了」 */
     skipped: string;
     /** 「小明 求到了」 */
-    drew: (host: string) => string;
-    /** 抽到之後要不要去（發起人有要求才會出現） */
-    yes: string;
-    no: string;
-    /** 抽到之後：還有幾位沒回覆；0 就是到齊了，可以出發 */
-    waiting: (n: number) => string;
+    drew: (name: string) => string;
+    /** 「小明 起駕：巷口牛肉麵」 */
+    decided: (name: string, shop: string) => string;
+    /** 起駕的那一刻，大家畫面上的一句 */
     depart: string;
     map: string;
-    ok: string;
-    /** 發起人收回邀請 */
+    /** 發起人收回 */
     closed: (host: string) => string;
-    /** 每個人頭像旁的狀態：加入（要去）、不去、還沒回 */
-    mark: { go: string; pass: string; wait: string };
+    /** 每個人頭像旁的狀態：要去、不去、還沒回 */
+    mark: { in: string; out: string; wait: string };
     /** 發起人收到的消息 */
     joinedBy: (name: string) => string;
     skippedBy: (name: string) => string;
-    goingBy: (name: string) => string;
-    notGoingBy: (name: string) => string;
-    /** 籤卡上：「報馬仔已通知 3 位團員」 */
+    /** 籤卡上：「報馬仔已通知 3 位」 */
     notified: (n: number) => string;
-    /** 團裡已經抽到了：首頁的大按鈕「看籤：巷口牛肉麵」 */
+    /** 起駕之後首頁的大按鈕：「看定案：巷口牛肉麵」 */
     look: (shop: string) => string;
-    /** 還能重抽幾次：「今天還能重抽 2 次」「這團還能重抽 2 次」 */
-    left: (n: number, team: boolean) => string;
+    /** 次數用完、還沒起駕：首頁大按鈕直接翻開最後抽到的那張（通常就是它，候選只是給大家挑）；按鈕上一行小字 */
+    lookLatest: string;
+    /** 還能重抽幾次 */
+    left: (n: number) => string;
+    /** 候選：標題、說明、剛抽到的那一支的小字、看全部的按鈕 */
+    cands: string;
+    candsHint: string;
+    latest: string;
+    lookAll: string;
+    /** 這家去不了：按鈕、再按一次確定、別人按了之後的消息、沒有店可以補的時候 */
+    cantGo: string;
+    /** 去不了的彈窗：標題、說明，每個原因有主題的說法（title）、白話（hint）、短短兩三個字（short，食籤簿、通知用） */
+    cantGoTitle: string;
+    cantGoHint: string;
+    skipWhy: Record<SkipWhy, { title: string; hint: string; short: string }>;
+    cantGoBy: (name: string, shop: string, why?: string) => string;
+    cantGoNone: string;
+    /** 重新開張時：重抽次數接續原本的 */
+    reopen: (n: number) => string;
+    /** 篩選紙上設定這一餐可以重抽幾次：標題、說明、單位（炷／顆）、0 次時的說法 */
+    stock: { title: string; hint: string; unit: string; none: string };
+    /** 有人搶先一步抽了、這一餐已經結束 */
+    raced: string;
+    ended: string;
+    /** 已經起駕了，翻到不是定案的那支：這餐結束了（或不能改）就說最後去了哪家 */
+    departedTo: (name: string) => string;
+    /** 起駕後改去這一張的按鈕：大字，和底下一行小字（原本要去哪家） */
+    switchTo: string;
+    switchFrom: (name: string) => string;
+    /** 這一餐其實已經開了，只是畫面還沒同步到 */
+    syncing: string;
   };
-  /** 通知處：廟宇是敲鑼的報馬仔，魔法是送信的貓頭鷹 */
+  /** 通知處：廟宇是敲鑼的報馬仔，魔法是送信的貓頭鷹；只放還在進行的餐 */
   herald: {
     name: string;
     eyebrow: string;
     lede: string;
-    /** 收到的邀請、自己發出的邀請、今天自己一個人抽的，三區的標題 */
-    inbox: string;
-    sent: string;
-    solo: string;
-    /** 三個分頁：章（一個字）、分頁上的短名字、那一頁空著時的一句話 */
-    marks: { inbox: string; sent: string; solo: string };
-    tabs: { inbox: string; sent: string; solo: string };
-    none: Record<'inbox' | 'sent' | 'solo', { title: string; hint: string }>;
-    soloNote: string;
-    soloLine: string;
+    /** 每張卡片上的小標：我發起的、揪我的、自己的 */
+    tags: { mine: string; invited: string; solo: string };
     emptyTitle: string;
     emptyHint: string;
-    /** 上方通知鈕的說明（有幾則新消息） */
+    /** 上方通知鈕的說明（有幾件事等你回） */
     unread: (n: number) => string;
+  };
+  /** 歷史：廟宇是食籤簿，魔法是冒險日誌 */
+  history: {
+    title: string;
+    eyebrow: string;
+    lede: string;
+    emptyTitle: string;
+    emptyHint: string;
+    error: string;
+    more: string;
+    end: string;
+    /** 每一餐的結果 */
+    result: { decided: string; none: string; cancelled: string; live: string };
+    with: string;
+    alone: string;
+    cands: string;
+    skipped: string;
+    /** 封面的小統計：最常吃的店、最常同桌的人；還沒有的時候的說法 */
+    noTop: string;
+    noTopHint: string;
+    topShop: string;
+    topMate: string;
+    noMateHint: string;
+    /** 「小明 起駕」 */
+    by: (name: string) => string;
+    /** 這個月吃了幾餐 */
+    count: (n: number) => string;
+    /**
+     * 四個分頁：全部、別人揪我的、我揪大家的、我一個人的。
+     * 每一頁一顆章（一個字）、分頁上的名字、那一頁空著時插畫底下的兩行字
+     */
+    marks: Record<HistoryTab, string>;
+    tabs: Record<HistoryTab, string>;
+    none: Record<Exclude<HistoryTab, 'all'>, { title: string; hint: string }>;
+    /** 彩蛋：點一下封面的小圖翻出一句幹話（廟宇是黃曆宜忌，魔法是隱形墨水），再點換一句，每次隨機、不連續重複 */
+    egg: { title: string; seal: string; lines: readonly string[] };
   };
   /**
    * 紙條區的空狀態與讀不到時，插畫底下的兩行字；
@@ -261,6 +335,9 @@ export interface ThemeCopy {
   };
 }
 
+/** 歷史的分頁：全部、別人揪我的、我揪大家的、我一個人的 */
+export type HistoryTab = 'all' | 'inbox' | 'sent' | 'solo';
+
 /** 排行榜前三名的一格 */
 export interface PodiumEntry {
   r: Restaurant;
@@ -295,7 +372,7 @@ export interface CrewBannerProps {
   fresh: boolean;
 }
 
-/** 主題的小圖：拆店（收書）、登出、搖手機、自己新增的店、通知處、組隊邀請 */
+/** 主題的小圖：拆店（收書）、登出、搖手機、自己新增的店、通知處、組隊邀請、這家去不了、歷史、還沒有、一個人、抽過的籤（供桌、牌陣） */
 export type GlyphName =
   | 'remove'
   | 'leave'
@@ -308,7 +385,12 @@ export type GlyphName =
   | 'skip'
   | 'depart'
   | 'rename'
-  | 'rethink';
+  | 'rethink'
+  | 'closed'
+  | 'ledger'
+  | 'empty'
+  | 'alone'
+  | 'altar';
 export interface GlyphProps {
   name: GlyphName;
   size?: number;
@@ -326,9 +408,10 @@ export type VignetteKind =
   | 'shops-none'
   | 'ranks-empty'
   | 'herald-empty'
-  | 'herald-inbox'
-  | 'herald-sent'
-  | 'herald-solo'
+  | 'history-empty'
+  | 'history-inbox'
+  | 'history-sent'
+  | 'history-solo'
   | 'titles-empty'
   | 'fans-empty';
 
@@ -425,6 +508,15 @@ export interface ShopCardProps {
   onOpen?: () => void;
 }
 
+/** 方形日期章：店家的張貼日期、食籤簿（冒險日誌）每一天的頁首；三行寫年份、月/日、星期 */
+export interface DateStampProps {
+  date: Date;
+  size?: number;
+  /** 讀螢幕的人聽到的說法（例如「張貼於 2026 年 9 月 10 日」）；沒給就念日期 */
+  label?: string;
+  className?: string;
+}
+
 export interface LoveStampProps {
   size: number;
   className?: string;
@@ -441,8 +533,8 @@ export interface Theme {
   copy: ThemeCopy;
   /** 分頁列上「抽」的圖示 */
   tabIcon: IconName;
-  /** 分頁列上「店家」「排行榜」的圖示：廟宇是掛著的菜牌、金榜；魔法是魔法書、星盤 */
-  tabIcons: { shops: IconName; ranks: IconName };
+  /** 分頁列上「店家」「歷史」「排行榜」的圖示：廟宇是菜牌、食籤簿、金榜；魔法是魔法書、冒險日誌、星盤 */
+  tabIcons: { shops: IconName; history: IconName; ranks: IconName };
   /** 主題的招牌音效：搖鈴、星光 */
   sound: () => void;
   /** 有人揪你、抽到了、出發了：報馬仔敲鑼、貓頭鷹叫兩聲 */
@@ -457,6 +549,8 @@ export interface Theme {
   ShopCard: ComponentType<ShopCardProps>;
   /** 愛店章：店家卡片和籤卡上都會蓋 */
   LoveStamp: ComponentType<LoveStampProps>;
+  /** 方形日期章：廟宇是朱印，魔法是帶月相的星郵票 */
+  DateStamp: ComponentType<DateStampProps>;
   /** 愛店按鈕左邊的圖：廟宇是蓋章處，魔法是愛心咒的法陣；按下去的動畫和聲音也由它負責 */
   LoveSlot: ComponentType<LoveSlotProps>;
   /** 排行榜前三名：廟宇是金榜，魔法是星盤；揭曉動畫也由它負責 */

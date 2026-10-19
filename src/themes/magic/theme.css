@@ -3,8 +3,9 @@
   --accent: var(--cobalt);
   --accent-lo: #2c5596;
   --accent-tint: var(--cobalt-tint);
-  /* 印在主色上的圖案（切換鈕的小圖） */
-  --accent-ink: var(--marigold);
+  /* 印在主色（鈷藍）上的字：金字在鈷藍上看不清，字一律用米白；金色只留給小圖（--accent-glyph） */
+  --accent-ink: var(--paper-hi);
+  --accent-glyph: var(--marigold);
   /* 預言展開時背後的放射光 */
   --ray-tint: var(--cobalt-tint);
   /* 施法時舞台四周暗下來，帶一點紫 */
