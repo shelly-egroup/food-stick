@@ -7,7 +7,7 @@ import type { DrawMode } from './types';
  * 這裡只放型別、表和純邏輯（不碰 Firestore），首頁、通知、歷史、規則測試都照這裡的說法。
  */
 
-/** 餐別：預設午餐；也可以自己打字。icon 是 24×24、線條粗 1.7 的 SVG path */
+/** 餐別：預設照現在的時間（slotAt）；也可以自己打字。icon 是 24×24、線條粗 1.7 的 SVG path */
 export const SLOTS = [
   {
     key: 'breakfast',
@@ -99,6 +99,29 @@ export function taipeiClock(t: number) {
   const hour = Number(parts.find((p) => p.type === 'hour')?.value ?? 0) % 24;
   return { day, hour };
 }
+/** 照台北時間猜現在是哪一餐：5–10 早餐、10–14 午餐、14–17 下午茶、17–21 晚餐，其他時間宵夜 */
+export function slotAt(t: number): Slot {
+  if (!t) return DEFAULT_SLOT;
+  const { hour } = taipeiClock(t);
+  const key: SlotKey =
+    hour >= 5 && hour < 10
+      ? 'breakfast'
+      : hour >= 10 && hour < 14
+        ? 'lunch'
+        : hour >= 14 && hour < 17
+          ? 'tea'
+          : hour >= 17 && hour < 21
+            ? 'dinner'
+            : 'supper';
+  return { key, label: SLOTS.find((s) => s.key === key)!.label };
+}
+
+/** 這一餐算哪一天：半夜 12 點到清晨 5 點的宵夜還算前一天的（不然過了 12 點就變成另一張單） */
+export function mealDateOf(t: number, slot: Slot) {
+  if (slot.key === 'supper' && taipeiClock(t).hour < 5) return taipeiDate(t - 5 * 3_600_000);
+  return taipeiDate(t);
+}
+
 /** 彩蛋的時段：宵夜（晚上 10 點到清晨 5 點） */
 export function momentOf(t: number): 'late' | null {
   if (!t) return null;
@@ -282,9 +305,11 @@ export const latestOf = (m: Meal) => candidatesOf(m).at(-1) ?? null;
 export const chosenOf = (m: Meal) => (m.decision ? pickOf(m, m.decision.rid) : null);
 export const skipOf = (m: Meal, rid: string) => m.skips.findLast((s) => s.rid === rid) ?? null;
 
-/** 現在能不能抽：還在進行、還沒起駕、我要去；第一支不用次數，之後要有剩 */
+/** 還有沒有次數：第一支不用次數，之後要有剩 */
+export const hasDraws = (m: Meal) => m.picks.length === 0 || m.rerollsLeft > 0;
+/** 現在能不能抽：還在進行、還沒起駕、我要去、還有次數 */
 export const canDraw = (m: Meal, uid: string, now: number) =>
-  isLive(m, now) && m.status === 'open' && isGoing(m, uid) && (m.picks.length === 0 || m.rerollsLeft > 0);
+  isLive(m, now) && m.status === 'open' && isGoing(m, uid) && hasDraws(m);
 /** 現在能不能起駕：還在抽的階段、我要去、有候選 */
 export const canDecide = (m: Meal, uid: string, now: number) =>
   isLive(m, now) && m.status === 'open' && isGoing(m, uid) && m.cands.length > 0;
@@ -331,6 +356,13 @@ export function mealsFor(meals: Meal[], uid: string, date: string, slot: Slot, n
   const done = here.filter((m) => m.status === 'decided' && !!m.decision && isGoing(m, uid)).sort(newest)[0] ?? null;
   const own = here.find((m) => m.id === mealIdOf(date, slot, uid)) ?? null;
   return { live, done, own };
+}
+
+/** 首頁看哪一餐：今天在這台裝置選過的 → 我要去、還在進行的那一餐 → 照現在的時間 */
+export function homeSlot(picked: Slot | null, meals: Meal[], uid: string, now: number): Slot {
+  if (picked) return picked;
+  const live = meals.filter((m) => isLive(m, now) && isGoing(m, uid)).sort(newest)[0];
+  return live ? live.slot : slotAt(now);
 }
 
 /** 起駕過的餐（排行榜、常一起吃的人、最近吃過的店都看這個） */
