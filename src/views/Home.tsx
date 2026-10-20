@@ -33,6 +33,9 @@ import {
   canReopen,
   canSkip,
   chosenOf,
+  hasDraws,
+  homeSlot,
+  mealDateOf,
   decided,
   isGoing,
   isLive,
@@ -44,7 +47,6 @@ import {
   mealsFor,
   modeOf,
   pickOf,
-  taipeiDate,
   type Meal,
   type MealFilters,
   type SkipWhy,
@@ -57,6 +59,7 @@ import {
   setMealFilters,
   setPref,
   skipMeal,
+  useMeal,
   type PickInput,
 } from '@/lib/store';
 import { newSeed, seeded } from '@/lib/random';
@@ -149,12 +152,12 @@ const readDevMoment = (): 'late' | null => {
 };
 
 export function Home() {
-  const { me, members, memberMap, restaurants, restaurantMap, meals, ready } = useAppData();
+  const { me, members, memberMap, restaurants, restaurantMap, meals: listed, ready: listedReady } = useAppData();
   const { theme } = useTheme();
   const { copy, StageTop, StageFloor, Loader } = theme;
   const toast = useToast();
   const router = useRouter();
-  const { setAddOpen, slot, setSlot, focus, setFocus } = useUi();
+  const { setAddOpen, picked, setSlot, focus, setFocus } = useUi();
   const stage = useRef<StageHandle>(null);
   const stageEl = useRef<HTMLElement>(null);
 
@@ -175,16 +178,28 @@ export function Home() {
 
   // ---------- 現在的這一餐 ----------
   const t = useNow();
-  const today = taipeiDate(t);
+  // 看哪一餐：今天手動選過的 → 我要去、還在進行的那一餐 → 照現在的時間
+  const slot = useMemo(() => homeSlot(picked, listed, me.id, t), [picked, listed, me.id, t]);
+  const today = mealDateOf(t, slot);
+  // 今天這一餐我開的那張直接讀：過了時間、還沒起駕的也拿得到，一進來就知道次數還剩多少
+  const ownDoc = useMeal(t ? mealIdOf(today, slot, me.id) : null);
+  const ownMeal = ownDoc.data;
+  const meals = useMemo(
+    () => (ownMeal ? [...listed.filter((m) => m.id !== ownMeal.id), ownMeal] : listed),
+    [listed, ownMeal],
+  );
+  const ready = listedReady && (ownMeal !== undefined || ownDoc.error);
   const { live, done, own } = useMemo(() => mealsFor(meals, me.id, today, slot, t), [meals, me.id, today, slot, t]);
   // 從通知點進來的那一餐優先
   const focused = focus ? (meals.find((m) => m.id === focus && isLive(m, t) && isGoing(m, me.id)) ?? null) : null;
   /** 我要去、還在進行的那一餐 */
   const meal = focused ?? live;
-  /** 首頁顯示的那一餐：還在進行的，或今天這一餐已經起駕過的 */
-  const shown = meal ?? done;
   /** 沒有在進行的：我自己那張可以重新開張（次數接續） */
   const reopen = !meal && own && canReopen(own, t) ? own : null;
+  /** 要重新開張的那張次數也用完了：不能再抽，直接當成用完，顯示最後抽到的那張 */
+  const reopenSpent = !!reopen && !hasDraws(reopen);
+  /** 首頁顯示的那一餐：還在進行的、今天這一餐已經起駕過的，或次數用完的那張 */
+  const shown = meal ?? done ?? (reopenSpent ? reopen : null);
   const chosen = shown ? chosenOf(shown) : null;
   const finished = !!shown && shown.status === 'decided' && !!chosen;
   const isHost = !!meal && meal.host === me.id;
@@ -260,7 +275,7 @@ export function Home() {
   const rerolls = base ? base.rerolls : savedRerolls;
   const rerollsLeft = base ? base.rerollsLeft : savedRerolls;
   const charged = !!base && base.picks.length > 0;
-  const canDrawNow = meal ? canDraw(meal, me.id, t) : !finished;
+  const canDrawNow = meal ? canDraw(meal, me.id, t) : !finished && !reopenSpent;
   const used = rerolls - rerollsLeft;
 
   // 篩選紙、供桌（預言牌陣）彈窗：籤卡翻開時要一起收起來，所以宣告在 openPick 前面
@@ -361,7 +376,7 @@ export function Home() {
       if (opts.skip && target) await skipMeal(target.id, me.id, opts.skip, input, opts.why);
       else if (target) await drawMeal(target.id, me.id, target.picks.length, input);
       else {
-        const how = await openMeal({
+        const opened = await openMeal({
           id,
           host: me.id,
           date: today,
@@ -369,14 +384,20 @@ export function Home() {
           party: mode === 'group' ? crew : [],
           rerolls: savedRerolls,
           filters: { ...savedFilters, prefer: savedPrefer },
-          first: reopen ? undefined : input,
+          first: input,
         });
-        if (how === 'reopened') await drawMeal(id, me.id, reopen?.picks.length ?? 0, input);
+        if (opened.how === 'reopened') await drawMeal(id, me.id, opened.picks, input);
       }
     } catch (err) {
       const why = err instanceof MealError ? err.reason : 'closed';
       // exists：這一餐其實已經開了（畫面還沒同步到），不是香燒完了
-      toast(why === 'raced' ? copy.meal.raced : why === 'exists' ? copy.meal.syncing : '沒有寫成功，等一下再試', '咦');
+      // 重新開張時才發現次數用完了（畫面還沒同步到）：照用完的說
+      if (why === 'closed' && !target) toast(copy.noMore, copy.acceptSeal);
+      else
+        toast(
+          why === 'raced' ? copy.meal.raced : why === 'exists' ? copy.meal.syncing : '沒有寫成功，等一下再試',
+          '咦',
+        );
       setPhase('idle');
       return;
     }
@@ -804,7 +825,7 @@ export function Home() {
             <p className="filters__count" key={pool.length}>
               {pool.length ? copy.countLine(pool.length) : copy.emptyTitle}
             </p>
-            <FilterRow icon={slotIcon(slot)} title="哪一餐" hint="預設午餐，可自己寫">
+            <FilterRow icon={slotIcon(slot)} title="哪一餐" hint="預設照時間，可自己寫">
               <SlotPicker
                 value={slot}
                 onChange={(s) => {
@@ -922,7 +943,7 @@ export function Home() {
               // 跟籤卡上「再抽一支」按鈕裡面一樣：籤筒（水晶球）、字、剩下的香（魔力球）；只是一行字，不是按鈕
               <span className="dock__charges">
                 <theme.Glyph name="shake" size={22} />
-                <span>{reopen ? copy.meal.reopen(rerollsLeft) : copy.meal.left(rerollsLeft)}</span>
+                <span>{reopen && !reopenSpent ? copy.meal.reopen(rerollsLeft) : copy.meal.left(rerollsLeft)}</span>
                 <Charges left={rerollsLeft} total={rerolls} label={copy.meal.left(rerollsLeft)} />
               </span>
             )}

@@ -37,6 +37,7 @@ import {
   canDraw,
   canReopen,
   canSkip,
+  hasDraws,
   isLive,
   toMeal,
   type Answer,
@@ -169,6 +170,43 @@ export function useLiveMeals(uid: string) {
     asMealDoc,
     `live:${uid}:${since.toMillis()}`,
   );
+}
+
+/**
+ * 直接盯著一張單（首頁用來看「今天這一餐我開的那張」）：useLiveMeals 只聽開網頁時還沒結束的，
+ * 過了時間、還沒起駕的那張會漏掉，就不知道次數已經用完。data：undefined 讀取中、null 沒有這張單。
+ */
+export function useMeal(id: string | null) {
+  const [state, setState] = useState<{ id: string | null; data: Meal | null | undefined; error: boolean }>({
+    id,
+    data: undefined,
+    error: false,
+  });
+  useEffect(() => {
+    if (!id) return;
+    let off = () => {};
+    let timer = 0;
+    let tries = 0;
+    const listen = () => {
+      off = onSnapshot(
+        mealRef(id),
+        (snap) => {
+          tries = 0;
+          setState({ id, data: snap.exists() ? asMealDoc(snap as QueryDocumentSnapshot) : null, error: false });
+        },
+        (err) => {
+          setState((s) => ({ id, data: s.id === id ? s.data : undefined, error: true }));
+          if (isTransient(err)) timer = window.setTimeout(listen, retryAfter(tries++));
+        },
+      );
+    };
+    listen();
+    return () => {
+      off();
+      clearTimeout(timer);
+    };
+  }, [id]);
+  return state.id === id ? state : { id, data: undefined, error: false };
 }
 
 const SYNC_KEY = 'lunchstick:meals-sync';
@@ -369,7 +407,8 @@ const raw = (x: DocumentData, key: string): unknown[] => (Array.isArray(x[key]) 
 
 /**
  * 開一餐（或把取消了、過了時間還沒起駕的那張重新開張）。
- * 新開的可以順便帶第一支；重新開張的回傳 reopened，第一支另外用 drawMeal 抽（次數接續原本的）。
+ * first：要順便抽第一支。新開的直接寫進去；重新開張的先確認次數還有剩（沒剩就丟 closed、整張不動），
+ * 回傳 reopened 和原本抽過幾支，第一支另外用 drawMeal 抽（次數接續原本的；規則不准重開時一起改抽過的）。
  */
 export async function openMeal(input: {
   id: string;
@@ -380,7 +419,7 @@ export async function openMeal(input: {
   rerolls: number;
   filters: MealFilters;
   first?: PickInput;
-}): Promise<'created' | 'reopened'> {
+}): Promise<{ how: 'created' | 'reopened'; picks: number }> {
   const { db } = fb();
   const ref = mealRef(input.id);
   const party = [...new Set([input.host, ...input.party])].slice(0, MAX_PARTY);
@@ -389,6 +428,7 @@ export async function openMeal(input: {
     if (snap.exists()) {
       const m = toMeal(snap.id, snap.data(), toDate);
       if (!canReopen(m, Date.now())) throw new MealError('exists');
+      if (input.first && !hasDraws(m)) throw new MealError('closed');
       tx.update(ref, {
         party,
         answers: {},
@@ -400,7 +440,7 @@ export async function openMeal(input: {
         updatedAt: serverTimestamp(),
         endsAt: endsAt(),
       });
-      return 'reopened' as const;
+      return { how: 'reopened' as const, picks: m.picks.length };
     }
     const first = input.first ? [pickDoc(input.first, input.host)] : [];
     tx.set(ref, {
@@ -423,7 +463,7 @@ export async function openMeal(input: {
       updatedAt: serverTimestamp(),
       endsAt: endsAt(),
     });
-    return 'created' as const;
+    return { how: 'created' as const, picks: first.length };
   });
 }
 

@@ -10,8 +10,8 @@ interface Ui {
   setAddOpen: (v: boolean) => void;
   meOpen: boolean;
   setMeOpen: (v: boolean) => void;
-  /** 首頁現在看哪一餐（預設午餐）；從通知點進來會切到那一餐 */
-  slot: Slot;
+  /** 今天在這台裝置選過的那一餐（沒選過是 null，首頁自己照進行中的餐、時間決定）；從通知點進來會切到那一餐 */
+  picked: Slot | null;
   setSlot: (s: Slot) => void;
   /** 從通知點進來的那一張餐單：首頁優先顯示它 */
   focus: string | null;
@@ -23,7 +23,7 @@ const Ctx = createContext<Ui>({
   setAddOpen: () => {},
   meOpen: false,
   setMeOpen: () => {},
-  slot: DEFAULT_SLOT,
+  picked: null,
   setSlot: () => {},
   focus: null,
   setFocus: () => {},
@@ -45,16 +45,16 @@ const cleanSaved = (v: unknown): SavedSlot => {
 export function UiProvider({ children }: { children: ReactNode }) {
   const [addOpen, setAddOpen] = useState(false);
   const [meOpen, setMeOpen] = useState(false);
-  // 首頁看哪一餐：記在這台裝置上，重新整理還是剛剛選的那一餐；隔天回到預設的午餐
+  // 首頁看哪一餐：記在這台裝置上，今天重新整理還是剛剛選的那一餐；隔天就不算了
   const now = useNow();
   const [saved, setSaved] = usePersisted('lunchstick:slot', NO_SLOT, cleanSaved);
   const today = now ? taipeiDate(now) : '';
-  const slot = today && saved.date === today ? saved.slot : DEFAULT_SLOT;
+  const picked = today && saved.date === today ? saved.slot : null;
   const setSlot = useCallback((s: Slot) => setSaved({ date: taipeiDate(Date.now()), slot: s }), [setSaved]);
   const [focus, setFocus] = useState<string | null>(null);
   const value = useMemo(
-    () => ({ addOpen, setAddOpen, meOpen, setMeOpen, slot, setSlot, focus, setFocus }),
-    [addOpen, meOpen, slot, setSlot, focus],
+    () => ({ addOpen, setAddOpen, meOpen, setMeOpen, picked, setSlot, focus, setFocus }),
+    [addOpen, meOpen, picked, setSlot, focus],
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

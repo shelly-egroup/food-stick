@@ -11,7 +11,10 @@ import {
   candidatesOf,
   chosenOf,
   customSlot,
+  hasDraws,
+  homeSlot,
   latestOf,
+  mealDateOf,
   mealIdOf,
   mealsFor,
   needsMe,
@@ -19,6 +22,7 @@ import {
   keptToday,
   momentOf,
   repeatOf,
+  slotAt,
   stateOf,
   taipeiDate,
   tallyOf,
@@ -254,11 +258,55 @@ describe('首頁的那一餐', () => {
     assert.equal(r.done?.id, d.id);
   });
 
+  it('過了時間、還沒起駕的那張：次數用完就不能重開再抽', () => {
+    const used = meal({ picks: [pick('a'), pick('b')], cands: ['a', 'b'], rerolls: 1, rerollsLeft: 0 });
+    assert.equal(canReopen(used, T0 + MEAL_MS), true);
+    assert.equal(hasDraws(used), false);
+    assert.equal(hasDraws({ ...used, rerollsLeft: 1 }), true);
+    assert.equal(hasDraws(meal({ rerollsLeft: 0 })), true);
+  });
+
   it('別的餐別、別天的不算', () => {
     const tea = meal({ id: '2026-09-10_tea_me', slot: { key: 'tea', label: '下午茶' } });
     const yesterday = meal({ id: '2026-09-09_lunch_me', date: '2026-09-09' });
     const r = mealsFor([tea, yesterday], 'me', '2026-09-10', lunch, T0);
     assert.deepEqual(r, { live: null, done: null, own: null });
+  });
+});
+
+describe('首頁看哪一餐', () => {
+  const tp = (h: number, m = 0) => Date.UTC(2026, 8, 10, h - 8, m); // 台北 9/10 的 h:m
+
+  it('照台北時間：早餐、午餐、下午茶、晚餐、宵夜', () => {
+    const keyAt = (h: number, m = 0) => slotAt(tp(h, m)).key;
+    assert.equal(keyAt(5), 'breakfast');
+    assert.equal(keyAt(9, 59), 'breakfast');
+    assert.equal(keyAt(10), 'lunch');
+    assert.equal(keyAt(13, 59), 'lunch');
+    assert.equal(keyAt(14), 'tea');
+    assert.equal(keyAt(17), 'dinner');
+    assert.equal(keyAt(21), 'supper');
+    assert.equal(keyAt(23), 'supper');
+    assert.equal(keyAt(4, 59), 'supper');
+    assert.deepEqual(slotAt(tp(19)), { key: 'dinner', label: '晚餐' });
+  });
+
+  it('今天選過的優先，再來是我要去、還在進行的那一餐，都沒有才照時間', () => {
+    const tea = { key: 'tea', label: '下午茶' } as const;
+    const lunchLive = meal(); // 11:30 開的午餐，14:30 結束
+    assert.deepEqual(homeSlot(tea, [lunchLive], 'me', tp(12)), tea);
+    assert.equal(homeSlot(null, [lunchLive], 'me', tp(14, 10)).key, 'lunch');
+    assert.equal(homeSlot(null, [lunchLive], 'me', tp(15)).key, 'tea');
+    assert.equal(homeSlot(null, [lunchLive], 'other', tp(12)).key, 'lunch');
+    assert.equal(homeSlot(null, [], 'me', tp(19)).key, 'dinner');
+  });
+
+  it('半夜的宵夜還算前一天的；其他餐別照當天', () => {
+    const supper = { key: 'supper', label: '宵夜' } as const;
+    const night = Date.UTC(2026, 8, 10, 17, 30); // 台北 9/11 01:30
+    assert.equal(mealDateOf(night, supper), '2026-09-10');
+    assert.equal(mealDateOf(night, { key: 'breakfast', label: '早餐' }), '2026-09-11');
+    assert.equal(mealDateOf(tp(23), supper), '2026-09-10');
   });
 });
 
